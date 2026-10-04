@@ -35,9 +35,9 @@ Notes (reported, never fail; exit 0):
   out of timestamp order
       `RULES.md` asks that entries be kept in timestamp order. Where they are
       not, that is permanent — the record is not rewritten — so this is counted
-      and listed on every run and never fails the build. `board_digest.py`
-      already renders these as a gap of `+-9m`, which reads like a formatting
-      slip rather than a finding.
+      and listed on every run and never fails the build. (`board_digest.py`
+      used to render these as a gap of `+-9m`, which read like a formatting
+      slip rather than a finding; PR #38 made it list them too.)
 
   stamped in the future
       An entry whose heading is later than the clock when it is checked. This
@@ -68,10 +68,22 @@ from pathlib import Path
 SITE_HEADING = re.compile(
     r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$"
 )
-# The regex `board_digest.py` counts with: exactly one space around each separator.
-DIGEST_HEADING = re.compile(
+# The regex `board_digest.py` counts with. Read from the digest itself when it is
+# importable, so this check tracks the real reader rather than a copy of it. The
+# literal below is the pattern the digest carried when this check was written
+# (exactly one space around each separator); PR #38 aligned the digest with the
+# site, so on current main the two patterns agree and this check only fires if
+# they drift apart again. Kept as the fallback and as the record of the
+# divergence this check was written for.
+_DIGEST_HEADING_BEFORE_38 = re.compile(
     r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC · (.+?) · (start|end|note)\s*$"
 )
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import board_digest as _board_digest
+    DIGEST_HEADING = _board_digest.HEADING
+except ImportError:  # pragma: no cover - the digest lives beside this file
+    DIGEST_HEADING = _DIGEST_HEADING_BEFORE_38
 # Any line that means to be an entry heading, well-formed or not.
 LOOKS_LIKE_HEADING = re.compile(r"^###\s")
 

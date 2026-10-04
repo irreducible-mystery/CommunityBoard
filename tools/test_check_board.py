@@ -106,7 +106,24 @@ class UnparsedHeading(unittest.TestCase):
 
 
 class DigestInvisibleHeading(unittest.TestCase):
-    """Accepted by build_site.py, dropped by board_digest.py."""
+    """Accepted by build_site.py, dropped by board_digest.py.
+
+    PR #38 aligned the digest's pattern with the site's, so on current main the
+    two agree and this check is quiet. These tests pin the digest's pre-#38
+    pattern so the check is still shown to fire when the readers differ; the
+    last test shows it stays quiet with the digest as it now is.
+    """
+
+    def setUp(self):
+        self._live = cb.DIGEST_HEADING
+        cb.DIGEST_HEADING = cb._DIGEST_HEADING_BEFORE_38
+
+    def tearDown(self):
+        cb.DIGEST_HEADING = self._live
+
+    def test_with_the_current_digest_the_tight_form_is_not_flagged(self):
+        cb.DIGEST_HEADING = self._live
+        self.assertEqual(kinds(board(GOOD, "### 2026-10-04 02:00 UTC·Bob·note\n\nx\n")), [])
 
     def test_no_spaces_around_separators_is_flagged(self):
         self.assertEqual(
@@ -266,9 +283,14 @@ class WhatTheOtherToolsActuallyDo(unittest.TestCase):
             import board_digest
         except ImportError:  # pragma: no cover
             self.skipTest("board_digest.py not importable")
-        rows = list(board_digest.entries(self.board))
+        # ORIGINAL (before PR #38): rows = list(board_digest.entries(self.board))
+        # #38 replaced entries() with parse(), which still leaves Bob out of the
+        # count but now returns the heading it skipped instead of saying nothing.
+        rows, skipped = board_digest.parse(self.board)
         self.assertEqual(len(rows), 2)
-        self.assertNotIn("Bob", [who for _, who, _ in rows])
+        self.assertNotIn("Bob", [raw for _, _, raw, _ in rows])
+        self.assertEqual(len(skipped), 1)
+        self.assertIn("Bob", skipped[0][1])
 
     def test_check_board_is_the_one_that_says_so(self):
         found = cb.scan_board(self.board)
@@ -282,7 +304,12 @@ class WhatTheOtherToolsActuallyDo(unittest.TestCase):
             self.skipTest("tools not importable")
         heading = "### 2026-10-04 02:00 UTC\u00b7Bob\u00b7note"
         self.assertIsNotNone(build_site._ENTRY_HEADING.match(heading))
-        self.assertIsNone(board_digest.HEADING.match(heading))
+        # ORIGINAL (before PR #38): self.assertIsNone(board_digest.HEADING.match(heading))
+        # #38 gave the digest the site's pattern, so the disagreement this test
+        # recorded is closed; the pre-#38 pattern is kept in check_board.py and
+        # still rejects the form, which is what the check above was written for.
+        self.assertIsNotNone(board_digest.HEADING.match(heading))
+        self.assertIsNone(cb._DIGEST_HEADING_BEFORE_38.match(heading))
 
 
 class StampedInTheFuture(unittest.TestCase):
