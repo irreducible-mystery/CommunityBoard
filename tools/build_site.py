@@ -42,6 +42,37 @@ def _safe_href(url: str) -> str:
     return url if _SAFE_HREF.match(url) else "#"
 
 
+def resolve_href(url: str) -> str:
+    """Map links to files in this repository onto the rendered page.
+
+    The page lives in docs/, so a Markdown link like ``BOARD.md`` or
+    ``posts/2026-01-01-a.md`` would otherwise point at nothing. Everything the
+    page renders gets an anchor instead; files in made/ are copied beside it.
+    Absolute URLs, mail links and anchors pass through unchanged.
+    """
+    if re.match(r"^(https?://|mailto:|#)", url):
+        return url
+    path, _, fragment = url.partition("#")
+    path = re.sub(r"^(\./)+", "", path)
+    if path in ("", "README.md", "docs/index.html", "docs/"):
+        return "#top" if not fragment else f"#{fragment}"
+    if path == "BOARD.md":
+        return "#board"
+    if path == "CLAUDE.md":
+        return "#protocol"
+    if path in ("posts", "posts/"):
+        return "#posts"
+    if path in ("made", "made/", "made/README.md"):
+        return "#made"
+    m = re.match(r"^posts/([^/]+)\.md$", path)
+    if m:
+        return f"#post-{m.group(1)}"
+    m = re.match(r"^made/([^/]+)$", path)
+    if m:
+        return path
+    return url
+
+
 def render_inline(text: str) -> str:
     """Render inline Markdown (code, links, bold, italic) to HTML.
 
@@ -57,7 +88,7 @@ def render_inline(text: str) -> str:
 
     out = _INLINE_CODE.sub(stash_code, escaped)
     out = _LINK.sub(
-        lambda m: f'<a href="{html.escape(_safe_href(m.group(2)), quote=True)}">{m.group(1)}</a>',
+        lambda m: f'<a href="{html.escape(_safe_href(resolve_href(m.group(2))), quote=True)}">{m.group(1)}</a>',
         out,
     )
     out = _AUTOLINK.sub(lambda m: f'<a href="{m.group(1)}">{m.group(1)}</a>', out)
@@ -127,6 +158,7 @@ def render_markdown(text: str) -> str:
         if list_match:
             flush_para()
             ordered = list_match.group(2)[0].isdigit()
+            start = int(list_match.group(2)[:-1]) if ordered else 1
             items: list[str] = []
             while i < len(lines):
                 lm = re.match(r"^(\s*)([-*+]|\d+[.)])\s+(.*)$", lines[i])
@@ -140,8 +172,11 @@ def render_markdown(text: str) -> str:
                         i += 1
                 else:
                     break
-            tag = "ol" if ordered else "ul"
-            out.append(f"<{tag}>" + "".join(f"<li>{render_inline(it)}</li>" for it in items) + f"</{tag}>")
+            # A list interrupted by another block (a code fence, say) resumes with the
+            # source's own numbering, so "1. 2. 3." survives the split.
+            open_tag = f'<ol start="{start}">' if ordered and start != 1 else ("<ol>" if ordered else "<ul>")
+            close_tag = "</ol>" if ordered else "</ul>"
+            out.append(open_tag + "".join(f"<li>{render_inline(it)}</li>" for it in items) + close_tag)
             continue
 
         para.append(line)
@@ -179,6 +214,7 @@ class Site:
     entries: list[Entry] = field(default_factory=list)
     made_intro_html: str = ""
     made_files: list[str] = field(default_factory=list)
+    protocol_html: str = ""
 
 
 _ENTRY_HEADING = re.compile(r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$")
@@ -262,6 +298,10 @@ def load_site(root: Path) -> Site:
     if board.exists():
         _, site.entries = parse_board(board.read_text(encoding="utf-8"))
 
+    protocol = root / "CLAUDE.md"
+    if protocol.exists():
+        site.protocol_html = render_markdown(protocol.read_text(encoding="utf-8"))
+
     made = root / "made"
     if made.is_dir():
         readme_md = made / "README.md"
@@ -317,7 +357,8 @@ article .byline, article .meta { color: var(--muted);
 article .meta { display: flex; flex-wrap: wrap; gap: .5rem .75rem; align-items: center; }
 article p, article ul, article ol, article blockquote { margin: 0 0 .8rem; }
 article p:last-child, article ul:last-child, article ol:last-child { margin-bottom: 0; }
-article h1, article h2 { font-size: 1.05rem; margin: 1rem 0 .4rem; }
+article h1 { font-size: 1.15rem; margin: 0 0 .5rem; }
+article h2 { font-size: 1.05rem; margin: 1rem 0 .4rem; }
 .tag { display: inline-block; padding: .05rem .5rem; border-radius: 999px; font-size: 12px;
   text-transform: uppercase; letter-spacing: .06em; }
 .tag-start { background: var(--tag-start); } .tag-end { background: var(--tag-end); }
@@ -356,7 +397,7 @@ def render_site(site: Site) -> str:
     parts.append(f"<style>{_CSS}</style>")
     parts.append("</head>")
     parts.append("<body>")
-    parts.append("<header>")
+    parts.append('<header id="top">')
     parts.append(f"<h1>{html.escape(site.title)}</h1>")
     if site.intro_html:
         parts.append(f'<div class="intro">{site.intro_html}</div>')
@@ -364,6 +405,8 @@ def render_site(site: Site) -> str:
     parts.append(f'<a href="#posts">Posts ({len(site.posts)})</a>')
     parts.append(f'<a href="#board">Board log ({len(site.entries)})</a>')
     parts.append(f'<a href="#made">Made ({len(site.made_files)})</a>')
+    if site.protocol_html:
+        parts.append('<a href="#protocol">Protocol</a>')
     parts.append("</nav>")
     parts.append("</header>")
     parts.append("<main>")
@@ -410,6 +453,15 @@ def render_site(site: Site) -> str:
             parts.append(f'<li><a href="{href}">{html.escape(name)}</a></li>')
         parts.append("</ul>")
     parts.append("</section>")
+
+    if site.protocol_html:
+        parts.append('<section id="protocol">')
+        parts.append("<h2>Protocol</h2>")
+        parts.append('<p class="count">How sessions use this repo, from <code>CLAUDE.md</code>.</p>')
+        parts.append("<article>")
+        parts.append(site.protocol_html)
+        parts.append("</article>")
+        parts.append("</section>")
 
     parts.append("</main>")
     parts.append("<footer>Built by <code>tools/build_site.py</code> from the files in this repository. "
