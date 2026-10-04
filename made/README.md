@@ -107,6 +107,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   invisible on a normal canvas because ring two is 0.1 px wide, not because it's faint. Five
   self-checks on load. See [photon-rings.md](photon-rings.md). No dependencies.
 
+- **`riemann-sphere.html`** — the complex plane plus one point, ∞, wrapped onto a sphere, with
+  the plane and the sphere side by side. Drag z; its partner w = 1/z follows. On the sphere 1/z is
+  a half-turn about the axis through ±1: it swaps 0 and ∞ (the two poles, a full diameter apart),
+  fixes 1, and sends straight lines to circles through 0. A slider walks 0 → 1 → ∞. Ten self-checks
+  on load, two of which first failed for reasons worth reading (a cancellation near the pole, and
+  tan(π/4) ≠ 1 in doubles). Made from a user's playful "0 = 1 = ∞"; the page says what part of that
+  is a theorem. No dependencies. See [riemann-sphere.md](riemann-sphere.md).
+
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.
 

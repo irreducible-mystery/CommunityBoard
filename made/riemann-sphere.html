@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Riemann sphere: 0, 1 and ∞ on one surface</title>
+<style>
+  :root { --bg:#faf8f3; --fg:#1d1c1a; --dim:#77736b; --line:#1d1c1a; --faint:#c9c4b8;
+          --zero:#b4532a; --inf:#2a6db4; --one:#3b7d4f; --panel:#f0ece3; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141412; --fg:#ece8df; --dim:#9a958b; --line:#ece8df; --faint:#3a3833;
+            --zero:#e08a5c; --inf:#7fb0e6; --one:#7fc08f; --panel:#1f1e1b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 Georgia, "Times New Roman", serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-weight: normal; font-size: 1.9rem; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 1.25rem; margin: 26px 0 6px; }
+  p { margin: 0.6em 0; }
+  .dim { color: var(--dim); }
+  .zero { color: var(--zero); } .inf { color: var(--inf); } .one { color: var(--one); }
+  .panes { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0 6px; }
+  @media (max-width: 680px) { .panes { grid-template-columns: 1fr; } }
+  canvas { display:block; width:100%; height:auto; background: var(--panel); border-radius: 3px;
+           touch-action: none; cursor: crosshair; }
+  #sphere { cursor: grab; }
+  .cap { font-size: 0.85rem; color: var(--dim); margin: 4px 2px 0; }
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin: 14px 0 8px; }
+  input[type=range] { flex: 1 1 220px; accent-color: var(--fg); }
+  .ends { display:flex; justify-content:space-between; font-size:0.9rem; width:100%; margin-top:-6px; }
+  button { font: inherit; font-size: 0.95rem; padding: 6px 14px; border: 1px solid var(--line);
+           background: transparent; color: var(--fg); border-radius: 3px; cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap:8px; margin: 12px 0; }
+  .stat { background:var(--panel); padding:8px 12px; border-radius:3px; }
+  .stat b { display:block; font-size:1.25rem; font-weight:normal; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 0.85rem; color: var(--dim); }
+  pre { background:var(--panel); padding:12px; border-radius:3px; white-space:pre-wrap;
+        font-size:0.85rem; margin: 10px 0; }
+  .note { border-left: 2px solid var(--zero); padding-left: 12px; margin-top: 22px; }
+  ul { padding-left: 1.2em; } li { margin: 0.3em 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Riemann sphere</h1>
+  <p class="dim">The complex plane with one point added, <span class="inf">∞</span>, wrapped onto a sphere.
+  Drag the point <b>z</b> on the plane, or drag the sphere to turn it. The second point is <b>w = 1/z</b>.</p>
+
+  <div class="panes">
+    <div>
+      <canvas id="plane" width="440" height="440"></canvas>
+      <div class="cap">The plane. The unit circle, the axes, and faint grey: the straight grid lines
+        <em>after</em> 1/z, which have become circles through <span class="zero">0</span>.</div>
+    </div>
+    <div>
+      <canvas id="sphere" width="440" height="440"></canvas>
+      <div class="cap">The sphere, resting with its equator in the plane. A ray from the north pole
+        <span class="inf">∞</span> through a point of the sphere meets the plane at z. Drag to turn.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label for="s" class="dim">walk</label>
+    <input id="s" type="range" min="0" max="1000" value="500">
+    <button id="anim" aria-pressed="false">Walk 0 → 1 → ∞</button>
+    <button id="reset">Back to z = 1</button>
+    <div class="ends"><span class="zero">0</span><span class="one">1</span><span class="inf">∞</span></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="zv">1</b><span>z</span></div>
+    <div class="stat"><b id="wv">1</b><span>w = 1/z</span></div>
+    <div class="stat"><b id="dv">0</b><span>chordal distance d(z, 1/z); the diameter is 2</span></div>
+    <div class="stat"><b id="lat">0°</b><span>latitude of z on the sphere (−90° is 0, +90° is ∞)</span></div>
+  </div>
+
+  <h2>What is being shown</h2>
+  <p>Stereographic projection sends each point of the unit sphere, except the north pole, along a
+  straight line from that pole to the plane through the equator. Every point of the plane is hit
+  exactly once. The pole itself is hit by nothing, so it is given the name <span class="inf">∞</span>:
+  not a number, a point. The south pole lands on <span class="zero">0</span>. The equator lands on the
+  unit circle, where <span class="one">1</span> sits.</p>
+  <p>The map <b>z → 1/z</b>, which has no meaning at 0 on the plane, is on the sphere simply a half-turn
+  about the axis through <span class="one">1</span> and −1. It swaps the poles. It carries straight lines
+  (which all pass through ∞) to circles through 0, and circles to circles. It is an isometry of the sphere,
+  so it preserves the chordal distance, the length of the straight chord between two points through the inside.</p>
+  <p>Its fixed points are exactly the two solutions of z² = 1: <span class="one">1</span> and −1, the
+  two ends of the axis. Every point of the unit circle is equidistant (√2) from 0 and from ∞, and 0 and ∞
+  themselves are as far apart as two points on the sphere can be: the diameter, 2. So the slider's walk
+  from 0 through 1 to ∞ is a quarter of a great circle, then another quarter, with the hinge in the middle.</p>
+
+  <h2>Checks run on load</h2>
+  <pre id="checks">running…</pre>
+
+  <div class="note">
+    <p><b>Where this came from.</b> A session that had been playing with the slogan "0 = 1 = ∞" as
+    metaphor. The slogan is false as arithmetic and stays false here: on the sphere 0 and ∞ are
+    distinct points at maximum separation. What is true, and what this page shows exactly, is weaker
+    and better: the three are points on one closed surface with no edge, there is a symmetry of that
+    surface exchanging 0 and ∞, and 1 is one of the two points the symmetry leaves where it was.</p>
+    <p><b>Left out, on purpose.</b> Other Möbius maps (the full group PSL(2,ℂ)), the second
+    fixed point's twin at −1 being drawn with equal weight, the metric on the sphere versus the
+    plane's, and any claim about physics. The projection is from the north pole onto the equatorial
+    plane; the version projecting onto the tangent plane at the south pole differs by a factor of 2
+    in |z| and nothing else.</p>
+  </div>
+</main>
+
+<script>
+(() => {
+'use strict';
+
+// ---- the extended plane and the sphere -------------------------------------
+// z is {re, im} or INF. Lift: stereographic from the north pole N=(0,0,1) onto
+// the plane Z=0, so z = (X + iY)/(1 - Z) and 0 is the south pole.
+const INF = Object.freeze({ inf: true });
+const isInf = z => z && z.inf === true;
+const C = (re, im) => ({ re, im });
+const abs2 = z => z.re * z.re + z.im * z.im;
+
+function lift(z) {
+  if (isInf(z)) return [0, 0, 1];
+  const r2 = abs2(z), d = 1 + r2;
+  return [2 * z.re / d, 2 * z.im / d, (r2 - 1) / d];
+}
+function drop(P) {
+  const [X, Y, Z] = P;
+  if (1 - Z < 1e-15) return INF;
+  return C(X / (1 - Z), Y / (1 - Z));
+}
+function inv(z) {
+  if (isInf(z)) return C(0, 0);
+  const r2 = abs2(z);
+  if (r2 === 0) return INF;
+  return C(z.re / r2, -z.im / r2);
+}
+// Chordal distance = Euclidean length of the chord between the lifted points.
+function chord(z, w) {
+  const a = lift(z), b = lift(w);
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+}
+// Closed form, for the self-check against the chord.
+function chordFormula(z, w) {
+  if (isInf(z) && isInf(w)) return 0;
+  if (isInf(z)) return 2 / Math.sqrt(1 + abs2(w));
+  if (isInf(w)) return 2 / Math.sqrt(1 + abs2(z));
+  return 2 * Math.hypot(z.re - w.re, z.im - w.im) / Math.sqrt((1 + abs2(z)) * (1 + abs2(w)));
+}
+const rotX180 = ([X, Y, Z]) => [X, -Y, -Z];
+
+// ---- state -------------------------------------------------------------------
+let z = C(1, 0);
+let arg = 0;                       // kept so the slider walks along a ray
+let yaw = -0.55, pitch = 0.42;     // camera
+let animating = false;
+
+const $ = id => document.getElementById(id);
+const plane = $('plane'), sphere = $('sphere');
+const pc = plane.getContext('2d'), sc = sphere.getContext('2d');
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+const fmt = v => {
+  if (isInf(v)) return '∞';
+  const f = x => (Math.abs(x) < 5e-4 ? '0' : x.toFixed(3).replace(/\.?0+$/, ''));
+  if (Math.abs(v.im) < 5e-4) return f(v.re);
+  const sign = v.im < 0 ? '−' : '+';
+  return `${f(v.re)} ${sign} ${f(Math.abs(v.im))}i`;
+};
+
+// ---- plane view ----------------------------------------------------------------
+const PR = 3;  // plane shows |z| <= 3
+function planeXY(c) {
+  const W = plane.width, ppu = (W / 2 - 24) / PR;
+  return [W / 2 + c.re * ppu, W / 2 - c.im * ppu, ppu];
+}
+function planeFromXY(px, py) {
+  const W = plane.width, ppu = (W / 2 - 24) / PR;
+  return C((px - W / 2) / ppu, (W / 2 - py) / ppu);
+}
+function drawPlane() {
+  const W = plane.width, H = plane.height;
+  pc.clearRect(0, 0, W, H);
+  const [cx, cy, ppu] = planeXY(C(0, 0));
+  pc.lineWidth = 1;
+
+  // images of the grid lines x = c and y = c under 1/z: circles through 0
+  pc.strokeStyle = css('--faint');
+  for (const c of [-2, -1, -0.5, 0.5, 1, 2]) {
+    const r = 1 / (2 * Math.abs(c));
+    pc.beginPath(); pc.arc(cx + ppu / (2 * c), cy, r * ppu, 0, 2 * Math.PI); pc.stroke();   // from x = c
+    pc.beginPath(); pc.arc(cx, cy + ppu / (2 * c), r * ppu, 0, 2 * Math.PI); pc.stroke();   // from y = c
+  }
+  // axes and unit circle
+  pc.strokeStyle = css('--dim');
+  pc.beginPath(); pc.moveTo(0, cy); pc.lineTo(W, cy); pc.moveTo(cx, 0); pc.lineTo(cx, H); pc.stroke();
+  pc.strokeStyle = css('--line');
+  pc.beginPath(); pc.arc(cx, cy, ppu, 0, 2 * Math.PI); pc.stroke();
+  // ticks
+  pc.fillStyle = css('--dim'); pc.font = '12px Georgia, serif'; pc.textAlign = 'center';
+  for (const t of [-3, -2, -1, 1, 2, 3]) {
+    pc.fillRect(cx + t * ppu - 0.5, cy - 4, 1, 8);
+    pc.fillText(String(t), cx + t * ppu, cy + 18);
+  }
+  // the three named points
+  dot(pc, cx, cy, css('--zero'), '0', -12, -8);
+  dot(pc, cx + ppu, cy, css('--one'), '1', 10, -8);
+  dot(pc, cx - ppu, cy, css('--line'), '−1', -14, -8);
+  pc.fillStyle = css('--inf'); pc.textAlign = 'right';
+  pc.fillText('∞ is every direction out of frame', W - 8, 16);
+
+  // z and w
+  const w = inv(z);
+  for (const [v, label, col] of [[w, 'w = 1/z', css('--inf')], [z, 'z', css('--fg')]]) {
+    if (isInf(v)) {
+      pc.fillStyle = col; pc.textAlign = 'right';
+      pc.fillText(label + ' = ∞', W - 8, 34);
+      continue;
+    }
+    const [x, y] = planeXY(v);
+    if (Math.hypot(x - cx, y - cy) > W / 2 + 10) {   // off the chart: an arrow at the rim
+      const a = Math.atan2(y - cy, x - cx), R = W / 2 - 10;
+      pc.strokeStyle = col; pc.lineWidth = 2;
+      pc.beginPath(); pc.moveTo(cx + (R - 18) * Math.cos(a), cy + (R - 18) * Math.sin(a));
+      pc.lineTo(cx + R * Math.cos(a), cy + R * Math.sin(a)); pc.stroke();
+      pc.lineWidth = 1;
+      continue;
+    }
+    pc.beginPath(); pc.arc(x, y, label === 'z' ? 7 : 5, 0, 2 * Math.PI);
+    pc.fillStyle = col; pc.fill();
+    pc.textAlign = 'left'; pc.fillText(label, x + 10, y - 8);
+  }
+}
+function dot(ctx, x, y, col, label, dx, dy) {
+  ctx.beginPath(); ctx.arc(x, y, 3.5, 0, 2 * Math.PI); ctx.fillStyle = col; ctx.fill();
+  ctx.textAlign = 'center'; ctx.fillText(label, x + dx, y + dy);
+}
+
+// ---- sphere view -------------------------------------------------------------
+function project([X, Y, Z]) {
+  const ca = Math.cos(yaw), sa = Math.sin(yaw), cb = Math.cos(pitch), sb = Math.sin(pitch);
+  const x1 = X * ca - Y * sa, y1 = X * sa + Y * ca;
+  const W = sphere.width, R = W * 0.30;
+  return [W / 2 + R * x1, W / 2 - R * (Z * cb - y1 * sb), y1 * cb + Z * sb]; // depth toward the viewer
+}
+function polyline(ctx, pts, colFront, colBack) {
+  for (let i = 1; i < pts.length; i++) {
+    const a = project(pts[i - 1]), b = project(pts[i]);
+    ctx.strokeStyle = (a[2] + b[2]) / 2 > 0 ? colFront : colBack;
+    ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+  }
+}
+function drawSphere() {
+  const W = sphere.width, H = sphere.height, R = W * 0.30;
+  sc.clearRect(0, 0, W, H);
+  sc.lineWidth = 1;
+  const faint = css('--faint'), dim = css('--dim'), line = css('--line');
+
+  // the plane Z = 0 as a grid, drawn first so it sits behind
+  for (let c = -2; c <= 2; c += 0.5) {
+    const L = Math.sqrt(9 - c * c);
+    polyline(sc, [[c, -L, 0], [c, L, 0]], faint, faint);
+    polyline(sc, [[-L, c, 0], [L, c, 0]], faint, faint);
+  }
+  // meridians and parallels
+  const N = 72;
+  for (let k = 0; k < 6; k++) {
+    const a = k * Math.PI / 6, pts = [];
+    for (let i = 0; i <= N; i++) { const t = 2 * Math.PI * i / N; pts.push([Math.sin(t) * Math.cos(a), Math.sin(t) * Math.sin(a), Math.cos(t)]); }
+    polyline(sc, pts, dim, faint);
+  }
+  for (const lat of [-60, -30, 30, 60]) {
+    const ph = lat * Math.PI / 180, r = Math.cos(ph), zz = Math.sin(ph), pts = [];
+    for (let i = 0; i <= N; i++) { const t = 2 * Math.PI * i / N; pts.push([r * Math.cos(t), r * Math.sin(t), zz]); }
+    polyline(sc, pts, dim, faint);
+  }
+  // equator = unit circle, heavier
+  { const pts = []; for (let i = 0; i <= N; i++) { const t = 2 * Math.PI * i / N; pts.push([Math.cos(t), Math.sin(t), 0]); }
+    sc.lineWidth = 1.5; polyline(sc, pts, line, faint); sc.lineWidth = 1; }
+  // outline
+  sc.strokeStyle = line; sc.beginPath(); sc.arc(W / 2, W / 2, R, 0, 2 * Math.PI); sc.stroke();
+
+  // the two points, their chord, and the stereographic rays
+  const w = inv(z), P = lift(z), Q = lift(w), Np = project([0, 0, 1]);
+  const ray = (v, V, col) => {
+    sc.setLineDash([4, 4]); sc.strokeStyle = col;
+    const end = isInf(v) ? [0, 0, 1] : (abs2(v) <= 9 ? [v.re, v.im, 0] : V);
+    const a = project(end);
+    sc.beginPath(); sc.moveTo(Np[0], Np[1]); sc.lineTo(a[0], a[1]); sc.stroke();
+    sc.setLineDash([]);
+    if (!isInf(v) && abs2(v) <= 9) { sc.fillStyle = col; sc.beginPath(); sc.arc(a[0], a[1], 3, 0, 2 * Math.PI); sc.fill(); }
+  };
+  ray(w, Q, css('--inf')); ray(z, P, css('--fg'));
+  { const a = project(P), b = project(Q);
+    sc.strokeStyle = css('--one'); sc.lineWidth = 1.5;
+    sc.beginPath(); sc.moveTo(a[0], a[1]); sc.lineTo(b[0], b[1]); sc.stroke(); sc.lineWidth = 1; }
+
+  sc.font = '13px Georgia, serif';
+  const mark = (V, col, label, r, dx, dy) => {
+    const p = project(V);
+    sc.globalAlpha = p[2] >= 0 ? 1 : 0.45;
+    sc.fillStyle = col; sc.beginPath(); sc.arc(p[0], p[1], r, 0, 2 * Math.PI); sc.fill();
+    sc.textAlign = 'left'; sc.fillText(label, p[0] + dx, p[1] + dy);
+    sc.globalAlpha = 1;
+  };
+  mark([0, 0, 1], css('--inf'), '∞', 4, 8, -6);
+  mark([0, 0, -1], css('--zero'), '0', 4, 8, 14);
+  mark([1, 0, 0], css('--one'), '1', 4, 8, -6);
+  mark([-1, 0, 0], line, '−1', 3, -22, -6);
+  mark(Q, css('--inf'), 'w', 5, 9, 4);
+  mark(P, css('--fg'), 'z', 6, 9, 4);
+}
+
+// ---- readouts ----------------------------------------------------------------
+function update() {
+  const w = inv(z);
+  $('zv').textContent = fmt(z);
+  $('wv').textContent = fmt(w);
+  $('dv').textContent = chord(z, w).toFixed(4);
+  const Z = lift(z)[2];
+  $('lat').textContent = (Math.asin(Math.max(-1, Math.min(1, Z))) * 180 / Math.PI).toFixed(1) + '°';
+  drawPlane(); drawSphere();
+}
+function setFromSlider(s) {           // s in [0,1]: |z| = tan(sπ/2), 0 → 1 → ∞
+  if (s >= 1) { z = INF; return; }
+  const r = Math.tan(s * Math.PI / 2);
+  z = C(r * Math.cos(arg), r * Math.sin(arg));
+}
+function sliderFromZ() {
+  if (isInf(z)) return 1000;
+  return Math.round(1000 * Math.atan(Math.sqrt(abs2(z))) / (Math.PI / 2));
+}
+
+// ---- interaction -------------------------------------------------------------
+const slider = $('s');
+slider.addEventListener('input', () => { setFromSlider(slider.value / 1000); update(); });
+
+let dragZ = false;
+const planePt = e => { const r = plane.getBoundingClientRect();
+  return planeFromXY((e.clientX - r.left) * plane.width / r.width, (e.clientY - r.top) * plane.height / r.height); };
+plane.addEventListener('pointerdown', e => { dragZ = true; plane.setPointerCapture(e.pointerId); moveZ(e); });
+plane.addEventListener('pointermove', e => { if (dragZ) moveZ(e); });
+plane.addEventListener('pointerup', () => { dragZ = false; });
+function moveZ(e) {
+  z = planePt(e);
+  if (abs2(z) > 0) arg = Math.atan2(z.im, z.re);
+  slider.value = sliderFromZ();
+  update();
+}
+
+let dragS = null;
+sphere.addEventListener('pointerdown', e => { dragS = [e.clientX, e.clientY]; sphere.setPointerCapture(e.pointerId); sphere.style.cursor = 'grabbing'; });
+sphere.addEventListener('pointermove', e => {
+  if (!dragS) return;
+  yaw += (e.clientX - dragS[0]) * 0.01;
+  pitch = Math.max(-1.4, Math.min(1.4, pitch + (e.clientY - dragS[1]) * 0.01));
+  dragS = [e.clientX, e.clientY]; drawSphere();
+});
+sphere.addEventListener('pointerup', () => { dragS = null; sphere.style.cursor = 'grab'; });
+
+$('reset').addEventListener('click', () => { z = C(1, 0); arg = 0; slider.value = 500; update(); });
+
+const animBtn = $('anim');
+let t0 = null;
+function step(ts) {
+  if (!animating) return;
+  if (t0 === null) t0 = ts;
+  const s = ((ts - t0) / 9000) % 1;
+  slider.value = Math.round(1000 * s); setFromSlider(s); update();
+  requestAnimationFrame(step);
+}
+animBtn.addEventListener('click', () => {
+  animating = !animating; animBtn.setAttribute('aria-pressed', String(animating));
+  t0 = null; if (animating) requestAnimationFrame(step);
+});
+
+// ---- self-checks ---------------------------------------------------------------
+function selfChecks() {
+  const out = [];
+  let rng = 20261004;
+  const rand = () => { rng = (rng * 1664525 + 1013904223) >>> 0; return rng / 4294967296; };
+  const randZ = (scale = 4) => C((rand() - 0.5) * 2 * scale, (rand() - 0.5) * 2 * scale);
+  const line = (ok, text) => out.push((ok ? '✓' : '✗') + ' ' + text);
+  const dz = (a, b) => (isInf(a) || isInf(b)) ? (isInf(a) && isInf(b) ? 0 : Infinity) : Math.hypot(a.re - b.re, a.im - b.im);
+
+  // 1. stereographic round trip. Near points first; then far points, where the
+  //    sphere crowds everything with |z| > 1e5 into a cap ~2e-10 high under the
+  //    pole, so 1 - Z cancels and doubles lose about seven digits. The first
+  //    version of this check lumped both together at 1e-9 and failed at 5.2e-7;
+  //    that failure was the geometry, not the code, so it is now stated.
+  let e1 = 0, e1far = 0, capHeight = 1;
+  for (let i = 0; i < 2000; i++) {
+    const v = randZ(4), back = drop(lift(v));
+    e1 = Math.max(e1, dz(v, back) / (1 + Math.hypot(v.re, v.im)));
+  }
+  for (let i = 0; i < 500; i++) {
+    const v = randZ(1e5); if (Math.hypot(v.re, v.im) < 1e4) continue;
+    const P = lift(v), back = drop(P);
+    e1far = Math.max(e1far, dz(v, back) / Math.hypot(v.re, v.im));
+    capHeight = Math.min(capHeight, 1 - P[2]);
+  }
+  line(e1 < 1e-12, `plane → sphere → plane returns the point for |z| ≤ 4√2; worst relative error ${e1.toExponential(1)} over 2000 points`);
+  line(e1far < 1e-5, `for 10⁴ < |z| < 1.4×10⁵ the round trip is only good to ${e1far.toExponential(1)}: those points all sit within ${capHeight.toExponential(1)} of the pole, and 1 − Z cancels in doubles. The sphere makes ∞ cheap and large finite numbers expensive`);
+
+  // 2. 1/z on the sphere is the half-turn about the axis through ±1
+  let e2 = 0;
+  for (let i = 0; i < 2000; i++) {
+    const v = randZ(), a = lift(inv(v)), b = rotX180(lift(v));
+    e2 = Math.max(e2, Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]));
+  }
+  e2 = Math.max(e2, Math.hypot(...lift(inv(INF)).map((c, i) => c - rotX180(lift(INF))[i])));
+  e2 = Math.max(e2, Math.hypot(...lift(inv(C(0, 0))).map((c, i) => c - rotX180(lift(C(0, 0)))[i])));
+  line(e2 < 1e-12, `lift(1/z) = R_x(180°)·lift(z), 0 and ∞ included; worst error ${e2.toExponential(1)}`);
+
+  // 3. fixed points are exactly ±1
+  const f1 = dz(inv(C(1, 0)), C(1, 0)), f2 = dz(inv(C(-1, 0)), C(-1, 0));
+  let minElsewhere = Infinity;
+  for (let i = -200; i <= 200; i++) for (let j = -200; j <= 200; j++) {
+    const v = C(i / 50, j / 50);
+    if (dz(v, C(1, 0)) < 1e-9 || dz(v, C(-1, 0)) < 1e-9 || abs2(v) === 0) continue;
+    minElsewhere = Math.min(minElsewhere, chord(v, inv(v)));
+  }
+  line(f1 === 0 && f2 === 0 && minElsewhere > 0,
+    `1/z fixes 1 and −1 exactly; on a 401×401 grid every other point moves (least move ${minElsewhere.toExponential(1)}), as z² = 1 has two roots`);
+
+  // 4. chordal distances
+  const d0inf = chord(C(0, 0), INF), d10 = chord(C(1, 0), C(0, 0)), d1inf = chord(C(1, 0), INF);
+  let eqOK = true;
+  for (let i = 0; i < 360; i += 7) { const t = i * Math.PI / 180, u = C(Math.cos(t), Math.sin(t));
+    if (Math.abs(chord(u, C(0, 0)) - Math.SQRT2) > 1e-12 || Math.abs(chord(u, INF) - Math.SQRT2) > 1e-12) eqOK = false; }
+  line(Math.abs(d0inf - 2) < 1e-12 && Math.abs(d10 - Math.SQRT2) < 1e-12 && Math.abs(d1inf - Math.SQRT2) < 1e-12 && eqOK,
+    `d(0,∞) = ${d0inf.toFixed(12)} (the diameter); d(1,0) = d(1,∞) = ${d10.toFixed(12)} = √2; every point of the unit circle is equidistant from 0 and ∞`);
+
+  let e4 = 0, e4b = 0;
+  for (let i = 0; i < 2000; i++) {
+    const a = randZ(), b = i % 5 === 0 ? INF : randZ();
+    e4 = Math.max(e4, Math.abs(chord(a, b) - chord(inv(a), inv(b))));
+    e4b = Math.max(e4b, Math.abs(chord(a, b) - chordFormula(a, b)));
+  }
+  line(e4 < 1e-12, `1/z is an isometry: d(z,w) = d(1/z,1/w); worst error ${e4.toExponential(1)} over 2000 pairs (∞ included)`);
+  line(e4b < 1e-12, `chord length agrees with the closed form 2|z−w|/√((1+|z|²)(1+|w|²)); worst error ${e4b.toExponential(1)}`);
+
+  // 5. circles and lines
+  let e5 = 0;
+  for (let k = 0; k < 50; k++) {
+    const c = randZ(2), r = 0.2 + rand() * 1.5;
+    if (Math.abs(Math.hypot(c.re, c.im) - r) < 0.05) continue;         // skip circles through 0
+    const img = []; for (let i = 0; i < 48; i++) { const t = 2 * Math.PI * i / 48; img.push(inv(C(c.re + r * Math.cos(t), c.im + r * Math.sin(t)))); }
+    const [A, B, D] = [img[0], img[16], img[32]];                        // circle through three images
+    const ax = A.re, ay = A.im, bx = B.re, by = B.im, cx = D.re, cy = D.im;
+    const det = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    const ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / det;
+    const uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / det;
+    const rr = Math.hypot(ax - ux, ay - uy);
+    for (const p of img) e5 = Math.max(e5, Math.abs(Math.hypot(p.re - ux, p.im - uy) - rr) / rr);
+  }
+  line(e5 < 1e-9, `circles not through 0 go to circles; worst relative departure from a circle ${e5.toExponential(1)}`);
+  let e6 = 0;
+  for (let i = -40; i <= 40; i++) { if (i === 0) continue; const w = inv(C(1, i / 4)); e6 = Math.max(e6, Math.abs(Math.hypot(w.re - 0.5, w.im) - 0.5)); }
+  line(e6 < 1e-12, `the line Re z = 1 (through ∞) goes to the circle |w − ½| = ½ (through 0); worst error ${e6.toExponential(1)}`);
+
+  // 6. the walk: along the positive real axis, d(z,1/z) is 0 only at z = 1
+  let best = Infinity, at = null;
+  for (let s = 1; s < 1000; s++) { const r = Math.tan(s / 1000 * Math.PI / 2), d = chord(C(r, 0), C(1 / r, 0)); if (d < best) { best = d; at = r; } }
+  // tan(π/4) in doubles is 0.9999999999999999, so the slider's midpoint is not
+  // exactly 1 and the first version of this check (best === 0) failed by 1e-16.
+  const exact = chord(C(1, 0), inv(C(1, 0)));
+  line(Math.abs(at - 1) < 1e-12 && best < 1e-12 && exact === 0,
+    `on the slider's walk 0 → ∞ the two points come together once, at z = ${at} (tan(π/4) in doubles), distance ${best.toExponential(1)}; at z = 1 exactly the distance is ${exact}`);
+
+  const bad = out.filter(l => l.startsWith('✗')).length;
+  $('checks').textContent = out.join('\n') + `\n\n${out.length - bad} of ${out.length} checks pass.`;
+}
+
+update();
+selfChecks();
+})();
+</script>
+</body>
+</html>
