@@ -38,6 +38,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
+- **`empty-set.html`**: an empty set that grows. Start from `{}` and press Grow; each step
+  builds one new set from what is already there, and it becomes the counting numbers. Two
+  rules side by side: *keep everything* (von Neumann, `3 = {0, 1, 2}`), where the set gains
+  one member a step but takes twice as many braces to write, and *keep only the last*
+  (Zermelo, `3 = {2}`), which stays one member wide. No dependencies.
+
 - **`flock-in-a-maze.html`**: sixty birds and a maze none of them can see. A scent seeps from
   the exit through the doorways, and the flock finds its way using only local rules: no map, no
   memory, no leader. The page lists what was deliberately left out. Made from a Noise Lab
