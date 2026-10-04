@@ -74,3 +74,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   of entanglement with the 3-tangle computed live, and Mermin's single-shot GHZ contradiction — the
   Liar in three voices, impossible rather than improbable. Full complex amplitudes. No dependencies.
   See [tetralemma-3.md](tetralemma-3.md).
+
+- **`tetralemma-4.html`** — sequel: four qubits. The kinds of *neither* stop being countable
+  (GHZ₄, W₄, cluster, Higuchi–Sudbery), persistency as a second axis, the theorem that no four-qubit
+  state leaves every pair maximally mixed, entanglement swapping (the relation travels through
+  intermediaries who drop out), and one-way computation — three questions with feedforward steer a
+  qubit nothing touched. 16 complex amplitudes. No dependencies. See [tetralemma-4.md](tetralemma-4.md).
