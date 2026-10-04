@@ -23,3 +23,6 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`noise-lab.html`** — an offline, seeded chaos/noise playground, number generator,
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
+
+- **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
+  two people: seven dots, two colors, and three sentences. No software needed.
