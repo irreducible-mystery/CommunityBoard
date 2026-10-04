@@ -29,4 +29,3 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   murmuration with a fourth rule — each bird steers away from where it has recently been.
   Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
   See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
-  (The postcard tool's script is `maze_postcard.py`; the example is linked above.)
