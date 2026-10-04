@@ -1,0 +1,244 @@
+{
+  "axes": {
+    "PICTURE": "two DESCRIPTIONS of one object (equivalence often provable)",
+    "INSIDE/OUT": "participant view vs observer view (self-reference lives here)",
+    "SCALE": "truth changes with degrees of freedom / dimension (renormalization)",
+    "RESOLUTION": "how finely you look: discrete vs continuous"
+  },
+  "entries": [
+    {
+      "name": "Our Gamma-equation (wave / particle)",
+      "field": "this project",
+      "axis": [
+        "PICTURE",
+        "RESOLUTION"
+      ],
+      "multiplicity": "2 here, but Gamma is a whole LINE of values \u2014 the binary is a slice",
+      "pic_A": "PARTICLE/fusion: Gamma in N0, a multiplicity (discrete count)",
+      "pic_B": "WAVE/dynamics: Gamma in R, a continuous coordinate",
+      "primary": "NEITHER (our explicit claim). v9 corpus leaned particle as primary; v10 demotes that to a chart-choice.",
+      "equiv_proven": true,
+      "equiv": "Same monic quadratic x^2-x-Gamma; based ring Z[t]/(t^2-t-a) is the integer points of the continuous family.",
+      "seam_invariant": "phi+psi=1 (center 1/2)",
+      "seam_tradeoff": "spread sqrt(1/4+Gamma) is free; integer-count and continuous-flow can't be held in one breath",
+      "gloss": "Counting whole things vs sliding a dial \u2014 same equation underneath.",
+      "analogy": "Stairs (you can only stand on a step) vs a ramp (any height). Same climb."
+    },
+    {
+      "name": "Wave / Particle (quantum)",
+      "field": "physics",
+      "axis": [
+        "PICTURE"
+      ],
+      "multiplicity": "2 descriptions, but position alone is already 3 (x,y,z) \u2014 picture-count and dimension-count are different things",
+      "pic_A": "PARTICLE: localized, countable; position-definite",
+      "pic_B": "WAVE: extended amplitude; momentum-definite",
+      "primary": "NEITHER (Bohr complementarity). Yet textbooks pick one per problem \u2014 the smuggle is pedagogical, not physical.",
+      "equiv_proven": true,
+      "equiv": "One state vector, two bases (position/momentum), related by Fourier; Dirac/von Neumann exact.",
+      "seam_invariant": "the state vector and its norm = 1",
+      "seam_tradeoff": "Heisenberg dx*dp >= hbar/2 \u2014 no simultaneous sharpness",
+      "gloss": "A thing that is here-and-countable OR spread-out-and-rhythmic, never crisply both.",
+      "analogy": "A photo (frozen position) vs a song (a frequency). You can't freeze a song."
+    },
+    {
+      "name": "Time / Frequency (Fourier)",
+      "field": "math / signal",
+      "axis": [
+        "PICTURE",
+        "RESOLUTION"
+      ],
+      "multiplicity": "2, but generalizes: any orthonormal basis is another 'picture' (wavelets, etc.) \u2014 infinitely many charts",
+      "pic_A": "TIME: the signal f(t), 'when'",
+      "pic_B": "FREQUENCY: F(omega), 'what rates'",
+      "primary": "NEITHER \u2014 fully symmetric (Fourier is its own near-inverse).",
+      "equiv_proven": true,
+      "equiv": "Fourier = unitary isomorphism L2->L2, fully invertible.",
+      "seam_invariant": "total energy (Parseval): int|f|^2 = int|F|^2",
+      "seam_tradeoff": "Gabor limit: can't be sharp in both time and frequency. SAME THEOREM as Heisenberg.",
+      "gloss": "When something happens vs what rhythms it's made of.",
+      "analogy": "A drum HIT (sharp in time) vs a sustained TONE (sharp in pitch). Pure hit has no pitch; pure tone has no moment."
+    },
+    {
+      "name": "Heisenberg / Schrodinger (QM formulations)",
+      "field": "physics",
+      "axis": [
+        "PICTURE"
+      ],
+      "multiplicity": "2 named, plus the 'interaction picture' = a 3rd. So really many; 2 is convention.",
+      "pic_A": "MATRIX: operators evolve, states fixed",
+      "pic_B": "WAVE: states evolve, operators fixed",
+      "primary": "NEITHER \u2014 provably same predictions. Historical primacy fight (Heisenberg vs Schrodinger 1926) was ego, not physics.",
+      "equiv_proven": true,
+      "equiv": "Equivalent (von Neumann); related by a time-dependent unitary \u2014 a frame change.",
+      "seam_invariant": "all expectation values <A>(t)",
+      "seam_tradeoff": "time-dependence must live somewhere (states OR operators), not nowhere, not fully both",
+      "gloss": "Does the movie move, or does the camera move? Same movie.",
+      "analogy": "Watching scenery from a moving train: say the train moves, or say the world slides past. Both correct."
+    },
+    {
+      "name": "Frequentist / Bayesian (probability)  [CONTROL]",
+      "field": "math / inference",
+      "axis": [
+        "INSIDE/OUT"
+      ],
+      "multiplicity": "genuinely 2 stances, and they do NOT merge \u2014 a real fork, not a chart-choice",
+      "pic_A": "FREQUENTIST: probability = countable long-run frequency (OUTSIDE/objective)",
+      "pic_B": "BAYESIAN: probability = degree of belief (INSIDE/participant)",
+      "primary": "Each camp claims primacy for itself \u2014 and neither can be dislodged, BECAUSE there is no proven equivalence to appeal to.",
+      "equiv_proven": false,
+      "equiv": "NOT a clean iso. Shared Kolmogorov axioms; agree numerically in large samples (Bernstein-von Mises) but disagree on what probability IS. HONEST GAP.",
+      "seam_invariant": "only the shared axioms (algebra), NOT a conserved quantity",
+      "seam_tradeoff": "can't have both 'pure objective frequency' AND 'applies to one-off events' \u2014 a forced choice, not a theorem",
+      "gloss": "Probability as 'how often it happens if you repeat' vs 'how sure I am right now'.",
+      "analogy": "A coin's 50% as 'half of a million flips' vs 'my confidence on THIS flip'. The single flip has no frequency.",
+      "note": "CONTROL CASE + a clue: this duality lives on the INSIDE/OUTSIDE axis, not PICTURE. The shape is weaker here. Open question: is it weak because equiv is unproven, OR because inside/outside dualities are structurally different from picture dualities? >>> NEW HYPOTHESIS from Kelly's axis idea."
+    },
+    {
+      "name": "Energy / Entropy (Legendre / thermo)",
+      "field": "physics",
+      "axis": [
+        "PICTURE"
+      ],
+      "multiplicity": "a whole FAMILY of potentials (U,F,G,H...) \u2014 pick which variables are control. Many charts.",
+      "pic_A": "ENERGY U(S,V), control = S,V",
+      "pic_B": "FREE ENERGY F(T,V)=U-TS, control = T,V",
+      "primary": "NEITHER \u2014 you choose by which variable you can hold fixed in the lab.",
+      "equiv_proven": true,
+      "equiv": "Legendre transform, fully invertible.",
+      "seam_invariant": "the physical equilibrium state",
+      "seam_tradeoff": "per conjugate pair you fix ONE and read the other; can't fix both",
+      "gloss": "Describe a gas by its energy-and-disorder, or by its temperature-and-energy. Same gas.",
+      "analogy": "Describing a hill by height-at-each-point vs by slope-at-each-point. Same hill, different handle."
+    },
+    {
+      "name": "Geometry / Algebra (Stone / Gelfand)",
+      "field": "math",
+      "axis": [
+        "PICTURE"
+      ],
+      "multiplicity": "2 categories, but the equivalence is the whole POINT \u2014 maximal merger.",
+      "pic_A": "SPACE X (points, geometry)",
+      "pic_B": "ALGEBRA C(X) (operations on functions)",
+      "primary": "NEITHER \u2014 contravariant EQUIVALENCE makes them literally interchangeable.",
+      "equiv_proven": true,
+      "equiv": "Gelfand & Stone: contravariant equivalences of categories.",
+      "seam_invariant": "the categorical structure (maps preserved, reversed)",
+      "seam_tradeoff": "arrows REVERSE across the seam (contravariance)",
+      "gloss": "A shape, or the catalogue of all measurements you can make on it. Same information.",
+      "analogy": "A city, vs the complete phone book + map + every fact about it. Reconstruct either from the other."
+    },
+    {
+      "name": "Micro / Macro (statistical mechanics)  [SCALE]",
+      "field": "physics",
+      "axis": [
+        "SCALE"
+      ],
+      "multiplicity": "not really 2 \u2014 a CONTINUUM of scales; 'micro vs macro' is two ends of a dial (renormalization flow)",
+      "pic_A": "MICRO: 10^23 particles, positions+momenta (reversible, no arrow of time)",
+      "pic_B": "MACRO: temperature, pressure, entropy (irreversible, has an arrow)",
+      "primary": "Reductionists smuggle MICRO as primary. But temperature is MEANINGLESS for 3 particles \u2014 the macro concepts don't even EXIST at micro scale.",
+      "equiv_proven": false,
+      "equiv": "NOT an equivalence \u2014 it is a PROJECTION (many micro-states -> one macro-state). Information is LOST going up. This is a different relation than the picture-dualities.",
+      "seam_invariant": "conserved totals (energy, particle number) survive both scales",
+      "seam_tradeoff": "you cannot have both full microscopic detail AND a sharp macroscopic concept like temperature \u2014 temperature only emerges by THROWING AWAY detail",
+      "gloss": "Tracking every molecule vs reading one thermometer. The thermometer fact isn't 'in' any single molecule.",
+      "analogy": "A crowd's MOOD vs each person's exact thoughts. 'The crowd is angry' is real and is in NO single person.",
+      "note": "Directly answers Kelly's 'truth changes with degrees of freedom'. Here truth is SCALE-RELATIVE: temperature is true at high DOF, undefined at low DOF. The seam-shape PARTLY holds (invariant + tradeoff) but the relation is projection, not equivalence. CRACK to examine, not paper over."
+    },
+    {
+      "name": "Syntax / Semantics (logic, language)",
+      "field": "logic / linguistics",
+      "axis": [
+        "PICTURE",
+        "INSIDE/OUT"
+      ],
+      "multiplicity": "2 classically, but model theory gives MANY models (semantics) for one syntax \u2014 multiplicity is real",
+      "pic_A": "SYNTAX: symbols + rules, pure form, provability (|-)",
+      "pic_B": "SEMANTICS: meaning, truth in a model (|=)",
+      "primary": "Formalists smuggle SYNTAX primary; Platonists smuggle SEMANTICS primary.",
+      "equiv_proven": "PARTIAL",
+      "equiv": "Goedel COMPLETENESS: for first-order logic, provable iff true-in-all-models (|- = |=). A REAL equivalence. BUT Goedel INCOMPLETENESS: for arithmetic, there are true statements not provable \u2014 the seam DOES NOT fully close. The gap is a THEOREM.",
+      "seam_invariant": "logical consequence on the closable part (completeness region)",
+      "seam_tradeoff": "for rich-enough systems, truth EXCEEDS proof \u2014 you cannot have both 'every truth is provable' AND 'the system is consistent + expressive'",
+      "gloss": "The rules of the game vs what the game is about. Mostly they match \u2014 but in rich systems, some truths can never be proven from inside.",
+      "analogy": "A rulebook vs the actual play. For checkers the rulebook captures everything; for life it never quite does.",
+      "note": "HUGE for Kelly's frame: Goedel is the FIRST-CLASS proof that the gap between truth and proof is STRUCTURAL and UN-CLOSABLE for any rich system. This is the 'unnameable cannot be proven, by construction' \u2014 but as a hard theorem about formal systems, NOT a mystical claim. The inside/outside axis is exactly why: a system can't fully see itself from inside. [PROVEN that the gap exists.]"
+    },
+    {
+      "name": "Special / General Relativity (flat / curved)  [SCALE]",
+      "field": "physics",
+      "axis": [
+        "SCALE",
+        "RESOLUTION"
+      ],
+      "multiplicity": "not 2 \u2014 a LIMIT: SR is GR at zero curvature / locally. One theory, scale-dependent face.",
+      "pic_A": "SPECIAL: flat spacetime, global inertial frames",
+      "pic_B": "GENERAL: curved spacetime, only LOCAL inertial frames",
+      "primary": "SR is not 'wrong' and GR 'right' \u2014 SR is the local/tangent picture, true in the small. Primacy is a domain-of-validity question, not truth-vs-false.",
+      "equiv_proven": "LIMIT",
+      "equiv": "SR = GR restricted to a tangent space / vanishing curvature. A LIMIT relation, not an equivalence. Every curved space looks flat up close (the equivalence principle IS this statement).",
+      "seam_invariant": "the speed of light c; local Lorentz invariance (true in BOTH)",
+      "seam_tradeoff": "you cannot have both a GLOBAL inertial frame AND real gravity/curvature \u2014 gravity is exactly the failure of global flatness",
+      "gloss": "Physics on a flat table vs physics on a curved Earth. Up close the Earth looks flat and the table-rules work; zoomed out they don't.",
+      "analogy": "A city map (flat, fine for your block) vs a globe (true overall). Your block isn't 'wrong', it's just the local chart.",
+      "note": "Pure ATLAS structure in the geometric sense: GR literally needs an atlas of local flat charts. Kelly's word, again literal. The 'no single chart covers the manifold' fact IS general relativity."
+    },
+    {
+      "name": "Discrete / Continuous (calculus: sum / integral)  [RESOLUTION]",
+      "field": "math",
+      "axis": [
+        "RESOLUTION"
+      ],
+      "multiplicity": "a LIMIT of finer and finer partitions \u2014 infinitely many intermediate charts",
+      "pic_A": "DISCRETE: a finite sum of rectangles (Riemann), countable pieces",
+      "pic_B": "CONTINUOUS: the integral, the limit as pieces -> 0 width",
+      "primary": "NEITHER is wrong: the discrete sum APPROACHES the integral. Numerical analysts use discrete; analysts use continuous. Same area.",
+      "equiv_proven": "LIMIT",
+      "equiv": "The integral is DEFINED as the limit of the discrete sums (Riemann/Lebesgue). Not a bijection, not a projection \u2014 a LIMIT: refine the partition, the sum CONVERGES to the integral. Information is ADDED monotonically as you refine; nothing is lost, nothing is blocked.",
+      "seam_invariant": "the total (the area / the measure) \u2014 the limit value all refinements agree on",
+      "seam_tradeoff": "finite computability vs exactness: a finite sum is computable but approximate; the exact value needs an infinite limit you can't finish by hand",
+      "gloss": "Adding up tiny blocks vs the smooth total they're heading toward.",
+      "analogy": "Counting staircase steps vs the ramp they approximate \u2014 add more, shorter steps and the staircase BECOMES the ramp in the limit.",
+      "note": "THE FOURTH-RELATION TEST CASE. Relation = REFINEMENT/LIMIT: info added monotonically, two ends joined by a convergence process. Distinct from equivalence (bijective), projection (lossy), un-closable (blocked)."
+    },
+    {
+      "name": "Observer / Observed (quantum measurement)  [INSIDE/OUT]",
+      "field": "physics",
+      "axis": [
+        "INSIDE/OUT",
+        "SCALE"
+      ],
+      "multiplicity": "2 named (system, apparatus) but the 'cut' between them is MOVABLE \u2014 infinitely many places to draw it (von Neumann chain)",
+      "pic_A": "OBSERVED: the quantum system, unitary, superposed (described from OUTSIDE)",
+      "pic_B": "OBSERVER: the measuring apparatus + you, which sees a definite outcome (INSIDE)",
+      "primary": "The 'measurement problem': no agreed primary. Where the quantum/classical CUT goes is not fixed by the theory \u2014 it is CHOSEN. That movability is the problem.",
+      "equiv_proven": false,
+      "equiv": "NOT resolved. Unitary QM (outside view) predicts superposition; experience (inside view) is definite. The transition ('collapse') is not derived from within unitary QM \u2014 it is added by hand or pushed off (many-worlds, decoherence soften but don't fully close it). A genuine OPEN seam, not just unproven.",
+      "seam_invariant": "the Born-rule probabilities (both views must reproduce them) and unitarity below the cut",
+      "seam_tradeoff": "you cannot have BOTH a fully unitary universe (no collapse, everything superposed) AND your single definite experienced outcome \u2014 not within one non-mystical account everyone accepts",
+      "gloss": "The world as all-possibilities-at-once vs your single actual experience of one outcome.",
+      "analogy": "A die mid-roll (all faces 'live') vs the face you actually read. Physics describes the roll; you only ever live ONE face.",
+      "note": "STRESSES UN-CLOSABLE. Here the inside (definite experience) and outside (unitary superposition) views have NO agreed bridge. The cut is movable = the seam won't localize. This is the physics cousin of Goedel: the system (universe) described from inside (you, an observer IN it) can't be fully closed from the outside view. [OPEN \u2014 and arguably un-closable in principle.]"
+    },
+    {
+      "name": "Map / Territory  (representation / reality)  [INSIDE/OUT]",
+      "field": "epistemology / general",
+      "axis": [
+        "INSIDE/OUT",
+        "SCALE"
+      ],
+      "multiplicity": "endlessly many maps of one territory (scales, projections, themes) \u2014 Borges' 1:1 map IS the territory and so useless",
+      "pic_A": "MAP: the model/representation (finite, usable, always a simplification)",
+      "pic_B": "TERRITORY: the thing itself (infinite detail, never fully captured)",
+      "primary": "Korzybski: 'the map is not the territory.' The map is NEVER primary over what it models; treating the model as the reality is the core error.",
+      "equiv_proven": false,
+      "equiv": "NEVER an equivalence \u2014 by construction a usable map OMITS detail. A 1:1 map is the territory itself (Borges) and therefore useless as a map. The gap is PERMANENT: any usable representation is strictly smaller than what it represents.",
+      "seam_invariant": "whatever the map gets RIGHT \u2014 the relations it faithfully preserves (its accuracy domain)",
+      "seam_tradeoff": "usable AND complete is impossible: to be usable a map must omit; to be complete it must equal the territory and lose all usefulness",
+      "gloss": "The model vs the real thing. The model is always smaller, on purpose \u2014 that's what makes it useful and what makes it incomplete.",
+      "analogy": "A subway map (clear, usable, geographically wrong) vs the actual tangled city. The lie is what makes it readable.",
+      "note": "STRESSES UN-CLOSABLE + names the GENERAL form. This is the everyday-language version of Goedel/observer: any inside representation of a whole it is part of is necessarily incomplete. Connects directly to Kelly's frame: the unnameable = the territory no map ever fully closes. PROVABLE that the gap is permanent (a complete map = the territory), un-provable what the omitted remainder fully IS."
+    }
+  ]
+}

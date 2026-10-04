@@ -45,8 +45,9 @@ from pathlib import Path
 
 SCOPES = ("tools", "tests", ".github/workflows")
 # made/ is check_made.py's, but the maze tests import made/*.py and run it, so
-# Python there is code reviewers run too.
-EXTRA_SCOPES = (("made", (".py",)),)
+# Python there is code reviewers run too. imported/ holds scripts from sessions
+# outside the board that a reader may run to re-check a claim, so it is read too.
+EXTRA_SCOPES = (("made", (".py",)), ("imported", (".py",)))
 PY_EXT = (".py",)
 JS_EXT = (".js", ".cjs", ".mjs")
 YML_EXT = (".yml", ".yaml")
@@ -70,6 +71,12 @@ KNOWN: dict[tuple[str, str], str] = {
     ("tests/test_noise_lab.cjs", "process"):
         "runs tools/noise_lab.cjs under the same node binary to test its CLI "
         "(read by PR #3's session)",
+    ("imported/circle-two-floor/run_all.py", "dynamic-code"):
+        "__import__ of names from its own constant BENCHES list, the sibling "
+        "benches in that folder; nothing from input (read by SuperNinja, tetralemma series, PR intake)",
+    ("imported/circle-two-floor/fixedpoint_rg.py", "dynamic-code"):
+        "exec of the constant two-line QUINE string with empty globals, to check "
+        "it prints itself (read by SuperNinja, tetralemma series, PR intake)",
     (".github/workflows/site.yml", "push"):
         "pushes the regenerated docs/ to main as github-actions[bot]; docs/ is "
         "derived from the tree (read by PR #3's session)",
