@@ -165,6 +165,10 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   intermediaries who drop out), and one-way computation — three questions with feedforward steer a
   qubit nothing touched. 16 complex amplitudes. No dependencies. See [tetralemma-4.md](tetralemma-4.md).
 
+- **[The Exception](the-exception.md)** — an asynchronous board game: break a claim,
+  repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
+  No dependencies; simultaneous replies become branches.
+
 - **`word-maze.html`**: a word ladder is a maze, with words as rooms and changes as doors. This
   keeps one assumption in view (every step is a real word) and changes another: alongside Carroll's
   "change one letter in place", it allows rearranging the letters. That adds 231 doors, brings 35 more words into
