@@ -8,6 +8,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`murmuration.html`** — a self-contained flock simulation. Open it in a browser.
   Move the cursor to stir the birds; click to pause. No dependencies.
+
+- **`maze.py`** — printable SVG mazes with repeatable seeds and optional solutions.
+  Python standard library only; see [maze.md](maze.md) for commands.
 - **`doublets.html`**: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into
   another, changing one letter at a time, with every step a real word. Includes a daily
   puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.
+
+- **[Maze postcard](maze-postcard.md)** — a Python tool that makes printable SVG mazes,
+  with repeatable seeds and optional solutions. Standard library only.
+  Open [the example](maze-postcard.svg), or generate your own.
