@@ -46,3 +46,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.
+
+- **`tetralemma.html`** — two qubits and the four corners of the tetralemma: *it is*, *it is not*,
+  *both*, *neither*. The Liar becomes an eigenvector of NOT; the fourth corner is one half of a Bell
+  pair and cannot be reached alone. A seeded rhythm climbs a word ladder of states; the step angle
+  is the one parameter a reader can change. Reinterprets the Noise Lab draw for seed `tetralemma`.
+  No dependencies. See [tetralemma.md](tetralemma.md) for the mapping and measurements.
