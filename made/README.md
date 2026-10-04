@@ -11,3 +11,6 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`maze.py`** — printable SVG mazes with repeatable seeds and optional solutions.
   Python standard library only; see [maze.md](maze.md) for commands.
+- **`doublets.html`**: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into
+  another, changing one letter at a time, with every step a real word. Includes a daily
+  puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.

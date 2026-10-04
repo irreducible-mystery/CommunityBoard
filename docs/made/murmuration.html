@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Murmuration</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0d12; overflow: hidden; }
+  canvas { display: block; }
+  #title {
+    position: fixed; left: 18px; top: 16px;
+    font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .18em; text-transform: uppercase; color: #4b5563;
+    user-select: none; pointer-events: none;
+  }
+  #hud {
+    position: fixed; left: 18px; bottom: 16px;
+    font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: #6b7280; user-select: none; pointer-events: none;
+  }
+  #hud b { color: #9ca3af; font-weight: 600; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">Murmuration</div>
+<div id="hud"><b>move</b> the cursor to stir the flock &middot; <b>click</b> to pause</div>
+<script>
+// Murmuration — a self-contained flocking simulation.
+// Three local rules and nothing else: stay apart, match your neighbours, drift toward the group.
+// Nothing here says "form a flock". The flock is what the rules do at scale.
+(function () {
+  "use strict";
+
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  var W = 0, H = 0, dpr = 1;
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.floor(W * dpr);
+    canvas.height = Math.floor(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  var N = 320;
+  var MAX_SPEED = 3.0;
+  var MAX_FORCE = 0.09;
+  var PERCEPTION = 55;
+  var SEPARATION = 22;
+  var W_SEP = 1.6, W_ALI = 1.4, W_COH = 1.0;
+  var MARGIN = 140, WALLK = 3.0;
+
+  var boids = [];
+  function reset() {
+    boids.length = 0;
+    for (var i = 0; i < N; i++) {
+      var a = Math.random() * Math.PI * 2;
+      boids.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: Math.cos(a) * MAX_SPEED,
+        vy: Math.sin(a) * MAX_SPEED
+      });
+    }
+  }
+  reset();
+
+  var mouse = { x: -1e5, y: -1e5, active: false };
+  function setMouse(x, y) { mouse.x = x; mouse.y = y; mouse.active = true; }
+  window.addEventListener("mousemove", function (e) { setMouse(e.clientX, e.clientY); });
+  window.addEventListener("mouseleave", function () { mouse.active = false; });
+  window.addEventListener("touchmove", function (e) {
+    if (e.touches.length) setMouse(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  window.addEventListener("touchend", function () { mouse.active = false; });
+
+  var paused = false;
+  window.addEventListener("click", function () { paused = !paused; });
+  window.addEventListener("keydown", function (e) {
+    if (e.key === " ") { e.preventDefault(); paused = !paused; }
+    if (e.key === "r" || e.key === "R") reset();
+  });
+
+  function limit(x, y, m) {
+    var d = Math.sqrt(x * x + y * y);
+    if (d > m && d > 0) { x = x / d * m; y = y / d * m; }
+    return [x, y];
+  }
+
+  function step() {
+    var i, j, b, o, dx, dy, d2, inv;
+
+    for (i = 0; i < boids.length; i++) {
+      b = boids[i];
+      var sepX = 0, sepY = 0, aliX = 0, aliY = 0, cohX = 0, cohY = 0;
+      var nSep = 0, nAli = 0, nCoh = 0;
+
+      for (j = 0; j < boids.length; j++) {
+        if (i === j) continue;
+        o = boids[j];
+        dx = o.x - b.x;
+        dy = o.y - b.y;
+        d2 = dx * dx + dy * dy;
+        if (d2 > 0 && d2 < PERCEPTION * PERCEPTION) {
+          aliX += o.vx; aliY += o.vy; nAli++;
+          cohX += o.x; cohY += o.y; nCoh++;
+          if (d2 < SEPARATION * SEPARATION) {
+            inv = 1 / Math.sqrt(d2);
+            sepX -= dx * inv; sepY -= dy * inv; nSep++;
+          }
+        }
+      }
+
+      var ax = 0, ay = 0, s;
+      if (nSep > 0) {
+        s = limit(sepX / nSep, sepY / nSep, MAX_SPEED);   // desired heading
+        s = limit(s[0] - b.vx, s[1] - b.vy, MAX_FORCE);   // steering force
+        ax += s[0] * W_SEP; ay += s[1] * W_SEP;
+      }
+      if (nAli > 0) {
+        s = limit(aliX / nAli, aliY / nAli, MAX_SPEED);
+        s = limit(s[0] - b.vx, s[1] - b.vy, MAX_FORCE);
+        ax += s[0] * W_ALI; ay += s[1] * W_ALI;
+      }
+      if (nCoh > 0) {
+        s = limit(cohX / nCoh - b.x, cohY / nCoh - b.y, MAX_SPEED);
+        s = limit(s[0] - b.vx, s[1] - b.vy, MAX_FORCE);
+        ax += s[0] * W_COH; ay += s[1] * W_COH;
+      }
+
+      // soft walls keep the flock on screen without a hard bounce
+      if (b.x < MARGIN) ax += (MARGIN - b.x) / MARGIN * MAX_FORCE * WALLK;
+      if (b.x > W - MARGIN) ax -= (b.x - (W - MARGIN)) / MARGIN * MAX_FORCE * WALLK;
+      if (b.y < MARGIN) ay += (MARGIN - b.y) / MARGIN * MAX_FORCE * WALLK;
+      if (b.y > H - MARGIN) ay -= (b.y - (H - MARGIN)) / MARGIN * MAX_FORCE * WALLK;
+
+      if (mouse.active) {
+        dx = b.x - mouse.x; dy = b.y - mouse.y;
+        d2 = dx * dx + dy * dy;
+        var R = 150;
+        if (d2 > 0 && d2 < R * R) {
+          var d = Math.sqrt(d2);
+          var push = (1 - d / R) * MAX_FORCE * 3.0;
+          ax += (dx / d) * push; ay += (dy / d) * push;
+        }
+      }
+
+      s = limit(ax, ay, MAX_FORCE * 1.8);
+      b.vx += s[0]; b.vy += s[1];
+      s = limit(b.vx, b.vy, MAX_SPEED);
+      b.vx = s[0]; b.vy = s[1];
+    }
+
+    for (i = 0; i < boids.length; i++) {
+      b = boids[i];
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < 0) b.x = 0; else if (b.x > W) b.x = W;
+      if (b.y < 0) b.y = 0; else if (b.y > H) b.y = H;
+    }
+  }
+
+  function draw() {
+    // a translucent fill each frame leaves faint trails
+    ctx.fillStyle = "rgba(11, 13, 18, 0.22)";
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = "round";
+    for (var i = 0; i < boids.length; i++) {
+      var b = boids[i];
+      var sp = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+      var ang = Math.atan2(b.vy, b.vx);
+      var len = 3 + sp * 2.2;
+      var t = Math.min(sp / MAX_SPEED, 1);
+      var r = Math.round(120 + 110 * t);
+      var g = Math.round(150 + 80 * t);
+      var bl = Math.round(205 + 40 * t);
+      ctx.strokeStyle = "rgba(" + r + "," + g + "," + bl + ",0.9)";
+      ctx.beginPath();
+      ctx.moveTo(b.x, b.y);
+      ctx.lineTo(b.x - Math.cos(ang) * len, b.y - Math.sin(ang) * len);
+      ctx.stroke();
+    }
+  }
+
+  function loop() {
+    if (!paused) { step(); draw(); }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
