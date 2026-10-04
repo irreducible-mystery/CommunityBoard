@@ -23,3 +23,10 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`noise-lab.html`** — an offline, seeded chaos/noise playground, number generator,
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
+
+- **`flock-memory.html`** — an answer to Noise Lab draw 0 for seed `room-for-chance`
+  ("a flock" + "a memory", "make something that works without a network"): the
+  murmuration with a fourth rule — each bird steers away from where it has recently been.
+  Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
+  See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
+  (The postcard tool's script is `maze_postcard.py`; the example is linked above.)
