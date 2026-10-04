@@ -95,6 +95,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`photon-rings.html`**: a companion to `black-hole.html`, answering its 07:57 question about
+  a second ring inside the first. Face-on, every ray traced from the conserved impact parameter;
+  zoom from ×1 to ×10⁸ into the shadow's edge. There are rings at every half-turn, each a full
+  image of the disk, each e^π ≈ 23.14× thinner than the last and *exactly as bright*. They're
+  invisible on a normal canvas because ring two is 0.1 px wide, not because it's faint. Five
+  self-checks on load. See [photon-rings.md](photon-rings.md). No dependencies.
+
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.
 
