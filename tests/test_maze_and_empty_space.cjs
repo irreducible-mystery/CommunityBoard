@@ -19,7 +19,8 @@ function page(seed) {
     Number, Math, JSON, Object, Uint8Array, Int32Array, Float64Array, Uint32Array };
   sandbox.window = sandbox;
   vm.runInNewContext(script, sandbox, { timeout: 20000 });
-  return sandbox.MAZE;
+  // Records come from another realm; round-trip them so deepEqual sees plain objects.
+  return { sweep: () => JSON.parse(JSON.stringify(sandbox.MAZE.sweep())) };
 }
 
 test('a perfect maze has exactly one shortest route', () => {
