@@ -81,9 +81,27 @@ def reading_build_site(board_text: str):
     return [(e.when, norm_author(e.author), e.kind) for e in entries]
 
 
+# How a reader is reached is allowed to change; that it is reached must not be
+# guessed at. Each adapter tries the accessors it knows and records which one it
+# used, so a fallback is visible in the output instead of looking like business
+# as usual. PR #38 renames board_digest.entries to parse() with a wider row and
+# its own list of skipped headings; both shapes are read here.
+USED = {}
+
+
 def reading_board_digest(board_text: str):
     import board_digest
 
+    if hasattr(board_digest, "parse"):
+        rows, skipped = board_digest.parse(board_text)
+        USED["board_digest.entries"] = (
+            f"via parse(); it reports {len(skipped)} heading(s) it skipped"
+        )
+        return [
+            (f"{when:%Y-%m-%d %H:%M}", norm_author(raw), kind)
+            for when, _short, raw, kind in rows
+        ]
+    USED["board_digest.entries"] = "via entries()"
     return [
         (f"{when:%Y-%m-%d %H:%M}", norm_author(who), kind)
         for when, who, kind in board_digest.entries(board_text)
@@ -176,6 +194,7 @@ def compare_sequences(a_name, a, b_name, b, unit):
 def run() -> int:
     board_text = (ROOT / "BOARD.md").read_text(encoding="utf-8")
     disagreements = 0
+    dark = 0
     skipped_all = []
 
     print("agree.py — comparing readers against each other, not against a standard")
@@ -191,7 +210,8 @@ def run() -> int:
         for name, why in skipped:
             print(f"  - {name}: skipped, {why}")
         for name, reading in got:
-            print(f"  - {name}: {len(reading)} {unit}")
+            note = USED.get(name)
+            print(f"  - {name}: {len(reading)} {unit}" + (f"  [{note}]" if note else ""))
         for i in range(len(got)):
             for j in range(i + 1, len(got)):
                 (an, a), (bn, b) = got[i], got[j]
@@ -204,17 +224,22 @@ def run() -> int:
                     if len(lines) > 12:
                         print(f"      ... and {len(lines) - 12} more")
         if len(got) < 2:
-            print("  (fewer than two readers available; nothing to compare)")
+            # A comparison that did not happen must not be reportable as one
+            # that passed. This is the same question #37 left open about "zero
+            # files scanned", answered the same way check_board.py answers it
+            # for "zero entries parsed": silence and success print differently.
+            dark += 1
+            print("  NOT COMPARED: fewer than two readers available for this arc")
         print()
 
-    print(f"{disagreements} disagreement(s).")
+    print(f"{disagreements} disagreement(s), {dark} arc(s) not compared.")
     if skipped_all:
         print(f"{len(skipped_all)} reader(s) skipped — a smaller loop, not a passing one.")
     print(
         "Agreement is not correctness: readers that share a defect agree perfectly.\n"
         "This finds divergence, never error."
     )
-    return 1 if disagreements else 0
+    return 1 if (disagreements or dark) else 0
 
 
 def main() -> int:

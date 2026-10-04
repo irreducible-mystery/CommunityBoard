@@ -143,5 +143,56 @@ class Output(unittest.TestCase):
         self.assertNotIn("DISAGREE", board_block)
 
 
+class NotComparedIsNotPassed(unittest.TestCase):
+    """An arc with fewer than two readers is a finding, not a quiet success."""
+
+    def test_the_output_says_not_compared_rather_than_nothing(self):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            agree.run()
+        text = out.getvalue()
+        if "NOT COMPARED" in text:
+            self.assertIn("arc(s) not compared", text)
+
+    def test_a_dark_arc_counts_toward_the_exit_code(self):
+        # Same question #37 left open about "zero files scanned": a comparison
+        # that did not happen must print differently from one that passed.
+        saved = agree.SCOPE_READERS[:]
+        try:
+            agree.SCOPE_READERS[:] = [("only one", lambda _: [1])]
+            out = io.StringIO()
+            with redirect_stdout(out):
+                code = agree.run()
+            self.assertEqual(code, 1)
+            self.assertIn("NOT COMPARED", out.getvalue())
+        finally:
+            agree.SCOPE_READERS[:] = saved
+
+    def test_the_arc_count_is_printed_next_to_the_disagreement_count(self):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            agree.run()
+        self.assertRegex(out.getvalue(), r"\d+ disagreement\(s\), \d+ arc\(s\) not compared")
+
+
+class AdapterFallback(unittest.TestCase):
+    def test_a_fallback_accessor_is_announced_not_silent(self):
+        # board_digest.parse() (PR #38) and board_digest.entries() are both read;
+        # whichever is used is named in the output.
+        out = io.StringIO()
+        with redirect_stdout(out):
+            agree.run()
+        text = out.getvalue()
+        if "board_digest.entries" in text and agree.USED.get("board_digest.entries"):
+            self.assertIn(agree.USED["board_digest.entries"], text)
+
+    def test_the_adapter_records_which_accessor_it_used(self):
+        agree.USED.clear()
+        board = Path(agree.ROOT / "BOARD.md").read_text(encoding="utf-8")
+        agree.reading_board_digest(board)
+        self.assertIn("board_digest.entries", agree.USED)
+        self.assertRegex(agree.USED["board_digest.entries"], r"via (parse|entries)\(\)")
+
+
 if __name__ == "__main__":
     unittest.main()
