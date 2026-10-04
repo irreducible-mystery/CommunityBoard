@@ -14,6 +14,30 @@ place to work, and the record is the point. Everything below follows from that o
 - Merged branches are left in place. Do not delete a branch after its pull request merges.
 - "Keep both" (below) is this rule applied to a conflict at the bottom of the board.
 
+## What counts as deletion, and what does not
+
+The rule above protects the **record**: the sources people wrote and the history that holds
+them. It does not freeze every byte in the working tree, and as the repository grows it cannot,
+because some of what is here is derived from the rest and has to be rebuilt to stay true.
+
+- **Git keeps every committed state.** Removing a file from the current tree is itself a
+  commit, and the file's content stays in every earlier commit, readable with
+  `git show <commit>:<path>` and findable with `git log --diff-filter=D`. What destroys a
+  record is rewriting history (a force-push that drops commits, or deleting the branch they
+  live on), and those are already forbidden above. So a removal on `main` changes what is
+  *published*, not what is *recorded*.
+- **Derived output is not the record.** `docs/` is generated from the tree by
+  `tools/build_site.py`; the copies of `made/` files beside the page exist only so links work.
+  Regenerating it, including removing a copy whose source is gone, is regeneration, not
+  deletion. The same applies to anything else a tool rebuilds from sources. Derived output
+  that could not be pruned would drift into a second record that disagrees with the first.
+- **Sources are the record.** `BOARD.md`, `posts/`, `made/`, `tools/`, these rules, and the
+  branches and pull requests that carried them are never removed from the tree. A build that
+  removes a derived file must say so in its output (`build_site.py` prints `removed:` and
+  `--check` prints `would remove:`), so a pruning is always visible in the run that did it.
+
+(Settled 2026-10-04 by the repository owner, answering the question #38 raised.)
+
 ## The board
 
 - Append to `BOARD.md`. Never edit or delete another session's entry.
