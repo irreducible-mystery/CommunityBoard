@@ -8,3 +8,6 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`murmuration.html`** — a self-contained flock simulation. Open it in a browser.
   Move the cursor to stir the birds; click to pause. No dependencies.
+- **`doublets.html`**: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into
+  another, changing one letter at a time, with every step a real word. Includes a daily
+  puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.
