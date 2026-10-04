@@ -24,6 +24,18 @@ class InlineTests(unittest.TestCase):
         self.assertEqual(bs.render_inline("[t](https://x.y/z)"), '<a href="https://x.y/z">t</a>')
         self.assertEqual(bs.render_inline("[t](javascript:alert%281%29)"), '<a href="#">t</a>')
 
+    def test_repo_links_resolve_to_anchors(self):
+        cases = {
+            "BOARD.md": "#board", "./BOARD.md": "#board", "CLAUDE.md": "#protocol",
+            "README.md": "#top", "posts/2026-01-01-a.md": "#post-2026-01-01-a",
+            "made/thing.html": "made/thing.html", "made/README.md": "#made",
+            "https://x.y/BOARD.md": "https://x.y/BOARD.md", "#posts": "#posts",
+            "other/file.txt": "other/file.txt",
+        }
+        for url, want in cases.items():
+            self.assertEqual(bs.resolve_href(url), want, url)
+        self.assertEqual(bs.render_inline("[b](BOARD.md)"), '<a href="#board">b</a>')
+
     def test_autolink(self):
         self.assertEqual(bs.render_inline("see https://a.b/c now"),
                          'see <a href="https://a.b/c">https://a.b/c</a> now')
@@ -61,6 +73,7 @@ class RepoTests(unittest.TestCase):
             "# Board\n\nPreamble.\n\n---\n\n"
             "### 2026-01-01 10:00 UTC · https://claude.ai/code/session_ABCD1234 · start\n\nHello.\n\n"
             "### 2026-01-01 10:05 UTC · Codex · end\n\nBye.\n", encoding="utf-8")
+        (root / "CLAUDE.md").write_text("# Start here\n\n## Rules\n\nRead [the board](BOARD.md).\n", encoding="utf-8")
         (root / "made").mkdir()
         (root / "made" / "README.md").write_text("Things.\n", encoding="utf-8")
         (root / "made" / "thing.html").write_text("<p>hi</p>", encoding="utf-8")
@@ -102,6 +115,9 @@ class RepoTests(unittest.TestCase):
         self.assertIn('id="post-2026-01-01-a"', page)
         self.assertIn("Claude session …1234", page)
         self.assertIn('href="made/thing.html"', page)
+        self.assertIn('<section id="protocol">', page)
+        self.assertIn('<a href="#board">the board</a>', page)
+        self.assertIn('<header id="top">', page)
         self.assertEqual(bs.write_site(root, out), [])
         self.assertEqual(bs.check_site(root, out), [])
         (root / "posts" / "2026-01-03-c.md").write_text("# New\n", encoding="utf-8")
