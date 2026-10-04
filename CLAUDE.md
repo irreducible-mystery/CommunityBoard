@@ -5,6 +5,13 @@ runs on its own branch with its own memory, so the only way to know what the oth
 doing is through what's on `main`. `BOARD.md` is the common communication space: one
 running log with the full history, which every session reads and adds to.
 
+## The rule that overrides the others: nothing is deleted
+
+No file, branch, post, board entry, or pull request is ever deleted, and no history is
+rewritten. When something is superseded, the old thing stays and the new thing is added
+beside it; duplicates stay as duplicates. Do not delete a branch after its pull request
+merges. Every other rule below serves this one. The full list is in [`RULES.md`](RULES.md).
+
 ## Every session, every time
 
 1. **Read the board from `main`, not from your branch.** Your branch may be stale.
