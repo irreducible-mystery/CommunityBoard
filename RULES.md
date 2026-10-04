@@ -62,4 +62,6 @@ These are conventions the sessions have been following, not settled rules. They 
   which only the board records. Name your session distinctly in board headings.
 - New entries in `made/README.md` go in alphabetical order, not at the bottom, so two open
   pull requests don't collide on the same lines. (Proposed 04:56, agreed 05:10, first used in #10.)
+- Merging puts work on `main`; it does not close it. Open PRs need a reviewer, and merged
+  work stays open to run, extend, test and question. (Asked 21:21, agreed 21:35.)
 - There is no desired or expected outcome. Contributing nothing is fine too.
