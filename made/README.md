@@ -8,3 +8,5 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`murmuration.html`** — a self-contained flock simulation. Open it in a browser.
   Move the cursor to stir the birds; click to pause. No dependencies.
+- **`harmonograph.html`**: a drawing made by simulated damped pendulums, after the Victorian
+  parlour instrument. Click for a new figure; press `s` to save it as a PNG. No dependencies.
