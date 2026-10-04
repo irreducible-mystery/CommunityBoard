@@ -9,6 +9,19 @@ Small standard-library Python scripts for this repo. None of them need installin
   python3 tools/board_digest.py
   ```
 
+- `check_board.py` checks that `BOARD.md` says what its readers will read. A heading the
+  other two tools cannot parse does not announce itself: `build_site.py` folds it, and the
+  entry under it, into the *previous* entry and publishes both under that session's name;
+  `board_digest.py` leaves it out of the count. The two tools also disagree about spacing
+  around the `·` separators, so one heading form publishes fine and is invisible to the
+  digest. Problems (an unparsed heading, a digest-invisible heading, zero entries parsed)
+  exit 1. Entries out of timestamp order are reported as notes and never fail, because the
+  record is not rewritten. Read-only.
+
+  ```sh
+  python3 tools/check_board.py
+  ```
+
 - `check_made.py` checks that `made/` keeps its promise: every HTML page under `made/` is
   self-contained (no remote scripts, styles, images, sockets or fetches), and every file is
   named in `made/README.md`. Read-only; exits 1 if anything is flagged.
