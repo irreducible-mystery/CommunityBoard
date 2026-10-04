@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Edge</title>
+<style>
+  :root { --bg:#0b0d12; --fg:#c9ced6; --mute:#6b7280; --dim:#374151; --acc:#8ab4e8; --warm:#e8b48a; }
+  html, body { margin:0; background:var(--bg); color:var(--fg);
+    font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  main { max-width: 1040px; margin: 0 auto; padding: 18px 16px 40px; }
+  h1 { font-size: 11px; letter-spacing:.18em; text-transform:uppercase; color:var(--mute); margin:0 0 4px; font-weight:600; }
+  .lede { color:var(--mute); margin:0 0 14px; max-width: 70ch; }
+  .lede b { color:var(--fg); font-weight:600; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
+  canvas { display:block; background:#07080b; border:1px solid var(--dim); border-radius:4px; }
+  #space { width:512px; height:256px; image-rendering: pixelated; }
+  .charts { display:flex; flex-direction:column; gap:10px; }
+  .charts canvas { width:496px; height:118px; }
+  .lab { position:relative; }
+  .lab span { position:absolute; left:8px; top:4px; color:var(--mute); font-size:11px; letter-spacing:.1em; text-transform:uppercase; pointer-events:none; }
+  .panel { display:grid; grid-template-columns: 9em 1fr 5.5em; gap: 6px 10px; align-items:center;
+    margin-top:14px; padding:12px 14px; border:1px solid var(--dim); border-radius:6px; max-width: 520px; }
+  .panel label { color:var(--mute); }
+  .panel output { text-align:right; color:var(--fg); }
+  input[type=range] { width:100%; accent-color: var(--acc); }
+  input[type=text] { font:inherit; color:var(--fg); background:#07080b; border:1px solid var(--dim); border-radius:4px; padding:3px 6px; width:100%; box-sizing:border-box; }
+  .toggles { grid-column: 1 / -1; display:flex; gap:14px; flex-wrap:wrap; color:var(--mute); }
+  .toggles label { display:flex; gap:6px; align-items:center; cursor:pointer; }
+  button { font:inherit; color:var(--fg); background:#11141b; border:1px solid var(--dim); border-radius:4px; padding:4px 10px; cursor:pointer; }
+  button:hover { border-color: var(--mute); }
+  .readout { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-top:12px; max-width:520px; }
+  .readout div { border:1px solid var(--dim); border-radius:6px; padding:8px 10px; }
+  .readout small { display:block; color:var(--mute); letter-spacing:.1em; text-transform:uppercase; font-size:10px; }
+  .readout b { font-size:16px; font-weight:600; }
+  .readout b.edge { color: var(--acc); }
+  pre { background:#07080b; border:1px solid var(--dim); border-radius:6px; padding:10px 12px; overflow-x:auto; max-width: 1000px; color:var(--mute); }
+  .hint { color:var(--mute); max-width:70ch; }
+  .hint b { color:var(--fg); font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Edge</h1>
+  <p class="lede">A ring of 256 coupled logistic maps, drawn one row per step. <b>r</b> is the knob between order
+    and chaos. <b>λ̂</b> is how fast nearby states pull apart: negative is order, positive is chaos, zero is the edge.
+    With <b>feedback</b> on, the system turns its own knob toward a chosen λ̂ and goes looking for the edge itself.</p>
+
+  <div class="row">
+    <div class="lab"><canvas id="space" width="256" height="256"></canvas><span>space · time ↓</span></div>
+    <div class="charts">
+      <div class="lab"><canvas id="cr" width="496" height="118"></canvas><span>r · knob</span></div>
+      <div class="lab"><canvas id="cl" width="496" height="118"></canvas><span>λ̂ · stretching rate</span></div>
+    </div>
+  </div>
+
+  <div class="readout">
+    <div><small>r</small><b id="o_r">–</b></div>
+    <div><small>λ̂</small><b id="o_l" class="edge">–</b></div>
+    <div><small>entropy H (bits)</small><b id="o_h">–</b></div>
+    <div><small>coherence</small><b id="o_c">–</b></div>
+  </div>
+
+  <div class="panel">
+    <label for="seed">seed</label><input id="seed" type="text" value="room-for-chance"><button id="reset">reset</button>
+    <label for="name">name this edge</label><input id="name" type="text" value="the edge" maxlength="80"><span></span>
+    <label for="r0">r (start)</label><input id="r0" type="range" min="2.5" max="4" step="0.001" value="3.2"><output id="v_r0">3.200</output>
+    <label for="eps">coupling ε</label><input id="eps" type="range" min="0" max="0.5" step="0.005" value="0.1"><output id="v_eps">0.100</output>
+    <label for="noise">noise</label><input id="noise" type="range" min="0" max="0.05" step="0.0005" value="0"><output id="v_noise">0.0000</output>
+    <label for="target">target λ̂</label><input id="target" type="range" min="-0.6" max="0.6" step="0.01" value="0"><output id="v_target">0.00</output>
+    <label for="gain">feedback gain</label><input id="gain" type="range" min="0" max="0.02" step="0.0005" value="0.004"><output id="v_gain">0.0040</output>
+    <label for="speed">steps / frame</label><input id="speed" type="range" min="1" max="8" step="1" value="2"><output id="v_speed">2</output>
+    <div class="toggles">
+      <label><input id="fb" type="checkbox" checked> feedback: λ̂ → r</label>
+      <label><input id="nf" type="checkbox"> feedback: order → noise</label>
+      <label><input id="pause" type="checkbox"> pause</label>
+      <button id="measure">measure 3000 steps → record</button>
+    </div>
+  </div>
+
+  <p class="hint">Try: feedback off, slide <b>r</b> slowly from 3.2 to 3.9 and watch λ̂ cross zero near 3.57. Then feedback on
+    and watch r walk there by itself. Add noise: the edge moves. Turn on <b>order → noise</b> and the two loops push on each other,
+    noise rising when things settle and fading when they get wild.</p>
+
+  <pre id="record">Press "measure" for a reproducible record of this edge.</pre>
+</main>
+<script>
+(function () {
+  "use strict";
+  // ---- seeded randomness: FNV-1a over a JSON tuple, then Mulberry32 (same scheme as noise-lab.html) ----
+  function rng(seed, stream, index) {
+    var a = 2166136261, s = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < s.length; i++) { a ^= s.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  var N = 256, ROWS = 256, HIST = 496;
+  var $ = function (id) { return document.getElementById(id); };
+  var space = $("space"), sctx = space.getContext("2d");
+  var cr = $("cr"), rctx = cr.getContext("2d");
+  var cl = $("cl"), lctx = cl.getContext("2d");
+  var img = sctx.createImageData(N, 1);
+
+  var S = {}; // simulation state
+
+  function params() {
+    return {
+      seed: $("seed").value || "room-for-chance",
+      name: $("name").value || "the edge",
+      r0: +$("r0").value, eps: +$("eps").value, noise: +$("noise").value,
+      target: +$("target").value, gain: +$("gain").value,
+      feedback: $("fb").checked, noiseFeedback: $("nf").checked
+    };
+  }
+
+  function reset() {
+    var p = params();
+    var random = rng(p.seed, "edge");
+    S = { x: new Float64Array(N), nx: new Float64Array(N), r: p.r0, lam: 0, lamEma: NaN,
+          H: 0, C: 0, t: 0, random: random, rHist: [], lHist: [], noiseEff: p.noise };
+    for (var i = 0; i < N; i++) S.x[i] = 0.2 + 0.6 * random();
+    sctx.fillStyle = "#07080b"; sctx.fillRect(0, 0, N, ROWS);
+  }
+
+  // One step of the coupled map lattice. Returns nothing; updates S.
+  function step(p) {
+    var r = S.r, eps = p.eps, x = S.x, nx = S.nx, i;
+    // local stretching rate before the update: mean log|f'(x)| = mean log|r(1-2x)|
+    var sum = 0;
+    for (i = 0; i < N; i++) { var d = Math.abs(r * (1 - 2 * x[i])); sum += Math.log(d > 1e-12 ? d : 1e-12); }
+    S.lam = sum / N;
+    S.lamEma = isNaN(S.lamEma) ? S.lam : S.lamEma + 0.02 * (S.lam - S.lamEma);
+
+    // feedback B: order → noise. More noise when settled, less when wild. Equals p.noise at the edge.
+    S.noiseEff = p.noiseFeedback ? p.noise * 2 / (1 + Math.exp(S.lamEma / 0.2)) : p.noise;
+
+    for (i = 0; i < N; i++) {
+      var f = r * x[i] * (1 - x[i]);
+      var l = x[(i + N - 1) % N], rr = x[(i + 1) % N];
+      var fl = r * l * (1 - l), fr = r * rr * (1 - rr);
+      var v = (1 - eps) * f + eps * 0.5 * (fl + fr);
+      if (S.noiseEff > 0) v += S.noiseEff * (2 * S.random() - 1);
+      nx[i] = v < 0 ? 0 : v > 1 ? 1 : v;
+    }
+    S.nx = x; S.x = nx;
+
+    // feedback A: λ̂ → r. Push the knob toward the target stretching rate.
+    if (p.feedback) {
+      S.r += p.gain * (p.target - S.lamEma);
+      if (S.r < 2.5) S.r = 2.5; else if (S.r > 4) S.r = 4;
+    }
+
+    // entropy of the state distribution (16 bins) and spatial coherence
+    var bins = new Int32Array(16), rough = 0;
+    for (i = 0; i < N; i++) {
+      bins[Math.min(15, (S.x[i] * 16) | 0)]++;
+      rough += Math.abs(S.x[i] - S.x[(i + 1) % N]);
+    }
+    var H = 0; for (i = 0; i < 16; i++) if (bins[i]) { var q = bins[i] / N; H -= q * Math.log2(q); }
+    S.H = H; S.C = Math.max(0, 1 - 2 * rough / N);
+    S.t++;
+    S.rHist.push(S.r); S.lHist.push(S.lamEma);
+    if (S.rHist.length > HIST) { S.rHist.shift(); S.lHist.shift(); }
+  }
+
+  function drawRow() {
+    // scroll the diagram up one pixel, draw the new row at the bottom
+    sctx.drawImage(space, 0, 1, N, ROWS - 1, 0, 0, N, ROWS - 1);
+    var d = img.data;
+    for (var i = 0; i < N; i++) {
+      var v = S.x[i], k = i * 4;
+      // low = deep blue, mid = grey, high = warm
+      d[k] = (40 + 200 * v) | 0; d[k + 1] = (60 + 110 * v) | 0; d[k + 2] = (140 - 60 * v) | 0; d[k + 3] = 255;
+    }
+    sctx.putImageData(img, 0, ROWS - 1);
+  }
+
+  function chart(ctx, w, h, series, lo, hi, line, color, mark) {
+    ctx.fillStyle = "#07080b"; ctx.fillRect(0, 0, w, h);
+    var y = function (v) { return h - 8 - (h - 16) * (v - lo) / (hi - lo); };
+    if (line !== null) {
+      ctx.strokeStyle = "#374151"; ctx.setLineDash([3, 4]); ctx.beginPath();
+      ctx.moveTo(0, y(line)); ctx.lineTo(w, y(line)); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (mark !== null) {
+      ctx.strokeStyle = "#8ab4e866"; ctx.beginPath(); ctx.moveTo(0, y(mark)); ctx.lineTo(w, y(mark)); ctx.stroke();
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = 1.2; ctx.beginPath();
+    for (var i = 0; i < series.length; i++) {
+      var yy = Math.max(2, Math.min(h - 2, y(series[i])));
+      if (i === 0) ctx.moveTo(w - series.length + i, yy); else ctx.lineTo(w - series.length + i, yy);
+    }
+    ctx.stroke();
+  }
+
+  function readout() {
+    $("o_r").textContent = S.r.toFixed(3);
+    $("o_l").textContent = (S.lamEma >= 0 ? "+" : "") + S.lamEma.toFixed(3);
+    $("o_h").textContent = S.H.toFixed(2);
+    $("o_c").textContent = S.C.toFixed(2);
+  }
+
+  function frame() {
+    if (!$("pause").checked) {
+      var p = params(), n = +$("speed").value;
+      for (var k = 0; k < n; k++) { step(p); drawRow(); }
+      chart(rctx, HIST, 118, S.rHist, 2.5, 4, 3.5699, "#e8b48a", null);
+      chart(lctx, HIST, 118, S.lHist, -1.2, 0.8, 0, "#8ab4e8", p.target);
+      readout();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // A reproducible record: reset from the seed, run `steps` with the current controls, report where it ended.
+  function measure(steps) {
+    reset();
+    var p = params();
+    var tail = Math.max(1, Math.floor(steps / 5)), sr = 0, sl = 0, sh = 0, sc = 0;
+    for (var k = 0; k < steps; k++) {
+      step(p);
+      if (k >= steps - tail) { sr += S.r; sl += S.lamEma; sh += S.H; sc += S.C; }
+    }
+    var rec = {
+      request: { version: "edge/1", seed: p.seed, kind: "edge",
+        params: { sites: N, r0: p.r0, eps: p.eps, noise: p.noise, target: p.target, gain: p.gain,
+                  feedback: p.feedback, noiseFeedback: p.noiseFeedback, steps: steps } },
+      result: { name: p.name,
+        r: +(sr / tail).toFixed(4), lambda: +(sl / tail).toFixed(4),
+        entropy: +(sh / tail).toFixed(3), coherence: +(sc / tail).toFixed(3),
+        note: "means over the last " + tail + " steps; λ̂ is the lattice-mean of log|r(1-2x)|, an estimate" }
+    };
+    $("record").textContent = JSON.stringify(rec, null, 1);
+    // redraw the diagram so the screen shows the measured state
+    for (var j = 0; j < ROWS; j++) { step(p); drawRow(); }
+    return rec;
+  }
+
+  ["r0", "eps", "noise", "target", "gain", "speed"].forEach(function (id) {
+    var el = $(id), out = $("v_" + id);
+    var fmt = { r0: 3, eps: 3, noise: 4, target: 2, gain: 4, speed: 0 }[id];
+    var show = function () { out.textContent = (+el.value).toFixed(fmt); };
+    el.addEventListener("input", function () {
+      show();
+      if (id === "r0" && !$("fb").checked) S.r = +el.value; // with feedback off, r0 is r
+    });
+    show();
+  });
+  $("reset").addEventListener("click", reset);
+  $("seed").addEventListener("change", reset);
+  $("measure").addEventListener("click", function () { measure(3000); });
+  window.addEventListener("keydown", function (e) {
+    if (e.key === " ") { e.preventDefault(); $("pause").checked = !$("pause").checked; }
+    if (e.key === "r" || e.key === "R") reset();
+  });
+
+  reset();
+  requestAnimationFrame(frame);
+
+  // For scripts and tests: window.EDGE.measure(steps) returns the record without touching the page controls' values.
+  window.EDGE = { measure: measure, state: function () { return S; }, step: function () { step(params()); } };
+})();
+</script>
+</body>
+</html>

@@ -18,6 +18,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   another, changing one letter at a time, with every step a real word. Includes a daily
   puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.
 
+- **`edge.html`** — a ring of 256 coupled logistic maps with one knob between order and
+  chaos, a measured stretching rate λ̂, and two feedback loops (λ̂ → r, order → noise) so
+  the system can find its own edge instead of being told where it is. Made from the owner's
+  question about an edge between noise and signal. Emits seeded JSON records like Noise Lab.
+  No dependencies. See [edge.md](edge.md) for what was measured.
+
 - **[Maze postcard](maze-postcard.md)** (`maze_postcard.py`) — a Python tool that makes printable SVG mazes,
   with repeatable seeds and optional solutions. Standard library only.
   Open [the example](maze-postcard.svg), or generate your own.
