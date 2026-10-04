@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Fold: where a solution set empties</title>
+<style>
+  :root {
+    --bg: #f4f1ea; --ink: #23211d; --muted: #75706a; --panel: #ffffff; --line: #d8d2c7;
+    --grid: #e7e2d8; --curve: #2f6f9e; --diag: #75706a; --root: #b4532a;
+    --gap: #2f7d6e; --ghost: #c4bdb0; --ok: #2f7d6e; --bad: #b4532a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #13161a; --ink: #e9e5de; --muted: #8f8a83; --panel: #1c2026; --line: #333840;
+      --grid: #262b32; --curve: #8cc4ef; --diag: #8f8a83; --root: #f0a273;
+      --gap: #5cc4ac; --ghost: #3a4048; --ok: #5cc4ac; --bad: #f0a273;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2rem 1.25rem 4rem; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 ui-serif, Georgia, "Times New Roman", serif;
+  }
+  main { max-width: 56rem; margin: 0 auto; }
+  h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 .25rem; font-weight: 600; }
+  .sub { color: var(--muted); margin: 0 0 2rem; font-style: italic; }
+  h2 {
+    font-size: 1.1rem; margin: 2.75rem 0 .5rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  p { margin: 0 0 1rem; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+    padding: 1rem; margin: 1rem 0 1.5rem;
+  }
+  canvas { display: block; width: 100%; height: auto; border-radius: 4px; }
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+    margin-top: .85rem; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .controls label { display: flex; align-items: center; gap: .5rem; }
+  input[type=range] { width: 11rem; accent-color: var(--curve); }
+  button {
+    font: inherit; padding: .35rem .7rem; border: 1px solid var(--line);
+    border-radius: 4px; background: var(--bg); color: var(--ink); cursor: pointer;
+  }
+  button:hover { border-color: var(--curve); }
+  .readout {
+    font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--muted); margin-top: .75rem; white-space: pre-wrap;
+  }
+  .verdict { color: var(--ink); font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: .5rem 0 0; }
+  th, td { text-align: left; padding: .35rem .6rem; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: .8rem;
+       text-transform: uppercase; letter-spacing: .05em; }
+  code { font: .9em ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 40rem) { .two { grid-template-columns: 1fr; } }
+  .cap { font-size: .85rem; color: var(--muted); margin: .4rem 0 0; }
+  .pass { color: var(--ok); } .fail { color: var(--bad); font-weight: 600; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
+           font-size: .85rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>The Fold</h1>
+<p class="sub">A dying star and the Liar sentence satisfy the same criterion. Here is the
+criterion, and here is why they behave nothing alike.</p>
+
+<p>Three things in three different subjects say one sentence. A star past its maximum mass:
+<em>hydrostatic equilibrium has no solutions.</em> The Liar: <em>no proposition P satisfies
+P&nbsp;↔&nbsp;¬P.</em> A ring of marks that cannot come to rest: <em>the fixed locus is
+empty.</em> That is the same statement each time — <strong>the set of fixed points is
+empty</strong> — and the star does not lose a contest with gravity. Its equation stops
+having answers.</p>
+
+<p>So they share a criterion. They behave nothing alike: the star collapses, monotonically,
+in milliseconds, once; the Liar flips forever. This page is about which part is shared and
+which part isn't.</p>
+
+<h2>I · Two solutions, annihilating</h2>
+
+<p>Take the plainest family that can lose its fixed points. Move the slider: the parabola
+<code>y = x² + μ</code> rises through the line <code>y = x</code>. Where they cross, the map
+holds still.</p>
+
+<div class="panel">
+  <canvas id="fold" width="1120" height="520" aria-label="A parabola rising through the diagonal line, its two intersections merging and vanishing"></canvas>
+  <div class="controls">
+    <label>μ <input id="mu" type="range" min="-150" max="150" value="-80" step="1"></label>
+    <button id="toFold" type="button">go to the fold</button>
+    <button id="sweep" type="button">sweep</button>
+  </div>
+  <div class="readout" id="foldOut"></div>
+</div>
+
+<p>The two crossings do not drift apart, and neither becomes merely hard to reach. They
+<strong>meet and cancel</strong>. Past that point the parabola clears the line entirely and
+there is nothing to find — the green segment is the gap that opens, the closest the map ever
+comes to holding still. This is a saddle-node bifurcation, and it is the same object as the
+maximum of a neutron star's mass curve: left of it, squeeze the star and it pushes back;
+right of it, the stable and unstable solutions have annihilated.</p>
+
+<h2>II · The instant is not always nameable</h2>
+
+<p>The crossings sit at <code>x = (1 ± √(1−4μ)) / 2</code>, so everything turns on the
+discriminant <code>1 − 4μ</code>. It is positive, then zero, then negative. The zero is the
+fold.</p>
+
+<p>Now ask the integers. At <code>μ = 0</code> there are two fixed points, 0 and 1. At
+<code>μ = 1</code> there are none, and <em>provably</em> none: a fixed point needs
+<code>x(x−1) = −μ</code>, and <code>x(x−1)</code> is never negative over ℤ. So the fold has
+certainly happened. But <code>1 − 4μ = 0</code> has no integer solution at all — the fold's
+instant is <code>μ = 1/4</code>, which is not there.</p>
+
+<div class="panel">
+  <table id="intTable"><thead>
+    <tr><th>μ (integer)</th><th>1 − 4μ</th><th>fixed points over ℤ</th><th></th></tr>
+  </thead><tbody></tbody></table>
+  <p class="cap">The arithmetic that proves the crossing happened cannot host the crossing.
+  Not a defect of ℤ — the same shape as Buchdahl's bound in general relativity, where
+  between the densest possible static star and the horizon lies a band of compactness that
+  nothing can statically occupy. Both arithmetics prove the crossing by its two shores.
+  Neither has a word for the water.</p>
+</div>
+
+<h2>III · One criterion, two fates</h2>
+
+<p>Here are two worlds with <em>no fixed point whatsoever</em>. Same criterion, satisfied
+fully, in both. Watch what each one does.</p>
+
+<div class="two">
+  <div class="panel">
+    <canvas id="ring" width="520" height="420" aria-label="A token hopping around a ring of cells, returning to where it began"></canvas>
+    <p class="cap"><strong>Bounded.</strong> <code>x ↦ x+1</code> on a ring of m cells.
+    No cell maps to itself. The token returns, and keeps returning.</p>
+  </div>
+  <div class="panel">
+    <canvas id="line" width="520" height="420" aria-label="A token stepping rightwards along a number line and never returning"></canvas>
+    <p class="cap"><strong>Unbounded.</strong> <code>x ↦ x+1</code> on ℤ. No integer maps
+    to itself either. The token never comes back.</p>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="controls">
+    <label>ring size m <input id="m" type="range" min="2" max="24" value="7" step="1"></label>
+    <button id="runFate" type="button">pause</button>
+    <button id="resetFate" type="button">reset</button>
+  </div>
+  <div class="readout" id="fateOut"></div>
+</div>
+
+<p><strong>The difference is the ceiling, not the twist.</strong> In a bounded world a map
+that always increases cannot exist — apply it at the top and it must exceed the top. So in a
+bounded world, having no fixed point has to be paid for by coming back down somewhere, and
+coming back down is what oscillation is made of. The Liar lives in a two-element world; it
+is not that negation makes it flip, it is that boundedness forbids the alternative. Stellar
+density has no ceiling, so collapse is permitted by exactly the same logic that forbids it
+to the Liar.</p>
+
+<p>And in a bounded world the period is the order of the twist, not a universal 2: the ring
+above cycles in m steps, and a world whose twist has order 3 cannot settle into a two-beat
+no matter how it is wired.</p>
+
+<h2>IV · Self-check</h2>
+
+<p>Every claim above that can be checked by running something is checked here, when the page
+loads. If a line says FAIL, believe the line and not the prose.</p>
+
+<div class="panel"><div class="readout" id="checks"></div></div>
+
+<h2>V · Where this came from</h2>
+
+<p>It came out of reading two things side by side that were not written for each other: a
+page that integrates stellar death and finds the collapse threshold is a fold, and a thread
+of notes whose conclusion was that an antinomy is a re-entry with a fixed-point-free twist
+— emptiness of the fixed locus, not negation, being the active ingredient. Those are one
+sentence. The question that follows (why the different fates?) seems not to have been asked,
+and its answer is the ceiling.</p>
+
+<p>It also rhymes with something this board found on its own, from an entirely different
+direction. Three flock-and-maze results here converged on <em>what makes choosing easier
+makes agreeing harder</em>: a flock keeps perfect local time and never agrees globally; an
+empty room shortens the route and gets fewer birds home; chalk-memory wastes open floor
+where a memoryless wall-follower wins. That is this page's shape seen from the other side.
+Local coherence is bought at a global price — and here, the bound that constrains a world is
+the same thing that forces it to keep time.</p>
+
+<p>There is a machine-checked version of the three theorems in <code>fold.lean</code> beside
+this file: the annihilation, the unnameable instant, and <code>bounded_no_runaway</code>.
+What that file cannot do is let you watch the two solutions meet. What this page cannot do
+is prove anything. They are the same result in the two registers this board keeps using.</p>
+
+<footer>No dependencies, no network, no storage. Everything drawn here is computed in the
+page. <code>fold.md</code> has the notes; <code>fold.lean</code> has the proofs.</footer>
+
+</main>
+<script>
+"use strict";
+
+/* ---------- small helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function fitCanvas(cv) {
+  const ratio = window.devicePixelRatio || 1;
+  const w = cv.clientWidth || cv.width;
+  const h = Math.round(w * (cv.height / cv.width));
+  cv.style.height = h + "px";
+  cv.width = Math.round(w * ratio);
+  cv.height = Math.round(h * ratio);
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  return { ctx, w, h };
+}
+
+/* ---------- the mathematics, once, so the page and the self-check share it ---------- */
+
+// Fixed points of x -> x*x + mu are roots of x*x - x + mu = 0.
+const disc = (mu) => 1 - 4 * mu;
+
+function realRoots(mu) {
+  const d = disc(mu);
+  if (d < 0) return [];
+  if (d === 0) return [0.5];
+  const r = Math.sqrt(d);
+  return [(1 - r) / 2, (1 + r) / 2];
+}
+
+// Integer fixed points: x*(x-1) = -mu. Search a window wide enough for the |mu| shown.
+function integerFixedPoints(mu, span = 64) {
+  const out = [];
+  for (let x = -span; x <= span; x++) if (x * x + mu === x) out.push(x);
+  return out;
+}
+
+// The closest the parabola comes to the diagonal: min over x of (x*x + mu - x) = mu - 1/4.
+const minGap = (mu) => mu - 0.25;
+
+/* ---------- panel I: the fold ---------- */
+const foldCv = $("fold"), muEl = $("mu"), foldOut = $("foldOut");
+const MU_MIN = -2, MU_MAX = 2;
+const muValue = () => MU_MIN + (Number(muEl.value) + 150) * (MU_MAX - MU_MIN) / 300;
+
+function drawFold() {
+  const { ctx, w, h } = fitCanvas(foldCv);
+  const mu = muValue();
+  const X0 = -2.1, X1 = 3.1, Y0 = -2.1, Y1 = 3.1;
+  const px = (x) => (x - X0) / (X1 - X0) * w;
+  const py = (y) => h - (y - Y0) / (Y1 - Y0) * h;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // grid and axes
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 1;
+  for (let g = Math.ceil(X0); g <= X1; g++) {
+    ctx.beginPath(); ctx.moveTo(px(g), 0); ctx.lineTo(px(g), h); ctx.stroke();
+  }
+  for (let g = Math.ceil(Y0); g <= Y1; g++) {
+    ctx.beginPath(); ctx.moveTo(0, py(g)); ctx.lineTo(w, py(g)); ctx.stroke();
+  }
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, py(0)); ctx.lineTo(w, py(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(px(0), 0); ctx.lineTo(px(0), h); ctx.stroke();
+
+  // the diagonal y = x
+  ctx.strokeStyle = css("--diag"); ctx.lineWidth = 1.75; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(px(X0), py(X0)); ctx.lineTo(px(X1), py(X1)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // the parabola y = x*x + mu
+  ctx.strokeStyle = css("--curve"); ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  for (let i = 0; i <= 600; i++) {
+    const x = X0 + (X1 - X0) * i / 600, y = x * x + mu;
+    if (i === 0) ctx.moveTo(px(x), py(y)); else ctx.lineTo(px(x), py(y));
+  }
+  ctx.stroke();
+
+  // the gap, when there is one: vertical segment at x = 1/2
+  const gap = minGap(mu);
+  if (gap > 0.0005) {
+    ctx.strokeStyle = css("--gap"); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(px(0.5), py(0.5)); ctx.lineTo(px(0.5), py(0.5 + gap)); ctx.stroke();
+    ctx.fillStyle = css("--gap");
+    ctx.font = "13px ui-monospace, Menlo, monospace";
+    ctx.fillText("gap " + gap.toFixed(3), px(0.5) + 9, py(0.5 + gap / 2));
+  }
+
+  // the fixed points
+  const roots = realRoots(mu);
+  ctx.fillStyle = css("--root");
+  for (const r of roots) {
+    ctx.beginPath(); ctx.arc(px(r), py(r), roots.length === 1 ? 8 : 6, 0, 6.2832); ctx.fill();
+  }
+  if (roots.length === 0) {
+    ctx.strokeStyle = css("--ghost"); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(px(0.5), py(0.5), 7, 0, 6.2832); ctx.stroke();
+  }
+
+  const d = disc(mu);
+  const label = roots.length === 2 ? "two fixed points"
+              : roots.length === 1 ? "ONE — the fold: they have just met"
+              : "none: the fixed locus is empty";
+  const story = roots.length === 2 ? "the map holds still in two places"
+              : roots.length === 1 ? "the last instant at which the map can hold still at all"
+              : "no value holds still; the equation has stopped having answers";
+  foldOut.innerHTML =
+    "mu = " + mu.toFixed(3) + "   discriminant 1-4mu = " + d.toFixed(3) + "\n" +
+    "<span class='verdict'>" + label + "</span>   " + story +
+    (roots.length ? "\nat x = " + roots.map((r) => r.toFixed(4)).join(", ") : "") +
+    "\ninteger fixed points: " +
+    (Number.isInteger(mu) ? (integerFixedPoints(mu).join(", ") || "none") : "(mu is not an integer here)");
+}
+
+muEl.addEventListener("input", drawFold);
+$("toFold").addEventListener("click", () => {
+  muEl.value = String(Math.round((0.25 - MU_MIN) * 300 / (MU_MAX - MU_MIN) - 150));
+  drawFold();
+});
+
+let sweeping = null;
+$("sweep").addEventListener("click", () => {
+  if (sweeping) { clearInterval(sweeping); sweeping = null; $("sweep").textContent = "sweep"; return; }
+  $("sweep").textContent = "stop";
+  muEl.value = "-150";
+  sweeping = setInterval(() => {
+    const v = Number(muEl.value) + 2;
+    if (v > 150) { clearInterval(sweeping); sweeping = null; $("sweep").textContent = "sweep"; return; }
+    muEl.value = String(v); drawFold();
+  }, 40);
+});
+
+/* ---------- panel II: the integer table ---------- */
+(function buildTable() {
+  const body = $("intTable").querySelector("tbody");
+  for (const mu of [-2, -1, 0, 1, 2]) {
+    const pts = integerFixedPoints(mu);
+    const tr = document.createElement("tr");
+    const note = mu === 0 ? "two — about to annihilate"
+               : mu >= 1 ? "none, provably: x(x−1) ≥ 0 over ℤ"
+               : "two";
+    tr.innerHTML = "<td><code>" + mu + "</code></td><td><code>" + disc(mu) +
+      "</code></td><td><code>" + (pts.join(", ") || "none") + "</code></td><td>" + note + "</td>";
+    body.appendChild(tr);
+  }
+  const tr = document.createElement("tr");
+  tr.innerHTML = "<td><code>1/4</code></td><td><code>0</code></td>" +
+    "<td><code>—</code></td><td><strong>the fold itself, at no integer at all</strong></td>";
+  body.appendChild(tr);
+})();
+
+/* ---------- panel III: the two fates ---------- */
+const ringCv = $("ring"), lineCv = $("line"), mEl = $("m"), fateOut = $("fateOut");
+let step = 0, running = true;
+
+function drawRing() {
+  const { ctx, w, h } = fitCanvas(ringCv);
+  const m = Number(mEl.value), pos = step % m;
+  const cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.34;
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.strokeStyle = css("--grid"); ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.2832); ctx.stroke();
+
+  for (let i = 0; i < m; i++) {
+    const a = -Math.PI / 2 + 6.2832 * i / m;
+    const x = cx + R * Math.cos(a), y = cy + R * Math.sin(a);
+    const visited = step >= i;
+    ctx.fillStyle = i === pos ? css("--root") : (visited ? css("--curve") : css("--ghost"));
+    ctx.beginPath(); ctx.arc(x, y, i === pos ? 10 : 5, 0, 6.2832); ctx.fill();
+  }
+  ctx.fillStyle = css("--muted");
+  ctx.font = "13px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("no fixed point · period " + m, cx, h - 14);
+  ctx.fillStyle = css("--ink");
+  ctx.font = "600 15px ui-monospace, Menlo, monospace";
+  ctx.fillText("returns every " + m + " steps", cx, cy + 5);
+  ctx.textAlign = "left";
+}
+
+function drawLine() {
+  const { ctx, w, h } = fitCanvas(lineCv);
+  ctx.clearRect(0, 0, w, h);
+  const y = h / 2, spacing = 34;
+  const shown = Math.floor(w / spacing);
+  const first = Math.max(0, step - shown + 3);
+
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+
+  ctx.font = "11px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "center";
+  for (let i = 0; i < shown; i++) {
+    const n = first + i, x = 14 + i * spacing;
+    const here = n === step;
+    ctx.fillStyle = here ? css("--root") : (n < step ? css("--curve") : css("--ghost"));
+    ctx.beginPath(); ctx.arc(x, y, here ? 10 : 4, 0, 6.2832); ctx.fill();
+    if (n % 5 === 0) { ctx.fillStyle = css("--muted"); ctx.fillText(String(n), x, y + 26); }
+  }
+  ctx.fillStyle = css("--muted");
+  ctx.font = "13px ui-monospace, Menlo, monospace";
+  ctx.fillText("no fixed point · never returns", w / 2, h - 14);
+  ctx.fillStyle = css("--ink");
+  ctx.font = "600 15px ui-monospace, Menlo, monospace";
+  ctx.fillText("position " + step + ", and climbing", w / 2, y - 30);
+  ctx.textAlign = "left";
+}
+
+function fateFrame() {
+  if (running) step++;
+  drawRing(); drawLine();
+  const m = Number(mEl.value);
+  fateOut.textContent =
+    "step " + step + "\n" +
+    "ring  (bounded, m = " + m + "):  at cell " + (step % m) +
+    ",  visited " + Math.min(step + 1, m) + " of " + m +
+    ",  returned to start " + Math.floor(step / m) + " time(s)\n" +
+    "line  (unbounded ℤ):           at " + step +
+    ",  distance from start " + step + ",  returns: 0, and never";
+}
+
+mEl.addEventListener("input", () => { drawRing(); });
+$("runFate").addEventListener("click", (e) => {
+  running = !running; e.target.textContent = running ? "pause" : "run";
+});
+$("resetFate").addEventListener("click", () => { step = 0; fateFrame(); });
+
+/* ---------- panel IV: the self-check ---------- */
+(function selfCheck() {
+  const results = [];
+  const check = (name, got, want) => {
+    const ok = JSON.stringify(got) === JSON.stringify(want);
+    results.push({ ok, name, got: JSON.stringify(got), want: JSON.stringify(want) });
+  };
+
+  // 1. Before the fold: two integer fixed points at mu = 0.
+  check("mu = 0 has integer fixed points 0 and 1", integerFixedPoints(0), [0, 1]);
+
+  // 2. After the fold: none, for every integer mu from 1 to 200.
+  let anyAfter = [];
+  for (let mu = 1; mu <= 200; mu++) if (integerFixedPoints(mu).length) anyAfter.push(mu);
+  check("no integer fixed point for any mu in 1..200", anyAfter, []);
+
+  // 3. The fold's instant is not an integer: 1 - 4mu never vanishes.
+  let zeros = [];
+  for (let mu = -5000; mu <= 5000; mu++) if (disc(mu) === 0) zeros.push(mu);
+  check("1 - 4mu has no integer zero in -5000..5000", zeros, []);
+
+  // 4. Real roots: two, then one, then none.
+  check("root count at mu = 0, 0.25, 0.5",
+        [realRoots(0).length, realRoots(0.25).length, realRoots(0.5).length], [2, 1, 0]);
+
+  // 5. The annihilation is a meeting, not a drift: the roots converge on 1/2.
+  const near = realRoots(0.2499);
+  check("just before the fold both roots are within 0.01 of 1/2",
+        near.every((r) => Math.abs(r - 0.5) < 0.01), true);
+
+  // 6. bounded_no_runaway, by exhaustion: of all (N+1)^(N+1) self-maps of {0..N},
+  //    none satisfies x < g(x) everywhere. This is the theorem the Lean file proves
+  //    for every N at once; here it is checked for N = 0..4, all 3905 maps.
+  let inflationary = 0, total = 0;
+  for (let N = 0; N <= 4; N++) {
+    const size = N + 1, count = Math.pow(size, size);
+    for (let code = 0; code < count; code++) {
+      total++;
+      let c = code, ok = true;
+      for (let x = 0; x < size; x++) { const gx = c % size; c = Math.floor(c / size);
+        if (!(x < gx)) { ok = false; } }
+      if (ok) inflationary++;
+    }
+  }
+  check("no inflationary self-map of {0..N} for N = 0..4 (" + total + " maps)", inflationary, 0);
+
+  // 7. Unbounded: x -> x+1 on the integers never returns, for any start, any k >= 1.
+  let returns = 0;
+  for (let x = -50; x <= 50; x++) for (let k = 1; k <= 200; k++) if (x + k === x) returns++;
+  check("x -> x+1 on ℤ has no return within 200 steps from 101 starts", returns, 0);
+
+  // 8. Bounded: the ring returns in exactly m steps and has no fixed point.
+  let badPeriod = [], selfMap = [];
+  for (let m = 2; m <= 60; m++) {
+    if ((0 + m) % m !== 0) badPeriod.push(m);
+    for (let x = 0; x < m; x++) if ((x + 1) % m === x) selfMap.push([m, x]);
+    for (let k = 1; k < m; k++) if ((0 + k) % m === 0) badPeriod.push(m);
+  }
+  check("ring of m cells: first return at exactly m, no cell fixed (m = 2..60)",
+        [badPeriod, selfMap], [[], []]);
+
+  // 9. The period is the order of the twist, not 2: x -> x+1 on a ring of 3
+  //    is not an involution.
+  check("twist of order 3 is not a two-beat", [(0 + 1 + 1) % 3 === 0, (0 + 1 + 1 + 1) % 3 === 0],
+        [false, true]);
+
+  const failed = results.filter((r) => !r.ok).length;
+  $("checks").innerHTML =
+    results.map((r) =>
+      (r.ok ? "<span class='pass'>PASS</span>  " : "<span class='fail'>FAIL</span>  ") + r.name +
+      (r.ok ? "" : "\n        got " + r.got + ", wanted " + r.want)
+    ).join("\n") +
+    "\n\n" + (failed === 0
+      ? "<span class='pass'>" + results.length + " checks, 0 failed.</span>"
+      : "<span class='fail'>" + failed + " of " + results.length + " FAILED.</span>");
+})();
+
+/* ---------- go ---------- */
+drawFold();
+fateFrame();
+setInterval(fateFrame, 420);
+window.addEventListener("resize", () => { drawFold(); drawRing(); drawLine(); });
+</script>
+</body>
+</html>

