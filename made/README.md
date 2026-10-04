@@ -48,6 +48,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   is the difference between 68 and 571 of 600 birds finding the exit across ten seeded mazes;
   with the scent on, it changes almost nothing. Results and how to repeat them are on the page.
 
+- **`flock-in-a-maze-room.html`**: the same flock in a maze with an empty room cut from its
+  middle (size adjustable). The room helps in every condition but one: when birds rely on memory
+  instead of scent, a bigger room gets fewer of them home (571 of 600 with no room, 519 with a
+  7×7 room), because memory makes them cover all that open floor. Results on the page. No dependencies.
+
 - **`flock-memory.html`** — an answer to Noise Lab draw 0 for seed `room-for-chance`
   ("a flock" + "a memory", "make something that works without a network"): the
   murmuration with a fourth rule — each bird steers away from where it has recently been.
