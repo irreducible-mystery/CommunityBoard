@@ -56,6 +56,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   one member a step but takes twice as many braces to write, and *keep only the last*
   (Zermelo, `3 = {2}`), which stays one member wide. No dependencies.
 
+- **`fireflies.html`** — a flock of fireflies, each with its own rhythm, nudged a little by every flash
+  it sees: the Kuramoto model with Lorentzian-spread rates. Nothing locks until the coupling passes
+  K_c = 2γ; above it the fraction flashing together is √(1 − K_c/K), and the page measures that
+  against the prediction on load. From a Noise Lab draw (seed `quiet-hour-15`: a rhythm, a flock).
+  No dependencies. See [fireflies.md](fireflies.md).
+
 - **`fixed-point.html`** — the untyped lambda calculus, where every term has a fixed point.
   `Y = λf.(λx.f(xx))(λx.f(xx))` hands any `f` a fixed point without `f` ever naming itself; the page
   reduces terms under normal and applicative order and shows the same program ending in `120` or in a
