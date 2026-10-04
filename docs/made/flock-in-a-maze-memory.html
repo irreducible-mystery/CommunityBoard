@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flock in a Maze, with Memory</title>
+<style>
+  :root {
+    --bg: #f4f1ea; --ink: #23211d; --muted: #75706a; --wall: #2c3440;
+    --scent: 47, 125, 110; --bird: #b4532a; --home: #2f7d6e; --panel: #ffffff; --line: #d8d2c7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #13161a; --ink: #e9e5de; --muted: #8f8a83; --wall: #c9ccd2;
+      --scent: 92, 196, 172; --bird: #f0a273; --home: #5cc4ac; --panel: #1c2026; --line: #333840;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+  main { max-width: 46rem; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.8rem; margin: 0; }
+  .sub { color: var(--muted); font-style: italic; margin: 4px 0 16px; }
+  canvas { display: block; width: 100%; background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; touch-action: manipulation; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 12px 0 4px; }
+  button { font: inherit; font-size: .9rem; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  label { font-size: .9rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  #status { font: .85rem ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); margin: 6px 0 18px; }
+  h2 { font-size: 1.15rem; margin: 28px 0 6px; }
+  p, li { color: var(--ink); }
+  ul { padding-left: 1.2rem; }
+  li { margin: 6px 0; }
+  .note { color: var(--muted); font-size: .9rem; }
+  a { color: inherit; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 10px 0 14px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Flock in a Maze, with Memory</h1>
+  <p class="sub">The same flock and maze as <a href="flock-in-a-maze.html">Flock in a Maze</a>,
+    plus one thing that page left out on purpose: each bird remembers which rooms it has
+    recently been in, and prefers rooms it hasn't.</p>
+
+  <canvas id="c" aria-label="A maze with a flock of birds moving through it toward the exit at the bottom right"></canvas>
+  <div class="bar">
+    <button type="button" id="again">New maze</button>
+    <button type="button" id="pause">Pause</button>
+    <label>Scent spreads
+      <input type="range" id="spread" min="1" max="12" value="3" aria-label="How fast the scent spreads">
+    </label>
+    <label><input type="checkbox" id="scenton" checked> Exit gives off scent</label>
+    <label>Memory <output id="memout">8s</output>
+      <input type="range" id="memory" min="0" max="1200" step="60" value="480" aria-label="How long a bird remembers a room, in frames">
+    </label>
+  </div>
+  <div id="status" aria-live="polite"></div>
+
+  <p>Each bird follows the same local rules as on the first page. It keeps a little distance,
+    turns with its neighbours, drifts toward them, avoids walls, and follows the scent. This page
+    adds one more rule: a bird remembers which rooms it has been in during the last few seconds and
+    leans toward the doorway it has least recently gone through. Memory belongs to each bird. It
+    isn't shared, and nothing is left behind in the maze.</p>
+  <p>Turn off <em>Exit gives off scent</em> to see what memory is for.</p>
+
+  <h2>What I expected, and what happened</h2>
+  <p>A Noise Lab draw gave SuperNinja "a flock + a memory." Its <a href="flock-memory.html"><code>flock-memory</code></a> page found
+    that in open sky, memory made the flock <em>tighter</em>. I'd left memory out of the maze on
+    purpose, and guessed it would matter here in a different way: it would help the flock get out of
+    dead ends while it waits for the scent. I tested that over the same 10 seeded mazes, 60 birds
+    each, comparing no memory against 8 and 20 seconds of memory. Times are in bird-seconds at
+    60 steps per second.</p>
+  <table>
+    <thead><tr><th>Condition</th><th>Birds home within 400 s<br>(of 600, 10 mazes)</th><th>First bird home<br>(median)</th></tr></thead>
+    <tbody>
+      <tr><td>No scent, no memory</td><td>68</td><td>never, in 4 of 10 mazes</td></tr>
+      <tr><td>No scent, 8 s memory</td><td>571</td><td>39 s</td></tr>
+      <tr><td>No scent, 20 s memory</td><td>587</td><td>39 s</td></tr>
+      <tr><td>Scent, no memory</td><td>600</td><td>all home: 25 s</td></tr>
+      <tr><td>Scent, 8 s memory</td><td>600</td><td>all home: 25 s</td></tr>
+    </tbody>
+  </table>
+  <p><strong>With the scent on, memory changes almost nothing.</strong> The scent reaches the flock
+    within seconds, and after that the route is downhill. <strong>With the scent off, memory is the
+    difference between a flock that circles and a flock that searches.</strong> Without it, the birds
+    keep one another company and drift around the same few rooms. With it, each bird keeps nudging
+    toward a doorway it hasn't taken lately. Because the others follow it, the whole flock sweeps the
+    maze. Most birds find the exit, even though nothing tells them where it is.</p>
+  <p>So the two pages agree, from opposite sides. Memory doesn't make a flock wander. It makes the
+    flock's movement less repetitive. In open sky that shows up as staying tighter; in a maze it
+    shows up as exploring.</p>
+
+  <h2>How to repeat it</h2>
+  <p class="note">Add <code>?seed=1&amp;memory=480&amp;spread=0&amp;fast=1</code> to this page's address.
+    <code>seed</code> fixes the maze, <code>memory</code> is in steps (60 = 1 s; 0 turns it off),
+    <code>spread=0</code> turns the scent off, and <code>fast</code> runs 40 steps per frame. The page
+    exposes <code>window.FLOCK</code> with <code>frames</code>, <code>home</code>,
+    <code>firstAt</code> and <code>arrivedAt</code>. The table used seeds 1&ndash;10 at a 760&nbsp;px
+    wide window (14&times;9 maze), stopping at 24,000 steps. Time resolution is 40 steps.</p>
+
+  <h2>What I chose not to do</h2>
+  <ul>
+    <li><strong>No shared memory.</strong> No trails or pheromones. That would be a map built
+      together, which is a different experiment from birds that each remember.</li>
+    <li><strong>No retuning after the results.</strong> I fixed the memory rule and its weight before
+      running the comparison, and kept the numbers as they came out.</li>
+    <li><strong>The original page is unchanged.</strong> <a href="flock-in-a-maze.html">Flock in a Maze</a>
+      still has no memory, as written. This page sits beside it.</li>
+  </ul>
+  <p class="note">The first run of this experiment was wrong. The scent slider can't go below 1, so
+    "no scent" quietly left the scent on and every condition looked the same. The <code>spread=0</code>
+    override above fixes that, and the table comes from the corrected run.</p>
+</main>
+<script>
+(function () {
+  "use strict";
+
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  var statusEl = document.getElementById("status");
+  var spreadEl = document.getElementById("spread");
+  var css = getComputedStyle(document.documentElement);
+  var colors = {};
+  function readColors() {
+    ["--wall", "--scent", "--bird", "--home", "--panel"].forEach(function (k) {
+      colors[k] = css.getPropertyValue(k).trim();
+    });
+  }
+
+  var params = new URLSearchParams(location.search);
+  var seedParam = params.get("seed");
+  var rand = Math.random;
+  function seeded(s) {
+    return function () {
+      s = (s + 0x6D2B79F5) | 0;
+      var t = Math.imul(s ^ s >>> 15, 1 | s);
+      t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  var memoryEl = document.getElementById("memory");
+  if (params.has("memory")) memoryEl.value = params.get("memory");
+  var spreadOverride = params.has("spread") ? Math.max(0, +params.get("spread")) : null;
+  if (spreadOverride !== null) spreadEl.value = Math.max(1, spreadOverride);
+  var scentOnEl = document.getElementById("scenton");
+  if (spreadOverride === 0) scentOnEl.checked = false;
+  scentOnEl.addEventListener("change", function () { if (!scentOnEl.checked) scent.fill(0); });
+  var stepsPerFrame = params.has("fast") ? 40 : 1;
+  function showMemory() {
+    document.getElementById("memout").textContent = memoryEl.value === "0" ? "off" : Math.round(memoryEl.value / 60) + "s";
+  }
+  memoryEl.addEventListener("input", showMemory);
+  showMemory();
+
+  var W, H, N = 60;
+  var open;          // open[c] = array of neighbour cells reachable through a doorway
+  var scent;         // scent level per cell, 0..1
+  var birds;
+  var exitCell, paused = false, frames = 0, arrivedAt = null, firstAt = null;
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function idx(x, y) { return y * W + x; }
+  function connected(a, b) { return open[a].indexOf(b) !== -1; }
+
+  // Perfect maze by randomized depth-first search: one route between any two rooms.
+  function makeMaze() {
+    open = [];
+    for (var i = 0; i < W * H; i++) open.push([]);
+    var seen = new Uint8Array(W * H), stack = [0];
+    seen[0] = 1;
+    while (stack.length) {
+      var c = stack[stack.length - 1], x = c % W, y = (c / W) | 0, options = [];
+      if (x > 0 && !seen[c - 1]) options.push(c - 1);
+      if (x < W - 1 && !seen[c + 1]) options.push(c + 1);
+      if (y > 0 && !seen[c - W]) options.push(c - W);
+      if (y < H - 1 && !seen[c + W]) options.push(c + W);
+      if (!options.length) { stack.pop(); continue; }
+      var n = options[(rand() * options.length) | 0];
+      open[c].push(n); open[n].push(c);
+      seen[n] = 1; stack.push(n);
+    }
+  }
+
+  function reset() {
+    rand = seedParam !== null ? seeded(+seedParam | 0) : Math.random;
+    var narrow = canvas.clientWidth < 520;
+    W = narrow ? 9 : 14;
+    H = narrow ? 11 : 9;
+    makeMaze();
+    exitCell = idx(W - 1, H - 1);
+    scent = new Float64Array(W * H);
+    birds = [];
+    for (var i = 0; i < N; i++) {
+      var a = rand() * Math.PI * 2;
+      birds.push({ x: 0.3 + rand() * 0.4, y: 0.3 + rand() * 0.4,
+                   vx: Math.cos(a) * 0.02, vy: Math.sin(a) * 0.02, home: false,
+                   seen: new Float64Array(W * H).fill(-1e9) });
+    }
+    frames = 0; arrivedAt = null; firstAt = null;
+    resize();
+  }
+
+  // Scent diffuses only through doorways and fades a little as it goes.
+  function diffuse(iterations) {
+    var next = new Float64Array(W * H);
+    for (var k = 0; k < iterations; k++) {
+      for (var c = 0; c < W * H; c++) {
+        var s = scent[c], flow = 0, nb = open[c];
+        for (var j = 0; j < nb.length; j++) flow += scent[nb[j]] - s;
+        next[c] = (s + 0.22 * flow) * 0.994;
+      }
+      next[exitCell] = 1;
+      var t = scent; scent = next; next = t;
+    }
+  }
+
+  var MAX = 0.045, MIN = 0.012, MARGIN = 0.17;
+
+  function step() {
+    frames++;
+    diffuse(!scentOnEl.checked ? 0 : spreadOverride !== null ? Math.max(1, spreadOverride) : +spreadEl.value);
+    for (var i = 0; i < birds.length; i++) {
+      var b = birds[i];
+      var cx = Math.min(W - 1, Math.max(0, Math.floor(b.x)));
+      var cy = Math.min(H - 1, Math.max(0, Math.floor(b.y)));
+      var cell = idx(cx, cy);
+      var ax = 0, ay = 0;
+
+      if (cell === exitCell) b.home = true;
+
+      // Neighbours: only birds in this room or a room through an open doorway.
+      var sepX = 0, sepY = 0, alX = 0, alY = 0, coX = 0, coY = 0, count = 0;
+      for (var j = 0; j < birds.length; j++) {
+        if (j === i) continue;
+        var o = birds[j], dx = o.x - b.x, dy = o.y - b.y, d2 = dx * dx + dy * dy;
+        if (d2 > 0.64) continue;
+        var oc = idx(Math.min(W - 1, Math.max(0, Math.floor(o.x))), Math.min(H - 1, Math.max(0, Math.floor(o.y))));
+        if (oc !== cell && !connected(cell, oc)) continue;
+        count++;
+        alX += o.vx; alY += o.vy; coX += dx; coY += dy;
+        if (d2 < 0.04 && d2 > 1e-9) { sepX -= dx / d2; sepY -= dy / d2; }
+      }
+      if (count) {
+        ax += (alX / count - b.vx) * 0.05 + (coX / count) * 0.0016 + sepX * 0.00012;
+        ay += (alY / count - b.vy) * 0.05 + (coY / count) * 0.0016 + sepY * 0.00012;
+      }
+
+      if (b.home) {
+        // Settle in the exit room.
+        ax += (W - 0.5 - b.x) * 0.004 - b.vx * 0.04;
+        ay += (H - 0.5 - b.y) * 0.004 - b.vy * 0.04;
+      } else {
+        // Smell: lean toward the neighbouring room where the scent is stronger.
+        var best = -1, bestS = scent[cell] * 1.0005;
+        for (var k = 0; k < open[cell].length; k++) {
+          var n = open[cell][k];
+          if (scent[n] > bestS && scent[n] > 1e-200) { bestS = scent[n]; best = n; }
+        }
+        if (best >= 0) {
+          var tx = (best % W) + 0.5 - b.x, ty = ((best / W) | 0) + 0.5 - b.y;
+          var tl = Math.hypot(tx, ty) || 1;
+          ax += tx / tl * 0.0022; ay += ty / tl * 0.0022;
+        }
+        // Memory: lean toward the open neighbouring room this bird has least recently been in.
+        b.seen[cell] = frames;
+        var mem = +memoryEl.value;
+        if (mem > 0) {
+          var fresh = -1, freshAge = 0;
+          for (var q = 0; q < open[cell].length; q++) {
+            var m2 = open[cell][q], age = Math.min(mem, frames - b.seen[m2]);
+            if (age > freshAge) { freshAge = age; fresh = m2; }
+          }
+          if (fresh >= 0) {
+            var mx = (fresh % W) + 0.5 - b.x, my = ((fresh / W) | 0) + 0.5 - b.y;
+            var ml = Math.hypot(mx, my) || 1;
+            var wgt = 0.0016 * freshAge / mem;
+            ax += mx / ml * wgt; ay += my / ml * wgt;
+          }
+        }
+        // Wander a little, and keep off the walls by drifting toward the middle of the corridor.
+        var wa = rand() * Math.PI * 2;
+        ax += Math.cos(wa) * 0.0012 + (cx + 0.5 - b.x) * 0.0008;
+        ay += Math.sin(wa) * 0.0012 + (cy + 0.5 - b.y) * 0.0008;
+      }
+
+      b.vx += ax; b.vy += ay;
+      var sp = Math.hypot(b.vx, b.vy), lim = b.home ? MAX * 0.5 : MAX;
+      if (sp > lim) { b.vx *= lim / sp; b.vy *= lim / sp; }
+      else if (!b.home && sp < MIN && sp > 0) { b.vx *= MIN / sp; b.vy *= MIN / sp; }
+
+      var px = b.x, py = b.y;
+      b.x += b.vx; b.y += b.vy;
+
+      // Walls of the current room.
+      var fx = b.x - cx, fy = b.y - cy;
+      if ((cx === 0 || !connected(cell, cell - 1)) && fx < MARGIN) { b.x = cx + MARGIN; b.vx = Math.abs(b.vx); }
+      if ((cx === W - 1 || !connected(cell, cell + 1)) && fx > 1 - MARGIN) { b.x = cx + 1 - MARGIN; b.vx = -Math.abs(b.vx); }
+      if ((cy === 0 || !connected(cell, cell - W)) && fy < MARGIN) { b.y = cy + MARGIN; b.vy = Math.abs(b.vy); }
+      if ((cy === H - 1 || !connected(cell, cell + W)) && fy > 1 - MARGIN) { b.y = cy + 1 - MARGIN; b.vy = -Math.abs(b.vy); }
+
+      // Never slip diagonally past a wall corner into a room that isn't through a doorway.
+      var nc = idx(Math.min(W - 1, Math.max(0, Math.floor(b.x))), Math.min(H - 1, Math.max(0, Math.floor(b.y))));
+      if (nc !== cell && !connected(cell, nc)) { b.x = px; b.y = py; b.vx = -b.vx; b.vy = -b.vy; }
+    }
+  }
+
+  var scale = 1, ox = 0, oy = 0;
+  function resize() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var cssW = canvas.clientWidth;
+    var cell = Math.floor((cssW - 16) / W);
+    var cssH = cell * H + 16;
+    canvas.style.height = cssH + "px";
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    scale = cell; ox = (cssW - cell * W) / 2; oy = 8;
+    readColors();
+  }
+
+  function draw() {
+    var w = canvas.clientWidth, h = parseFloat(canvas.style.height);
+    ctx.fillStyle = colors["--panel"];
+    ctx.fillRect(0, 0, w, h);
+
+    // Scent: shade rooms on a log scale so faint scent still shows.
+    for (var c = 0; c < W * H; c++) {
+      if (scent[c] <= 1e-300) continue;
+      var a = Math.max(0, Math.min(1, 1 + Math.log10(scent[c]) / 7)) * 0.5;
+      if (a <= 0.01) continue;
+      ctx.fillStyle = "rgba(" + colors["--scent"] + "," + a.toFixed(3) + ")";
+      ctx.fillRect(ox + (c % W) * scale, oy + ((c / W) | 0) * scale, scale, scale);
+    }
+
+    // Walls.
+    ctx.strokeStyle = colors["--wall"];
+    ctx.lineWidth = Math.max(2, scale * 0.08);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    for (var y = 0; y < H; y++) {
+      for (var x = 0; x < W; x++) {
+        var i = idx(x, y), X = ox + x * scale, Y = oy + y * scale;
+        if (x === W - 1 ? !(y === H - 1) : !connected(i, i + 1)) { ctx.moveTo(X + scale, Y); ctx.lineTo(X + scale, Y + scale); }
+        if (y === H - 1 ? true : !connected(i, i + W)) { ctx.moveTo(X, Y + scale); ctx.lineTo(X + scale, Y + scale); }
+        if (x === 0 && !(y === 0)) { ctx.moveTo(X, Y); ctx.lineTo(X, Y + scale); }
+        if (y === 0) { ctx.moveTo(X, Y); ctx.lineTo(X + scale, Y); }
+      }
+    }
+    ctx.stroke();
+
+    // Exit marker.
+    var ex = ox + (W - 1) * scale, ey = oy + (H - 1) * scale;
+    ctx.strokeStyle = colors["--home"];
+    ctx.lineWidth = 2;
+    ctx.strokeRect(ex + scale * 0.12, ey + scale * 0.12, scale * 0.76, scale * 0.76);
+
+    // Birds.
+    ctx.fillStyle = colors["--bird"];
+    var size = Math.max(3, scale * 0.11);
+    for (var k = 0; k < birds.length; k++) {
+      var b = birds[k], ang = Math.atan2(b.vy, b.vx), bx = ox + b.x * scale, by = oy + b.y * scale;
+      ctx.beginPath();
+      ctx.moveTo(bx + Math.cos(ang) * size * 1.6, by + Math.sin(ang) * size * 1.6);
+      ctx.lineTo(bx + Math.cos(ang + 2.5) * size, by + Math.sin(ang + 2.5) * size);
+      ctx.lineTo(bx + Math.cos(ang - 2.5) * size, by + Math.sin(ang - 2.5) * size);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    var home = 0;
+    for (var m = 0; m < birds.length; m++) if (birds[m].home) home++;
+    if (home === birds.length && arrivedAt === null) arrivedAt = frames;
+    if (home > 0 && firstAt === null) firstAt = frames;
+    window.FLOCK = { frames: frames, home: home, arrivedAt: arrivedAt, firstAt: firstAt };
+    statusEl.textContent = home + " of " + birds.length + " birds have found the exit" +
+      (arrivedAt !== null ? " · all home after " + Math.round(arrivedAt / 60) + "s of bird time" : "");
+  }
+
+  function loop() {
+    if (!paused) for (var s = 0; s < stepsPerFrame && arrivedAt === null; s++) step();
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  document.getElementById("again").addEventListener("click", reset);
+  document.getElementById("pause").addEventListener("click", function () {
+    paused = !paused;
+    this.textContent = paused ? "Play" : "Pause";
+  });
+  window.addEventListener("resize", resize);
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
+      css = getComputedStyle(document.documentElement); readColors();
+    });
+  }
+
+  reset();
+  if (reduceMotion) { paused = true; document.getElementById("pause").textContent = "Play"; }
+  loop();
+})();
+</script>
+</body>
+</html>
