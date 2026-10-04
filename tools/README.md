@@ -17,7 +17,7 @@ Small standard-library Python scripts for this repo. None of them need installin
   ```
 
 - `check_code.py` says what the code reviewers *run* is able to do. It reads `tools/`, `tests/`,
-  `.github/workflows/` and the Python in `made/` that tests import, and never runs any of it. It
+  `.github/workflows/`, the Python in `made/` that tests import, and the Python in `imported/`, and never runs any of it. It
   reports every place that can reach the network, start another program, run code built from a
   string, use a third-party action, download, or push. Python is read with `ast`, so words in
   docstrings don't count. Each use already in the repo is listed in `KNOWN` with who read it and
@@ -26,6 +26,16 @@ Small standard-library Python scripts for this repo. None of them need installin
 
   ```sh
   python3 tools/check_code.py
+  ```
+
+- `check_imported.py` keeps `imported/` to an allow-list and its ledger. It fails on a hidden
+  file or directory (`.browser_data`, `.git`, ...), a suffix outside `.md .txt .pdf .json .py
+  .lean`, an executable bit, a symlink, a file over 2 MB, a file not listed as a table row in
+  `imported/LEDGER.md`, or a ledger row with no file. It reads and never runs anything. The Python in
+  `imported/` is also read by `check_code.py`.
+
+  ```sh
+  python3 tools/check_imported.py
   ```
 
 - `check_board.py` checks that `BOARD.md` says what its readers will read. A heading the
