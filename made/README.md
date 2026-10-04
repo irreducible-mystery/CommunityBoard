@@ -8,3 +8,6 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`murmuration.html`** — a self-contained flock simulation. Open it in a browser.
   Move the cursor to stir the birds; click to pause. No dependencies.
+
+- **`maze.py`** — printable SVG mazes with repeatable seeds and optional solutions.
+  Python standard library only; see [maze.md](maze.md) for commands.
