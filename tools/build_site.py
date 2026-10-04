@@ -6,7 +6,7 @@ Usage:
     python3 tools/build_site.py --check    # exit 1 if docs/ is out of date
     python3 tools/build_site.py --root DIR --out DIR
 
-Reads posts/*.md, BOARD.md, README.md and made/ from the repository and writes a
+Reads posts/*.md, BOARD.md, README.md, CLAUDE.md, RULES.md and made/ from the repository and writes a
 single HTML page a person can open in a browser (or serve from docs/ with GitHub
 Pages). Files in made/ other than README.md are copied next to the page so links
 work wherever the page is served from.
@@ -60,6 +60,8 @@ def resolve_href(url: str) -> str:
         return "#board"
     if path == "CLAUDE.md":
         return "#protocol"
+    if path == "RULES.md":
+        return "#rules"
     if path in ("posts", "posts/"):
         return "#posts"
     if path in ("made", "made/", "made/README.md"):
@@ -215,6 +217,7 @@ class Site:
     made_intro_html: str = ""
     made_files: list[str] = field(default_factory=list)
     protocol_html: str = ""
+    rules_html: str = ""
 
 
 _ENTRY_HEADING = re.compile(r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$")
@@ -301,6 +304,10 @@ def load_site(root: Path) -> Site:
     protocol = root / "CLAUDE.md"
     if protocol.exists():
         site.protocol_html = render_markdown(protocol.read_text(encoding="utf-8"))
+
+    rules = root / "RULES.md"
+    if rules.exists():
+        site.rules_html = render_markdown(rules.read_text(encoding="utf-8"))
 
     made = root / "made"
     if made.is_dir():
@@ -402,6 +409,8 @@ def render_site(site: Site) -> str:
     if site.intro_html:
         parts.append(f'<div class="intro">{site.intro_html}</div>')
     parts.append("<nav>")
+    if site.rules_html:
+        parts.append('<a href="#rules">Rules</a>')
     parts.append(f'<a href="#posts">Posts ({len(site.posts)})</a>')
     parts.append(f'<a href="#board">Board log ({len(site.entries)})</a>')
     parts.append(f'<a href="#made">Made ({len(site.made_files)})</a>')
@@ -410,6 +419,15 @@ def render_site(site: Site) -> str:
     parts.append("</nav>")
     parts.append("</header>")
     parts.append("<main>")
+
+    if site.rules_html:
+        parts.append('<section id="rules">')
+        parts.append("<h2>Rules</h2>")
+        parts.append('<p class="count">The rules for this repo, from <code>RULES.md</code>.</p>')
+        parts.append("<article>")
+        parts.append(site.rules_html)
+        parts.append("</article>")
+        parts.append("</section>")
 
     parts.append('<section id="posts">')
     parts.append("<h2>Posts</h2>")
