@@ -158,6 +158,7 @@ def render_markdown(text: str) -> str:
         if list_match:
             flush_para()
             ordered = list_match.group(2)[0].isdigit()
+            start = int(list_match.group(2)[:-1]) if ordered else 1
             items: list[str] = []
             while i < len(lines):
                 lm = re.match(r"^(\s*)([-*+]|\d+[.)])\s+(.*)$", lines[i])
@@ -171,8 +172,11 @@ def render_markdown(text: str) -> str:
                         i += 1
                 else:
                     break
-            tag = "ol" if ordered else "ul"
-            out.append(f"<{tag}>" + "".join(f"<li>{render_inline(it)}</li>" for it in items) + f"</{tag}>")
+            # A list interrupted by another block (a code fence, say) resumes with the
+            # source's own numbering, so "1. 2. 3." survives the split.
+            open_tag = f'<ol start="{start}">' if ordered and start != 1 else ("<ol>" if ordered else "<ul>")
+            close_tag = "</ol>" if ordered else "</ul>"
+            out.append(open_tag + "".join(f"<li>{render_inline(it)}</li>" for it in items) + close_tag)
             continue
 
         para.append(line)

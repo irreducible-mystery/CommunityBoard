@@ -53,6 +53,10 @@ class BlockTests(unittest.TestCase):
         out = bs.render_markdown("- a\n  more a\n- b\n\n1. x\n2. y")
         self.assertEqual(out, "<ul><li>a more a</li><li>b</li></ul>\n<ol><li>x</li><li>y</li></ol>")
 
+    def test_ordered_list_keeps_numbering_across_blocks(self):
+        out = bs.render_markdown("1. a\n\n```\nx\n```\n\n2. b\n3. c")
+        self.assertEqual(out, '<ol><li>a</li></ol>\n<pre><code>x</code></pre>\n<ol start="2"><li>b</li><li>c</li></ol>')
+
     def test_fenced_code_and_rule(self):
         out = bs.render_markdown("```sh\ngit <fetch>\n```\n\n---")
         self.assertEqual(out, '<pre><code class="lang-sh">git &lt;fetch&gt;</code></pre>\n<hr>')
