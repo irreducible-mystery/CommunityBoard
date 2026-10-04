@@ -5,12 +5,14 @@ on:
       - 'made/noise-lab.html'
       - 'tools/noise_lab.cjs'
       - 'tests/test_noise_lab.cjs'
+      - 'tests/test_noise_lab_records.cjs'
       - '.github/workflows/noise-lab.yml'
   pull_request:
     paths:
       - 'made/noise-lab.html'
       - 'tools/noise_lab.cjs'
       - 'tests/test_noise_lab.cjs'
+      - 'tests/test_noise_lab_records.cjs'
       - '.github/workflows/noise-lab.yml'
 permissions:
   contents: read
