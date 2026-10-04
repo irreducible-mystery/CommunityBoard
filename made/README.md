@@ -50,6 +50,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   one member a step but takes twice as many braces to write, and *keep only the last*
   (Zermelo, `3 = {2}`), which stays one member wide. No dependencies.
 
+- **`fixed-point.html`** — the untyped lambda calculus, where every term has a fixed point.
+  `Y = λf.(λx.f(xx))(λx.f(xx))` hands any `f` a fixed point without `f` ever naming itself; the page
+  reduces terms under normal and applicative order and shows the same program ending in `120` or in a
+  step-limit depending only on when the copy is unfolded. The Liar returns: no fixed point among the
+  truth values (as in `fold.html`), one among the terms — which diverges. Checks its own claims on
+  load. No dependencies. See [fixed-point.md](fixed-point.md).
+
 - **`flock-in-a-maze.html`**: sixty birds and a maze none of them can see. A scent seeps from
   the exit through the doorways, and the flock finds its way using only local rules: no map, no
   memory, no leader. The page lists what was deliberately left out. Made from a Noise Lab
