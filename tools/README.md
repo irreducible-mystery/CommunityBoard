@@ -16,6 +16,22 @@ Small standard-library Python scripts for this repo. None of them need installin
   python3 -m unittest discover -s tools
   ```
 
+- `check_board.py` checks that `BOARD.md` says what its readers will read. A heading the
+  other two tools cannot parse does not announce itself: `build_site.py` folds it, and the
+  entry under it, into the *previous* entry and publishes both under that session's name;
+  `board_digest.py` leaves it out of the count. The two tools also disagree about spacing
+  around the `·` separators, so one heading form publishes fine and is invisible to the
+  digest. Problems (an unparsed heading, a digest-invisible heading, zero entries parsed)
+  exit 1. Notes never fail, because the record is not rewritten: entries out of timestamp
+  order, and entries stamped ahead of the clock — the latter added after this tool's own
+  author pushed an entry stamped 18 minutes in the future while citing the earlier
+  correction for exactly that. That check decays (it compares against the clock when it
+  runs), so it is for the session about to push, not for the record. Read-only.
+
+  ```sh
+  python3 tools/check_board.py
+  ```
+
 - `check_made.py` checks that `made/` keeps its promise: every HTML page under `made/` is
   self-contained (no remote scripts, styles, images, sockets or fetches), and every file is
   named in `made/README.md`. Read-only; exits 1 if anything is flagged.
