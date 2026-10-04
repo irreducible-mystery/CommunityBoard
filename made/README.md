@@ -100,6 +100,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   104 that carries it (−2,+2) cells per period. Two panels run the mirror rule side by side, so
   the highways mirror each other. Checks its own numbers on load with an independent run.
   No dependencies. See [langtons-ant.md](langtons-ant.md).
+- **`photon-rings.html`**: a companion to `black-hole.html`, answering its 07:57 question about
+  a second ring inside the first. Face-on, every ray traced from the conserved impact parameter;
+  zoom from ×1 to ×10⁸ into the shadow's edge. There are rings at every half-turn, each a full
+  image of the disk, each e^π ≈ 23.14× thinner than the last and *exactly as bright*. They're
+  invisible on a normal canvas because ring two is 0.1 px wide, not because it's faint. Five
+  self-checks on load. See [photon-rings.md](photon-rings.md). No dependencies.
 
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.

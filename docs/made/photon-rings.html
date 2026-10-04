@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photon rings: thinner, not fainter</title>
+<style>
+  :root { --bg:#07080b; --fg:#d6d9e0; --dim:#7d8492; --line:#22262f; --acc:#f2b36b; }
+  html, body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.6 Georgia, "Times New Roman", serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
+  h1 { font-weight: normal; font-size: 26px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 18px; margin: 30px 0 8px; color: var(--acc); }
+  p { margin: 8px 0; max-width: 760px; }
+  .dim { color: var(--dim); }
+  .mono { font: 12.5px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  canvas { display:block; background:#000; border:1px solid var(--line); border-radius:4px; max-width:100%; height:auto; }
+  .row { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+  .ctl { margin: 10px 0; }
+  .ctl label { margin-right: 16px; }
+  input[type=range] { width: 320px; vertical-align: middle; }
+  button { background:#151821; color:var(--fg); border:1px solid #333a47; border-radius:4px; padding:3px 10px; font:12px ui-monospace, Menlo, monospace; cursor:pointer; margin: 2px 4px 2px 0; }
+  button:hover { border-color: var(--acc); }
+  table { border-collapse: collapse; margin: 8px 0; }
+  td, th { padding: 3px 12px 3px 0; text-align: right; border-bottom: 1px solid var(--line); }
+  th { color: var(--dim); font-weight: normal; }
+  .ok { color: #8fd18f; } .bad { color: #e98a8a; }
+</style>
+
+</head>
+<body>
+<main>
+<h1>Photon rings: thinner, not fainter</h1>
+<p class="dim">A companion to <a href="black-hole.html" style="color:var(--acc)">black-hole.html</a>, answering the question its
+author left at 07:57: is there a second ring inside the first? Yes, and a third, and so on. They aren't
+missing because they are faint; they're missing because they're thin.</p>
+
+<p>A Schwarzschild black hole, a thin disk from 6M to 18M, seen exactly face-on from far away. With the
+camera on the axis the picture is a set of circles, so everything depends on one number, the ray's impact
+parameter <i>b</i>. A ray with <i>b</i> just above 3√3 M ≈ 5.196 M goes around the photon sphere before
+leaving. It can hit the disk on its first crossing of the disk's plane (the direct image, <b>k = 0</b>),
+after half a turn (<b>k = 1</b>), after a full turn (<b>k = 2</b>), and so on. Each image is a complete
+copy of the disk, squeezed into a band <b>e<sup>π</sup> ≈ 23.14 times narrower</b> than the one before.</p>
+
+<h2>1 · At ordinary resolution</h2>
+<div class="row">
+  <canvas id="full" width="440" height="440"></canvas>
+  <div style="flex:1;min-width:260px">
+    <p>48 M across at about 9 px per M, close to <code>black-hole.html</code>'s 9.9. Each pixel is the
+    <i>area average</i> of the true brightness over that pixel, not a single sample, so a ring
+    narrower than a pixel still contributes its share of light.</p>
+    <p class="mono" id="fullnote"></p>
+    <p>On a screen, a band 0.1 px wide gets 0.1 of a pixel's light, so here thinness turns into faintness.
+    In the sky it doesn't: zoom in below and every ring is as bright at its peak as the direct image.</p>
+  </div>
+</div>
+
+<h2>2 · Zoom into the shadow's edge</h2>
+<canvas id="zoom" width="900" height="300"></canvas>
+<div class="ctl">
+  <label>magnification <input id="mag" type="range" min="0" max="8" step="0.01" value="0"> <span id="magv" class="mono"></span></label>
+  <span class="mono dim">jump to ring:</span>
+  <span id="jumps"></span>
+</div>
+<p class="mono" id="zoomnote"></p>
+<p class="dim">The left quarter of the view is inside the shadow (b &lt; b<sub>c</sub>); the dashed line is
+b<sub>c</sub>. Rays that land between bands escape and are drawn black. There are no stars here, so the gaps
+are easy to see.</p>
+
+<h2>3 · On a log scale they are all the same ring</h2>
+<canvas id="strip" width="900" height="120"></canvas>
+<p>Horizontal axis: log<sub>10</sub>(b − b<sub>c</sub>), from +1.3 on the left to −9 on the right.
+On this axis every ring takes up the same 1.364 decades (log<sub>10</sub> e<sup>π</sup>). This self-similarity
+is the whole story: each extra half-turn around the photon sphere costs the same factor, because near
+3M an orbit is unstable with Lyapunov exponent exactly π per half-turn.</p>
+
+<h2>4 · What the integrator found</h2>
+<table class="mono" id="bands"></table>
+<div class="mono" id="checks"></div>
+<p class="dim">Every ring maps the whole disk, 6M to 18M, so its peak is the brightness of the disk at 6M.
+Face-on there is no Doppler shift (the camera sits on the rotation axis, so every ray has zero angular
+momentum about it), and the gravitational redshift depends only on where the light was emitted.
+Brightness is bolometric: emission ∝ r<sup>−3</sup> times g<sup>4</sup>, with g = √(1 − 3M/r).
+Odd rings show the disk's underside; this thin disk shines equally from both faces.</p>
+
+<details class="dim"><summary>Method</summary>
+<p>Null geodesics obey the Binet equation u'' + u = 3Mu² in the orbital angle φ, u = 1/r. A ray starts at
+r = 1000 M with du/dφ = √(1/b² − u²(1 − 2Mu)), so b is the conserved impact parameter and the critical value
+is 3√3 M exactly, not a camera-frame approximation. RK4 with fixed steps (0.002 rad near the hole, 0.01 far
+out). The camera is on the disk's axis, so the disk plane is crossed at φ = π/2 + kπ. Band edges come from
+classifying rays on a merged linear and logarithmic grid, then bisecting each change of outcome 50 times.
+Band positions are measured from the integrator's own b<sub>c</sub>, found the same way, so its
+discretisation error cancels.</p></details>
+<p class="dim mono" style="margin-top:20px">SuperNinja (harmonograph session), 2026-10-04. One file, no dependencies.</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  const M = 1, R0 = 1000, RIN = 6, ROUT = 18, KMAX = 7, BC_EXACT = 3 * Math.sqrt(3);
+  const $ = id => document.getElementById(id);
+
+  // ---- engine ----
+  function f(u, w) { return [w, 3 * M * u * u - u]; }
+  function rk4(u, w, h) {
+    const a = f(u, w), b = f(u + .5 * h * a[0], w + .5 * h * a[1]);
+    const c = f(u + .5 * h * b[0], w + .5 * h * b[1]), d = f(u + h * c[0], w + h * c[1]);
+    return [u + h / 6 * (a[0] + 2 * b[0] + 2 * c[0] + d[0]), w + h / 6 * (a[1] + 2 * b[1] + 2 * c[1] + d[1])];
+  }
+  // Fate of a ray with conserved impact parameter b: {k, r} on a disk hit, else {k:-1, fate}.
+  function trace(b) {
+    const u0 = 1 / R0;
+    let u = u0, w = Math.sqrt(Math.max(0, 1 / (b * b) - u0 * u0 * (1 - 2 * M * u0))), phi = 0, k = 0;
+    let next = Math.PI / 2;                        // next crossing of the disk plane
+    for (let i = 0; i < 400000; i++) {
+      const h = u < 0.05 ? 0.01 : 0.002, pu = u, pp = phi;
+      const s = rk4(u, w, h); u = s[0]; w = s[1]; phi += h;
+      if (u >= 1 / (2 * M)) return { k: -1, fate: "horizon" };
+      if (phi >= next) {
+        const uc = pu + (u - pu) * (next - pp) / h, rc = 1 / uc;
+        if (uc > 0 && rc >= RIN && rc <= ROUT) return { k, r: rc };
+        k++; next += Math.PI;
+        if (k > KMAX) return { k: -1, fate: "beyond" };
+      }
+      if (u < u0 && w < 0) return { k: -1, fate: "escape" };
+    }
+    return { k: -1, fate: "beyond" };
+  }
+  const key = t => t.k >= 0 ? "k" + t.k : t.fate;
+  function bright(r) { const g2 = 1 - 3 * M / r; return g2 > 0 ? Math.pow(r, -3) * g2 * g2 : 0; }
+  const IPEAK = bright(RIN);
+
+  // critical b from this integrator: horizon vs not, ignoring the disk
+  function falls(b) {
+    const u0 = 1 / R0; let u = u0, w = Math.sqrt(Math.max(0, 1 / (b * b) - u0 * u0 * (1 - 2 * M * u0)));
+    for (let i = 0; i < 400000; i++) { const s = rk4(u, w, u < 0.05 ? 0.01 : 0.002); u = s[0]; w = s[1];
+      if (u >= .5) return true; if (u < u0 && w < 0) return false; }
+    return true;
+  }
+  let lo = 5, hi = 5.4; for (let i = 0; i < 55; i++) { const m = (lo + hi) / 2; falls(m) ? lo = m : hi = m; }
+  const BC = (lo + hi) / 2;
+
+  // ---- band edges ----
+  const pts = [];
+  for (let b = 0.05; b < 30; b += 0.05) pts.push(b);
+  for (let x = 1.3; x >= -10; x -= 0.02) { pts.push(BC + Math.pow(10, x)); if (x < 0.5) pts.push(BC - Math.pow(10, x)); }
+  pts.sort((a, b) => a - b);
+  const cls = pts.map(b => key(trace(b)));
+  const intervals = [];                           // [b0, b1, key]
+  let start = pts[0];
+  for (let i = 1; i < pts.length; i++) if (cls[i] !== cls[i - 1]) {
+    let a = pts[i - 1], c = pts[i];
+    for (let j = 0; j < 50; j++) { const m = (a + c) / 2; key(trace(m)) === cls[i - 1] ? a = m : c = m; }
+    const e = (a + c) / 2; intervals.push([start, e, cls[i - 1]]); start = e;
+  }
+  intervals.push([start, 1e9, cls[cls.length - 1]]);
+  const bands = intervals.filter(v => v[2][0] === "k");
+  const byK = {};
+  bands.forEach(([b0, b1, kk]) => { const k = +kk.slice(1); (byK[k] = byK[k] || []).push([b0, b1]); });
+
+  // brightness of the true image at b (point sample)
+  function I(b) { const t = trace(b); return t.k >= 0 ? bright(t.r) / IPEAK : 0; }
+  // area average of I over [b0, b1]
+  function avg(b0, b1) {
+    let sum = 0;
+    for (const [c0, c1] of bands) {
+      const a = Math.max(b0, c0), c = Math.min(b1, c1);
+      if (c <= a) continue;
+      const n = 4; let s = 0;
+      for (let j = 0; j < n; j++) s += I(a + (c - a) * (j + .5) / n);
+      sum += s / n * (c - a);
+    }
+    return sum / (b1 - b0);
+  }
+  function color(v) {                              // v in [0,1] -> warm palette, gamma for visibility
+    const t = Math.pow(Math.max(0, Math.min(1, v)), 0.5);
+    return [255 * Math.min(1, 1.6 * t), 255 * Math.min(1, 1.15 * t * t + .1 * t), 255 * Math.min(1, t * t * t * 1.2)];
+  }
+
+  // ---- panel 1: full face-on image ----
+  (function () {
+    const cv = $("full"), cx = cv.getContext("2d"), W = cv.width, S = 48 / W;  // M per px
+    const NB = W * 2, prof = new Float64Array(NB), dr = (W / 2 * Math.SQRT2 * S) / NB;
+    for (let i = 0; i < NB; i++) prof[i] = avg(i * dr, (i + 1) * dr);
+    const img = cx.createImageData(W, W), px = img.data;
+    for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
+      const b = Math.hypot(x + .5 - W / 2, y + .5 - W / 2) * S, c = color(prof[Math.min(NB - 1, Math.floor(b / dr))]);
+      const o = (y * W + x) * 4; px[o] = c[0]; px[o + 1] = c[1]; px[o + 2] = c[2]; px[o + 3] = 255;
+    }
+    cx.putImageData(img, 0, 0);
+    const wpx = k => byK[k] ? byK[k].reduce((s, v) => s + v[1] - v[0], 0) / S : 0;
+    $("fullnote").innerHTML = `scale ${(1 / S).toFixed(2)} px per M<br>` +
+      [0, 1, 2, 3].map(k => `ring k=${k}: ${wpx(k) >= 0.1 ? wpx(k).toFixed(2) : wpx(k).toExponential(1)} px wide`).join("<br>");
+  })();
+
+  // ---- panel 2: zoom ----
+  const zc = $("zoom"), zx = zc.getContext("2d"), ZW = zc.width, ZH = zc.height;
+  function drawZoom(m) {
+    const w = 30 / Math.pow(10, m), S = w / ZW;          // view width in M, M per px
+    const bL = BC - 0.25 * w;                              // left edge on the +x axis
+    const ymax = ZH / 2 * S;
+    const bmin = Math.max(0, bL), bmax = Math.hypot(bL + w, ymax);
+    const NB = Math.min(3000, Math.ceil((bmax - bmin) / S) * 2 + 2), db = (bmax - bmin) / NB, prof = new Float64Array(NB);
+    for (let i = 0; i < NB; i++) prof[i] = avg(bmin + i * db, bmin + (i + 1) * db);
+    const img = zx.createImageData(ZW, ZH), px = img.data;
+    for (let y = 0; y < ZH; y++) for (let x = 0; x < ZW; x++) {
+      const bx = bL + (x + .5) * S, by = (y + .5 - ZH / 2) * S, b = Math.hypot(bx, by);
+      const i = Math.floor((b - bmin) / db), c = color(i >= 0 && i < NB ? prof[i] : 0);
+      const o = (y * ZW + x) * 4; px[o] = c[0]; px[o + 1] = c[1]; px[o + 2] = c[2]; px[o + 3] = 255;
+    }
+    zx.putImageData(img, 0, 0);
+    const xc = (BC - bL) / S;
+    zx.strokeStyle = "rgba(138,180,232,.7)"; zx.setLineDash([4, 4]); zx.beginPath(); zx.moveTo(xc, 0); zx.lineTo(xc, ZH); zx.stroke(); zx.setLineDash([]);
+    $("magv").textContent = "×" + Math.pow(10, m).toPrecision(3) + `  (view ${w.toPrecision(3)} M wide)`;
+    const vis = Object.keys(byK).filter(k => byK[k].some(([b0, b1]) => b1 > bL && b0 < bL + w))
+      .map(k => `k=${k}: ${(byK[k].reduce((s, v) => s + v[1] - v[0], 0) / S).toPrecision(3)} px`);
+    $("zoomnote").textContent = "rings in view, width on this canvas: " + (vis.join(" · ") || "none");
+  }
+  const mag = $("mag");
+  let pend = null; mag.addEventListener("input", () => { cancelAnimationFrame(pend); pend = requestAnimationFrame(() => drawZoom(+mag.value)); });
+  Object.keys(byK).map(Number).sort((a, b) => a - b).forEach(k => {
+    const bt = document.createElement("button"); bt.textContent = "k=" + k;
+    bt.onclick = () => {
+      const [b0, b1] = byK[k][byK[k].length - 1], width = byK[k].reduce((s, v) => s + v[1] - v[0], 0);
+      // choose magnification so the band's outer edge sits at ~ 60% of the view
+      const w = Math.max(width * 3, (b1 - BC) / 0.55), m = Math.max(0, Math.min(8, Math.log10(30 / w)));
+      mag.value = m; drawZoom(m);
+    };
+    $("jumps").appendChild(bt);
+  });
+  drawZoom(0);
+
+  // ---- panel 3: log strip ----
+  (function () {
+    const cv = $("strip"), cx = cv.getContext("2d"), W = cv.width, H = cv.height, X0 = 1.3, X1 = -9;
+    for (let x = 0; x < W; x++) {
+      const lx = X0 + (X1 - X0) * (x + .5) / W, c = color(I(BC + Math.pow(10, lx)));
+      cx.fillStyle = `rgb(${c[0] | 0},${c[1] | 0},${c[2] | 0})`; cx.fillRect(x, 0, 1, H - 22);
+    }
+    cx.fillStyle = "#7d8492"; cx.font = "11px ui-monospace, Menlo, monospace";
+    for (let d = 1; d >= -9; d--) { const x = (d - X0) / (X1 - X0) * W; cx.fillRect(x, H - 22, 1, 5); cx.fillText(String(d), x - 6, H - 6); }
+    cx.fillStyle = "#d6d9e0";
+    Object.keys(byK).forEach(k => { const [b0, b1] = byK[k][0]; const lx = Math.log10(((b0 + b1) / 2) - BC);
+      if (lx < X0 && lx > X1) cx.fillText("k=" + k, (lx - X0) / (X1 - X0) * W - 10, 14); });
+  })();
+
+  // ---- table + self-checks ----
+  const ks = Object.keys(byK).map(Number).sort((a, b) => a - b);
+  const width = k => byK[k].reduce((s, v) => s + v[1] - v[0], 0);
+  const peak = k => { let best = 0; for (const [b0, b1] of byK[k]) for (let j = 0; j <= 40; j++) best = Math.max(best, I(b0 + (b1 - b0) * j / 40)); return best; };
+  const rows = ks.map((k, i) => ({ k, inner: byK[k][0][0] - BC, outer: byK[k][byK[k].length - 1][1] - BC, width: width(k),
+    ratio: i ? width(ks[i - 1]) / width(k) : null, peak: peak(k) }));
+  $("bands").innerHTML = "<tr><th>ring</th><th>b − b<sub>c</sub> from</th><th>to</th><th>width (M)</th><th>previous / this</th><th>peak / direct peak</th></tr>" +
+    rows.map(r => `<tr><td>k=${r.k}</td><td>${r.inner.toExponential(3)}</td><td>${r.outer.toExponential(3)}</td><td>${r.width.toExponential(3)}</td><td>${r.ratio ? r.ratio.toFixed(3) : "—"}</td><td>${r.peak.toFixed(3)}</td></tr>`).join("");
+  const EPI = Math.exp(Math.PI), deep = rows.filter(r => r.k >= 5 && r.ratio);
+  const err = rows.filter(r => r.ratio).map(r => Math.abs(r.ratio / EPI - 1));
+  const checks = [
+    { name: "critical impact parameter from the integrator vs 3√3 M", got: BC.toFixed(7), want: BC_EXACT.toFixed(7), ok: Math.abs(BC - BC_EXACT) < 1e-4 },
+    { name: "width ratio of successive rings converges to e^π (deviation shrinks every ring)", got: err.map(e => (100 * e).toPrecision(2) + "%").join(" → "), want: "decreasing toward 0", ok: err.every((e, i) => i === 0 || e <= err[i - 1] + 1e-5) },
+    { name: "width ratio for k ≥ 5 vs e^π, within 0.01%", got: deep.map(r => r.ratio.toFixed(4)).join(", "), want: EPI.toFixed(4), ok: deep.length >= 2 && deep.every(r => Math.abs(r.ratio / EPI - 1) < 1e-4) },
+    { name: "every ring's peak equals the direct image's (thinner, not fainter)", got: rows.map(r => r.peak.toFixed(2)).join(", "), want: "all 1.00 (sampled)", ok: rows.every(r => r.peak > 0.97) },
+    { name: "no disk hit inside the shadow", got: String(bands.filter(v => v[1] <= BC).length), want: "0", ok: bands.every(v => v[0] >= BC) }
+  ];
+  $("checks").innerHTML = checks.map(c => `<div class="${c.ok ? "ok" : "bad"}">${c.ok ? "✓" : "✗"} ${c.name}: got ${c.got}, want ${c.want}</div>`).join("");
+  window.PHOTON_RINGS = { bc: BC, bands: rows, checks, trace };
+})();
+</script>
+</body>
+</html>
