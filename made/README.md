@@ -59,6 +59,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
   See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
 
+- **`flock-in-time-range.html`** — the flock's boid rules stay fixed while a selector changes
+  how far each bird's clock can hear. Read global synchrony R beside the live neighbor-graph
+  component count; use the same seed and reset to compare ranges. No dependencies. See
+  [flock-in-time-range.md](flock-in-time-range.md) for the question and measurements.
+
 - **`hand-and-chalk.html`**: two maze walkers side by side. One keeps its right hand on the
   wall and remembers nothing; the other uses Trémaux's chalk marks. In a maze with no loops both
   get out (the example). With loops and the exit on an island, the hand circles forever and only

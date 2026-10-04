@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A flock in time: how far can a beat travel?</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#0b0d12;color:#aab2c0;font:13px/1.6 ui-monospace,Menlo,monospace}
+canvas{display:block}
+#hud{position:fixed;left:16px;bottom:14px;max-width:calc(100% - 32px);padding:8px 10px;background:#0b0d12cc}
+label{margin-right:12px}b{color:#e0e4ec}input,select,button{font:inherit;color:#e0e4ec;background:#202631;border:1px solid #465061}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+<label>sync radius <select id="range"><option value="55">55 px · local</option><option value="100">100 px</option><option value="180">180 px</option><option value="320">320 px</option><option value="all">whole screen</option></select></label>
+<label>seed <input id="seed" value="superninja-harmonograph-session" size="28"></label><button id="reset">reset</button>
+<br>Flocking stays on; only clock connections change. <b id="status"></b>
+</div>
+<script>
+(function(){"use strict";
+var canvas=document.getElementById("c"),ctx=canvas.getContext("2d"),range=document.getElementById("range"),seed=document.getElementById("seed");
+var W=0,H=0,N=200,SPEED=2.6,FORCE=.08,PERCEPTION=55,SEPARATION=22,K=.24,OMEGA=.07,SPREAD=.15;
+var birds=[],random,stepNumber=0,R=0,meanDegree=0,components=N,largest=1;
+function resize(){W=innerWidth;H=innerHeight;canvas.width=W;canvas.height=H}
+function rng(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619)}
+ return function(){h|=0;h=h+0x6D2B79F5|0;var t=Math.imul(h^h>>>15,1|h);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function limit(x,y,m){var d=Math.hypot(x,y);return d>m?[x/d*m,y/d*m]:[x,y]}
+function radius(){return range.value==="all"?Math.hypot(W,H):Number(range.value)}
+function reset(){random=rng(seed.value);birds=[];stepNumber=0;R=0;
+ for(var i=0;i<N;i++){var a=random()*Math.PI*2;birds.push({x:random()*W,y:random()*H,vx:Math.cos(a)*SPEED,vy:Math.sin(a)*SPEED,phase:random()*Math.PI*2,omega:OMEGA*(1+SPREAD*(2*random()-1))})}}
+function step(){var i,j,b,o,dx,dy,d2,s;
+ for(i=0;i<N;i++){b=birds[i];var sx=0,sy=0,ax=0,ay=0,cx=0,cy=0,n=0,ns=0,phasePull=0,phaseN=0,rad=radius();
+  for(j=0;j<N;j++){if(i===j)continue;o=birds[j];dx=o.x-b.x;dy=o.y-b.y;d2=dx*dx+dy*dy;
+   if(d2<PERCEPTION*PERCEPTION){ax+=o.vx;ay+=o.vy;cx+=o.x;cy+=o.y;n++;
+    if(d2<SEPARATION*SEPARATION&&d2>0){var inv=1/Math.sqrt(d2);sx-=dx*inv;sy-=dy*inv;ns++}}
+   if(d2<=rad*rad){phasePull+=Math.sin(o.phase-b.phase);phaseN++}}
+  b.dphase=b.omega+(phaseN?K*phasePull/phaseN:0);b.fx=0;b.fy=0;
+  if(ns){s=limit(sx/ns,sy/ns,SPEED);s=limit(s[0]-b.vx,s[1]-b.vy,FORCE);b.fx+=s[0]*1.6;b.fy+=s[1]*1.6}
+  if(n){s=limit(ax/n,ay/n,SPEED);s=limit(s[0]-b.vx,s[1]-b.vy,FORCE);b.fx+=s[0]*1.4;b.fy+=s[1]*1.4;
+   s=limit(cx/n-b.x,cy/n-b.y,SPEED);s=limit(s[0]-b.vx,s[1]-b.vy,FORCE);b.fx+=s[0];b.fy+=s[1]}
+  var margin=120;if(b.x<margin)b.fx+=(margin-b.x)/margin*FORCE*3;if(b.x>W-margin)b.fx-=(b.x-W+margin)/margin*FORCE*3;
+  if(b.y<margin)b.fy+=(margin-b.y)/margin*FORCE*3;if(b.y>H-margin)b.fy-=(b.y-H+margin)/margin*FORCE*3}
+ var real=0,imag=0;
+ for(i=0;i<N;i++){b=birds[i];s=limit(b.fx,b.fy,FORCE*1.8);b.vx+=s[0];b.vy+=s[1];s=limit(b.vx,b.vy,SPEED);b.vx=s[0];b.vy=s[1];
+  b.x=Math.max(0,Math.min(W,b.x+b.vx));b.y=Math.max(0,Math.min(H,b.y+b.vy));b.phase+=b.dphase;real+=Math.cos(b.phase);imag+=Math.sin(b.phase)}
+ R=R*.97+Math.hypot(real,imag)/N*.03;stepNumber++;
+ if(stepNumber%60===0)measureGraph()}
+function measureGraph(){var edges=0,adj=Array.from({length:N},function(){return[]}),r2=radius();
+ for(var i=0;i<N;i++)for(var j=i+1;j<N;j++){var dx=birds[j].x-birds[i].x,dy=birds[j].y-birds[i].y;if(dx*dx+dy*dy<=r2*r2){edges++;adj[i].push(j);adj[j].push(i)}}
+ meanDegree=2*edges/N;var seen=new Uint8Array(N);components=0;largest=0;
+ for(i=0;i<N;i++)if(!seen[i]){components++;var queue=[i],head=0;seen[i]=1;while(head<queue.length){var current=queue[head++];for(var k=0;k<adj[current].length;k++){var next=adj[current][k];if(!seen[next]){seen[next]=1;queue.push(next)}}}largest=Math.max(largest,queue.length)}}
+function draw(){ctx.fillStyle="rgba(11,13,18,.25)";ctx.fillRect(0,0,W,H);
+ for(var i=0;i<N;i++){var b=birds[i],glow=(Math.cos(b.phase)+1)/2;ctx.fillStyle="rgba("+(120+135*glow|0)+","+(150+100*glow|0)+",255,"+(.25+.75*glow)+")";
+  ctx.beginPath();ctx.arc(b.x,b.y,1.6+2.6*glow,0,Math.PI*2);ctx.fill()}
+ document.getElementById("status").textContent="R "+R.toFixed(3)+" · degree "+meanDegree.toFixed(1)+" · "+components+" components, largest "+largest+"/"+N+" · step "+stepNumber}
+function loop(){step();draw();requestAnimationFrame(loop)}
+window.FRT={measure:function(){return{seed:seed.value,radius:range.value==="all"?"whole screen":Number(range.value),R:+R.toFixed(3),meanDegree:+meanDegree.toFixed(2),components:components,largestComponent:largest,step:stepNumber}}};
+addEventListener("resize",function(){resize();reset()});range.addEventListener("change",reset);seed.addEventListener("change",reset);document.getElementById("reset").addEventListener("click",reset);
+resize();reset();loop();
+})();
+</script>
+</body>
+</html>
