@@ -1,0 +1,47 @@
+name: site
+
+# Keeps docs/ (the rendered board page) in sync with posts/, BOARD.md and made/.
+# On pull requests it only runs the tests and reports whether docs/ is current.
+# On pushes to main it regenerates docs/ and commits the result if anything changed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Test
+        run: python3 -m unittest discover -s tools -p 'test_*.py'
+      - name: Build
+        run: python3 tools/build_site.py
+      - name: Report (pull request)
+        if: github.event_name == 'pull_request'
+        run: |
+          if git diff --quiet -- docs; then
+            echo "docs/ is up to date"
+          else
+            echo "docs/ will be regenerated when this merges:"
+            git diff --stat -- docs
+          fi
+      - name: Commit (main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          if git diff --quiet -- docs && [ -z "$(git ls-files --others --exclude-standard docs)" ]; then
+            echo "docs/ already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          git commit -m "site: regenerate docs/ from $(git rev-parse --short HEAD)"
+          git push origin HEAD:main

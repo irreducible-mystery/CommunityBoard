@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doublets</title>
+<style>
+  :root {
+    --bg: #f6f3ee; --ink: #22201c; --muted: #77716a; --line: #d9d3ca;
+    --tile: #ffffff; --changed: #f1d48a; --match: #9fd3a8; --bad: #b4412f;
+    --accent: #2f5d8a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15161a; --ink: #ece8e1; --muted: #8d877f; --line: #34353b;
+      --tile: #202127; --changed: #7a6122; --match: #2f6b3b; --bad: #e07a63;
+      --accent: #8db5dc;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.5 Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  }
+  main { max-width: 34rem; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-size: 1.9rem; margin: 0; letter-spacing: .02em; }
+  .sub { color: var(--muted); margin: 4px 0 20px; font-style: italic; }
+  .rules { color: var(--muted); font-size: .95rem; margin: 0 0 20px; }
+  .modes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  button {
+    font: inherit; font-size: .9rem; color: var(--ink); background: var(--tile);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer;
+  }
+  button:hover { border-color: var(--muted); }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .goal { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; color: var(--muted); }
+  .ladder { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .row { display: flex; align-items: center; gap: 6px; }
+  .row .n { width: 1.6rem; text-align: right; color: var(--muted); font-size: .8rem; }
+  .tile {
+    width: 2.6rem; height: 2.6rem; display: grid; place-items: center;
+    background: var(--tile); border: 1px solid var(--line); border-radius: 6px;
+    font: 600 1.25rem/1 ui-monospace, SFMono-Regular, Menlo, monospace; text-transform: uppercase;
+  }
+  .tile.changed { background: var(--changed); }
+  .tile.match { box-shadow: inset 0 -4px 0 var(--match); }
+  .row.target .tile { border-style: dashed; }
+  .row.hint .tile { opacity: .55; border-style: dotted; }
+  form { display: flex; gap: 8px; margin: 6px 0 10px 2.2rem; }
+  input[type=text] {
+    width: 8.5rem; font: 600 1.2rem ui-monospace, SFMono-Regular, Menlo, monospace;
+    text-transform: uppercase; letter-spacing: .3em; padding: 6px 10px;
+    background: var(--tile); color: var(--ink); border: 1px solid var(--line); border-radius: 6px;
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; margin-left: 2.2rem; }
+  #msg { min-height: 1.5em; margin: 12px 0 0 2.2rem; }
+  #msg.bad { color: var(--bad); }
+  #msg.win { font-weight: 600; }
+  details { margin-top: 28px; color: var(--muted); font-size: .95rem; }
+  details form { margin-left: 0; flex-wrap: wrap; }
+  summary { cursor: pointer; }
+  footer { margin-top: 32px; color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Doublets</h1>
+  <p class="sub">A word puzzle Lewis Carroll published in 1879.</p>
+  <p class="rules">Turn the top word into the target word. Change exactly one letter at a time,
+    and every step must be a real word. <em>Par</em> is the fewest steps possible.</p>
+
+  <div class="modes" role="group" aria-label="Choose a puzzle">
+    <button type="button" id="today">Today's puzzle</button>
+    <button type="button" id="random">Random</button>
+    <button type="button" id="carroll">One of Carroll's</button>
+  </div>
+
+  <div class="goal" id="goal"></div>
+  <div class="ladder" id="ladder" aria-label="Your ladder"></div>
+
+  <form id="step" autocomplete="off">
+    <label for="word" class="visually-hidden" style="position:absolute;left:-9999px">Next word</label>
+    <input type="text" id="word" maxlength="4" spellcheck="false" autocapitalize="off" placeholder="····">
+    <button type="submit" class="primary">Step</button>
+  </form>
+  <div class="tools">
+    <button type="button" id="undo">Undo</button>
+    <button type="button" id="hint">Hint</button>
+    <button type="button" id="giveup">Show a solution</button>
+  </div>
+  <p id="msg" role="status" aria-live="polite"></p>
+
+  <details>
+    <summary>Make your own puzzle</summary>
+    <form id="custom">
+      <input type="text" id="cfrom" maxlength="4" placeholder="from" aria-label="Start word">
+      <input type="text" id="cto" maxlength="4" placeholder="to" aria-label="Target word">
+      <button type="submit">Play it</button>
+    </form>
+  </details>
+
+  <footer>About 1,200 common four-letter words. A real word that isn't on the list won't be
+    accepted; that's the list's fault, not yours.</footer>
+</main>
+<script>
+(function () {
+  "use strict";
+
+  var WORDS = "able ache acid acre aged aide airs ally also arch area arms army arts aunt auto avid away awry axes back bade bail bait bake bald bale ball balm band bane bang bank bans bare bark barn base bash bass bath bats bead beak beam bean bear beat beds beef been beer bees beet bell belt bend bent best bets bias bike bile bill bind bird bite bits blew blot blow blue blur boar boat body boil bold bolt bomb bond bone book boom boon boot bore born boss both bout bowl bows brag bran brew brim bulb bulk bull bump bunk buns burn bury bush bust busy buys buzz cafe cage cake calf call calm came camp cane cans cape caps card care carp cars cart case cash cask cast cats cave cell cent chap chat chef chin chip chop cite city clad clam clan clap claw clay clip clod clog clot club clue coal coat code coil coin cold colt comb come cone cook cool cope cops copy cord core cork corn cost cosy cots cove cows crab crew crib crop crow cube cubs cuff cult curb cure curl cute cuts dame damp dare dark darn dart dash data date dawn days daze dead deaf deal dean dear debt deck deed deem deep deer dent deny desk dial dice died dies diet digs dill dime dine dips dire dirt disc dish disk dive dock does dogs dole doll dome done doom door dose dots dove down doze drab drag draw drew drip drop drug drum dual duck duel dues dull duly dumb dump dune dung dusk dust duty each earn ears ease east easy eats echo edge edit eggs else envy epic even ever evil exam exit eyes face fact fade fail fair fake fall fame fang fare farm fast fate fear feat feed feel fees feet fell felt fern feud fill film find fine fire firm fish fist fits five flag flap flat flaw flea fled flew flip flit flog flow foam foil fold folk fond font food fool foot ford fore fork form fort foul four fowl free frog from fuel full fume fund fuse fuss gain gait gale game gang gape gaps garb gash gasp gate gave gaze gear gems gift gild gill gilt girl gist give glad glee glow glue glum gnat goad goal goat gold golf gone gong good gore gown grab gram gray grew grey grid grim grin grip grit grow grub gulf gull gulp gush gust guts hail hair half hall halt hand hang hard hare harm harp hash hate haul have hawk haze hazy head heal heap hear heat heed heel held hell helm help herb herd here hero hide high hike hill hilt hind hint hire hiss hits hive hoax hold hole holy home hone hood hoof hook hoop hoot hope horn hose host hour howl huge hulk hull hump hung hunt hurl hurt hush hymn icon idea idle inch info iron isle item jabs jack jade jail jams jars jaws jazz jeer jest jets jobs jogs join joke jolt jump junk jury just keel keen keep kelp kept keys kick kids kill kiln kind king kiss kite knee knew knit knob knot know lace lack lacy lady laid lake lamb lame lamp land lane lard lark lash last late lawn laws lazy lead leaf leak lean leap left legs lend lens lent less liar lice lick lied lies life lift like lily limb lime limp line link lint lion lips list live load loaf loan lobe lock loft logo logs lone long look loom loop loot lord lore lose loss lost lots loud love luck lull lump lung lure lurk lush lust made maid mail main make male mall malt mane many maps mare mark mash mask mass mast mate math maze meal mean meat meek meet melt memo mend menu mere mesh mess mice mild mile milk mill mime mind mine mint miss mist mite moan moat mock mode mold mole monk mood moon moor moss most moth move much muck mule muse mush must mute myth nail name nape navy near neat neck need nest news newt next nice nick nine node none nook noon norm nose note noun null numb nuts oath obey odds oils okay omen once ones only onto ooze open oral oven over owed owes owls owns pace pack pact page paid pail pain pair pale palm pane pang pans park part pass past path pave pawn pays peak peal pear peas peat peck peek peel peep peer pegs pelt pens pest pets pick pier pies pike pile pill pine pink pins pint pipe pity plan play plea plod plot plow ploy plug plum plus pods poem poet poke pole poll pond pony pool poor pops pore pork port pose post pour pout pray prey prim prod prom prop pros pull pulp pump punk puns pure push puts quit quiz race rack raft rage rags raid rail rain rake ramp rang rank rant rare rash rate rats rave rays read real ream reap rear reed reef reek reel rely rent rest rice rich ride rife rift ring rink riot ripe rise risk rite road roam roar robe rock rode role roll roof room root rope rose rosy rots rout rows rude rugs ruin rule rump rung runs rush rust sack safe saga sage said sail sake sale salt same sand sane sang sank sash save scan scar seal seam sear seas seat sect seed seek seem seen seep self sell send sent sets sewn shed shin ship shoe shop shot show shut sick side sigh sign silk sill silo sing sink sips sire site sits size skin skip slab slam slap slat sled slew slid slim slip slit slob slot slow slug slum slur smog snag snap snip snob snow snug soak soap soar sock soda sofa soft soil sold sole solo some song soon soot sore sort soul soup sour sown span spar spat sped spin spit spot spun spur stab stag star stay stem step stew stir stop stub stud stun such suck suit sulk sung sunk sure surf swam swan swap sway swim tack tact tail take tale talk tall tame tang tank tape taps tart task taxi teak teal team tear teas tees tell tend tent term test text than that thaw them then they thin this thud thus tick tide tidy tied tier ties tile till tilt time tint tiny tips tire toad toes tofu told toll tomb tone tons took tool toot tops tore torn toss tour town toys tram trap tray tree trek trim trio trip trod true tube tuck tuna tune turf turn tusk twig twin type ugly undo unit upon urge used user uses vain vale vane vary vase vast veal veil vein vent verb very vest veto vets vice view vile vine visa void vole vote vows wade wage wail wait wake walk wall wand want ward warm warn warp wars wart wary wash wasp wave wavy waxy ways weak wear weed week weep weld well went wept were west what when whim whip whom wick wide wife wild will wilt wily wind wine wing wink wipe wire wiry wise wish wisp with wits woke wolf womb wood wool word wore work worm worn wove wrap wren writ yard yarn yawn year yell yelp yoga yoke yolk your zany zeal zero zest zinc zone zoom".split(" ");
+  var SET = new Set(WORDS);
+  var ABC = "abcdefghijklmnopqrstuvwxyz";
+
+  // Carroll's own examples, where this word list can reach them.
+  var CARROLL = [["head", "tail"], ["cold", "warm"], ["four", "five"], ["poor", "rich"],
+                 ["tree", "wood"]];
+
+  function neighbors(w) {
+    var out = [];
+    for (var i = 0; i < 4; i++) {
+      for (var j = 0; j < 26; j++) {
+        var c = ABC[j];
+        if (c === w[i]) continue;
+        var x = w.slice(0, i) + c + w.slice(i + 1);
+        if (SET.has(x)) out.push(x);
+      }
+    }
+    return out;
+  }
+
+  // Breadth-first search from one word; returns a distance map.
+  function distancesFrom(src) {
+    var dist = new Map([[src, 0]]), queue = [src];
+    for (var k = 0; k < queue.length; k++) {
+      var u = queue[k], d = dist.get(u);
+      neighbors(u).forEach(function (v) {
+        if (!dist.has(v)) { dist.set(v, d + 1); queue.push(v); }
+      });
+    }
+    return dist;
+  }
+
+  function oneApart(a, b) {
+    var diff = 0;
+    for (var i = 0; i < 4; i++) if (a[i] !== b[i]) diff++;
+    return diff === 1;
+  }
+
+  // Small seeded RNG so "today's puzzle" is the same for everyone on the same date.
+  function rng(seed) {
+    return function () {
+      seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function hash(s) {
+    var h = 2166136261;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+
+  function pickPuzzle(rand) {
+    for (var tries = 0; tries < 200; tries++) {
+      var start = WORDS[Math.floor(rand() * WORDS.length)];
+      var dist = distancesFrom(start);
+      var far = [];
+      dist.forEach(function (d, w) { if (d >= 4 && d <= 6) far.push(w); });
+      if (far.length) return [start, far[Math.floor(rand() * far.length)]];
+    }
+    return ["cold", "warm"];
+  }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = null;
+
+  function start(from, to, label) {
+    var fromTarget = distancesFrom(to);
+    state = { from: from, to: to, chain: [from], hints: 0, done: false,
+              fromTarget: fromTarget, par: fromTarget.get(from), hintWord: null };
+    $("goal").textContent = label + ": " + from.toUpperCase() + " → " + to.toUpperCase() +
+      "  ·  par " + state.par;
+    say("");
+    render();
+    $("word").focus();
+  }
+
+  function say(text, kind) {
+    var m = $("msg");
+    m.textContent = text;
+    m.className = kind || "";
+  }
+
+  function rowEl(word, prev, cls, n) {
+    var row = document.createElement("div");
+    row.className = "row" + (cls ? " " + cls : "");
+    var num = document.createElement("span");
+    num.className = "n";
+    num.textContent = n === null ? "" : n;
+    row.appendChild(num);
+    for (var i = 0; i < 4; i++) {
+      var t = document.createElement("span");
+      t.className = "tile";
+      if (prev && prev[i] !== word[i]) t.className += " changed";
+      if (cls !== "target" && word[i] === state.to[i]) t.className += " match";
+      t.textContent = word[i];
+      row.appendChild(t);
+    }
+    row.setAttribute("aria-label", word);
+    return row;
+  }
+
+  function render() {
+    var ladder = $("ladder");
+    ladder.innerHTML = "";
+    state.chain.forEach(function (w, i) {
+      ladder.appendChild(rowEl(w, i ? state.chain[i - 1] : null, "", i));
+    });
+    var last = state.chain[state.chain.length - 1];
+    if (state.hintWord) ladder.appendChild(rowEl(state.hintWord, last, "hint", null));
+    if (!state.done) ladder.appendChild(rowEl(state.to, null, "target", null));
+    $("undo").disabled = state.chain.length < 2 || state.done;
+    $("hint").disabled = state.done;
+    $("giveup").disabled = state.done;
+    $("word").disabled = state.done;
+  }
+
+  function step(word) {
+    if (state.done) return;
+    var w = word.trim().toLowerCase();
+    var last = state.chain[state.chain.length - 1];
+    if (!/^[a-z]{4}$/.test(w)) return say("Four letters, please.", "bad");
+    if (!oneApart(last, w)) return say("Change exactly one letter of " + last.toUpperCase() + ".", "bad");
+    if (!SET.has(w)) return say(w.toUpperCase() + " isn't on the word list.", "bad");
+    if (state.chain.indexOf(w) !== -1) return say("You've already used " + w.toUpperCase() + ".", "bad");
+    state.chain.push(w);
+    state.hintWord = null;
+    if (w === state.to) {
+      state.done = true;
+      var steps = state.chain.length - 1;
+      var verdict = steps === state.par ? "Par. As short as it gets." :
+        (steps - state.par) + " over par.";
+      say("Solved in " + steps + " step" + (steps === 1 ? "" : "s") + ". " + verdict +
+        (state.hints ? " (" + state.hints + " hint" + (state.hints === 1 ? "" : "s") + ")" : ""), "win");
+    } else {
+      say("");
+    }
+    render();
+  }
+
+  // The next word on some shortest path from the current word.
+  function nextOnShortestPath(from) {
+    var d = state.fromTarget.get(from);
+    var options = neighbors(from).filter(function (v) { return state.fromTarget.get(v) === d - 1; });
+    return options[0] || null;
+  }
+
+  $("step").addEventListener("submit", function (e) {
+    e.preventDefault();
+    step($("word").value);
+    $("word").value = "";
+    $("word").focus();
+  });
+  $("undo").addEventListener("click", function () {
+    if (state.chain.length > 1) { state.chain.pop(); state.hintWord = null; say(""); render(); }
+  });
+  $("hint").addEventListener("click", function () {
+    var last = state.chain[state.chain.length - 1];
+    var next = nextOnShortestPath(last);
+    if (!next) return;
+    state.hints++;
+    state.hintWord = next;
+    say("A shortest route goes through " + next.toUpperCase() + ". You still have to type it.");
+    render();
+  });
+  $("giveup").addEventListener("click", function () {
+    var path = [state.chain[state.chain.length - 1]];
+    while (path[path.length - 1] !== state.to) path.push(nextOnShortestPath(path[path.length - 1]));
+    state.chain = state.chain.concat(path.slice(1));
+    state.done = true;
+    state.hintWord = null;
+    say("One shortest way from where you were. Par was " + state.par + ".");
+    render();
+  });
+
+  $("today").addEventListener("click", function () {
+    var d = new Date().toISOString().slice(0, 10);
+    var p = pickPuzzle(rng(hash(d)));
+    start(p[0], p[1], "Today (" + d + ")");
+  });
+  $("random").addEventListener("click", function () {
+    var p = pickPuzzle(Math.random);
+    start(p[0], p[1], "Random");
+  });
+  var carrollIndex = 0;
+  var carrollReachable = CARROLL.filter(function (p) {
+    return SET.has(p[0]) && SET.has(p[1]) && distancesFrom(p[0]).has(p[1]);
+  });
+  $("carroll").addEventListener("click", function () {
+    var p = carrollReachable[carrollIndex++ % carrollReachable.length];
+    start(p[0], p[1], "Carroll's");
+  });
+  $("custom").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var a = $("cfrom").value.trim().toLowerCase(), b = $("cto").value.trim().toLowerCase();
+    if (!SET.has(a) || !SET.has(b)) return say("Both words need to be on the list.", "bad");
+    if (a === b) return say("Pick two different words.", "bad");
+    if (!distancesFrom(a).has(b)) return say("There's no ladder between those two on this list.", "bad");
+    start(a, b, "Yours");
+  });
+
+  $("today").click();
+})();
+</script>
+</body>
+</html>
