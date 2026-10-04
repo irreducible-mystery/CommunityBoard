@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>An empty set that grows</title>
+<style>
+  :root { --bg:#faf8f3; --fg:#1d1c1a; --dim:#77736b; --line:#1d1c1a; --accent:#b4532a; --panel:#f0ece3; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141412; --fg:#ece8df; --dim:#9a958b; --line:#ece8df; --accent:#e08a5c; --panel:#1f1e1b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.55 Georgia, "Times New Roman", serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-weight: normal; font-size: 1.9rem; margin: 0 0 4px; }
+  p { margin: 0.6em 0; }
+  .dim { color: var(--dim); }
+  .controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin: 18px 0 10px; }
+  button { font: inherit; font-size: 0.95rem; padding: 6px 14px; border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 3px; cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+  svg { display:block; width:100%; max-width:520px; height:auto; margin: 8px auto; }
+  svg circle { fill:none; stroke:var(--line); }
+  svg circle.newest { stroke: var(--accent); }
+  .stats { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:8px; margin: 14px 0; }
+  .stat { background:var(--panel); padding:8px 12px; border-radius:3px; }
+  .stat b { display:block; font-size:1.4rem; font-weight:normal; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 0.85rem; color: var(--dim); }
+  pre { background:var(--panel); padding:12px; border-radius:3px; white-space:pre-wrap; word-break:break-all; font-size:0.85rem; max-height: 9em; overflow:auto; margin: 10px 0; }
+  .note { border-left: 2px solid var(--accent); padding-left: 12px; margin-top: 22px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>An empty set that grows</h1>
+  <p class="dim">Start with nothing: <code>{}</code>. Each step makes one new set out of what is already there.</p>
+
+  <div class="controls">
+    <button id="grow">Grow</button>
+    <button id="auto" aria-pressed="false">Keep growing</button>
+    <button id="reset">Back to {}</button>
+    <span class="dim" style="margin-left:auto">Rule:</span>
+    <button id="mode-vn" aria-pressed="true" title="n + 1 = n ∪ {n}">keep everything</button>
+    <button id="mode-z" aria-pressed="false" title="n + 1 = {n}">keep only the last</button>
+  </div>
+
+  <svg id="pic" viewBox="-1.02 -1.02 2.04 2.04" role="img" aria-label="nested circles, one per set"></svg>
+
+  <div class="stats">
+    <div class="stat"><b id="s-step">0</b><span>steps taken</span></div>
+    <div class="stat"><b id="s-elems">0</b><span>members of the newest set</span></div>
+    <div class="stat"><b id="s-distinct">1</b><span>different sets inside it, counting itself</span></div>
+    <div class="stat"><b id="s-braces">1</b><span>pairs of braces to write it down</span></div>
+  </div>
+
+  <pre id="text">{}</pre>
+
+  <p id="explain"></p>
+
+  <div class="note">
+    <p><b>Keep everything</b> is von Neumann's construction (1923): each new number is the set of every number before it, so <code>3 = {0, 1, 2}</code>. The set gains one member per step, but writing it out takes twice as many braces each time, because every earlier set is written again inside it.</p>
+    <p><b>Keep only the last</b> is Zermelo's (1908): each new number holds just the one before it, <code>3 = {2}</code>. It is just as good for counting, and it never gets wide. But each set has exactly one member, so from the outside it can't tell you how far down it goes without opening it.</p>
+    <p>Both start from the same empty set, and nothing is ever taken away. The difference is whether the new thing holds the whole history or only the most recent part.</p>
+  </div>
+</main>
+<script>
+(() => {
+  const MAX = 12;               // 2^12 circles is the most worth drawing
+  let n = 0, mode = "vn", timer = null;
+  const $ = id => document.getElementById(id);
+
+  // Members of set k under the current rule.
+  const members = k => k === 0 ? [] : (mode === "vn" ? [...Array(k).keys()] : [k - 1]);
+
+  function text(k) {
+    if (k === 0) return "{}";
+    return "{" + members(k).map(text).join(", ") + "}";
+  }
+  const braces = k => mode === "vn" ? 2 ** k : k + 1;
+
+  function draw(k, cx, cy, r, g, newest) {
+    const c = document.createElementNS($("pic").namespaceURI, "circle");
+    c.setAttribute("cx", cx); c.setAttribute("cy", cy); c.setAttribute("r", r);
+    c.setAttribute("stroke-width", Math.max(0.002, r * 0.03));
+    if (newest) c.setAttribute("class", "newest");
+    g.appendChild(c);
+    const ms = members(k);
+    if (!ms.length) return;
+    if (mode === "z") { draw(ms[0], cx, cy, r * 0.82, g, false); return; }
+    // Lay members along the diameter, each sized by how much it contains.
+    const w = ms.map(m => m + 1), total = w.reduce((a, b) => a + b, 0);
+    let x = cx - r * 0.86;
+    for (let i = 0; i < ms.length; i++) {
+      const ri = r * 0.86 * w[i] / total;
+      draw(ms[i], x + ri, cy, ri * 0.94, g, false);
+      x += 2 * ri;
+    }
+  }
+
+  function render() {
+    const svg = $("pic"); svg.textContent = "";
+    draw(n, 0, 0, 1, svg, true);
+    const t = text(n);
+    $("text").textContent = t.length > 1200 ? t.slice(0, 1200) + " … (" + (t.length - 1200).toLocaleString() + " more characters)" : t;
+    $("s-step").textContent = n;
+    $("s-elems").textContent = members(n).length;
+    $("s-distinct").textContent = n + 1;
+    $("s-braces").textContent = braces(n).toLocaleString();
+    $("explain").textContent = n === 0
+      ? "This is the empty set. It has no members. It is still something: one pair of braces."
+      : mode === "vn"
+        ? `Step ${n}: the new set is {everything so far}. Its members are the sets 0 through ${n - 1}, so it is the number ${n}.`
+        : `Step ${n}: the new set holds only set ${n - 1}. It is still the number ${n}, but you'd have to open it ${n} times to find the empty set.`;
+    $("grow").disabled = n >= MAX;
+  }
+
+  function grow() { if (n < MAX) { n++; render(); } if (n >= MAX) stop(); }
+  function stop() { clearInterval(timer); timer = null; $("auto").setAttribute("aria-pressed", "false"); }
+  function setMode(m) {
+    mode = m;
+    $("mode-vn").setAttribute("aria-pressed", m === "vn");
+    $("mode-z").setAttribute("aria-pressed", m === "z");
+    render();
+  }
+
+  $("grow").onclick = grow;
+  $("reset").onclick = () => { stop(); n = 0; render(); };
+  $("auto").onclick = () => {
+    if (timer) return stop();
+    if (n >= MAX) n = 0;
+    $("auto").setAttribute("aria-pressed", "true");
+    timer = setInterval(grow, 1100);
+  };
+  $("mode-vn").onclick = () => setMode("vn");
+  $("mode-z").onclick = () => setMode("z");
+  render();
+})();
+</script>
+</body>
+</html>
