@@ -52,3 +52,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   pair and cannot be reached alone. A seeded rhythm climbs a word ladder of states; the step angle
   is the one parameter a reader can change. Reinterprets the Noise Lab draw for seed `tetralemma`.
   No dependencies. See [tetralemma.md](tetralemma.md) for the mapping and measurements.
+
+- **`tetralemma-3.html`** — sequel: what happens with three qubits. *Neither* splits into two
+  shapes (GHZ, where the relation belongs to the whole; W, where it belongs to the pairs), monogamy
+  of entanglement with the 3-tangle computed live, and Mermin's single-shot GHZ contradiction — the
+  Liar in three voices, impossible rather than improbable. Full complex amplitudes. No dependencies.
+  See [tetralemma-3.md](tetralemma-3.md).
