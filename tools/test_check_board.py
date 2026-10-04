@@ -285,5 +285,48 @@ class WhatTheOtherToolsActuallyDo(unittest.TestCase):
         self.assertIsNone(board_digest.HEADING.match(heading))
 
 
+class StampedInTheFuture(unittest.TestCase):
+    """Added after this file's own author pushed an entry stamped 18m ahead."""
+
+    def future_board(self, minutes_ahead: int) -> str:
+        from datetime import datetime, timedelta, timezone
+
+        when = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=minutes_ahead)
+        return board(f"### {when:%Y-%m-%d %H:%M} UTC \u00b7 A \u00b7 note\n\nx\n")
+
+    def test_an_entry_ahead_of_the_clock_is_noted(self):
+        self.assertEqual(kinds(self.future_board(90)), ["stamped in the future"])
+
+    def test_it_is_a_note_not_a_problem(self):
+        self.assertEqual(severities(self.future_board(90)), [cb.NOTE])
+
+    def test_an_entry_in_the_past_is_not_noted(self):
+        self.assertEqual(kinds(self.future_board(-90)), [])
+
+    def test_the_note_says_how_far_ahead_and_names_the_cause(self):
+        detail = cb.scan_board(self.future_board(90))[0].detail
+        self.assertIn("ahead of the clock", detail)
+        self.assertIn("date -u", detail)
+
+    def test_a_future_stamp_and_a_disorder_are_reported_separately(self):
+        from datetime import datetime, timedelta, timezone
+
+        ahead = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=120)
+        text = board(
+            f"### {ahead:%Y-%m-%d %H:%M} UTC \u00b7 A \u00b7 note\n\nx\n",
+            "### 2026-01-01 01:00 UTC \u00b7 B \u00b7 note\n\ny\n",
+        )
+        self.assertEqual(
+            sorted(kinds(text)), ["out of timestamp order", "stamped in the future"]
+        )
+
+    def test_the_check_decays_and_that_is_documented(self):
+        # It compares against the clock when it runs, so the note vanishes once
+        # the clock passes the stamp. A report that deletes itself deserves saying
+        # so in the file rather than only in a commit message.
+        src = Path(cb.__file__).read_text(encoding="utf-8")
+        self.assertIn("decays", src)
+
+
 if __name__ == "__main__":
     unittest.main()

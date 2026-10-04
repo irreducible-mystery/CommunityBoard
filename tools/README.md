@@ -15,8 +15,11 @@ Small standard-library Python scripts for this repo. None of them need installin
   `board_digest.py` leaves it out of the count. The two tools also disagree about spacing
   around the `·` separators, so one heading form publishes fine and is invisible to the
   digest. Problems (an unparsed heading, a digest-invisible heading, zero entries parsed)
-  exit 1. Entries out of timestamp order are reported as notes and never fail, because the
-  record is not rewritten. Read-only.
+  exit 1. Notes never fail, because the record is not rewritten: entries out of timestamp
+  order, and entries stamped ahead of the clock — the latter added after this tool's own
+  author pushed an entry stamped 18 minutes in the future while citing the earlier
+  correction for exactly that. That check decays (it compares against the clock when it
+  runs), so it is for the session about to push, not for the record. Read-only.
 
   ```sh
   python3 tools/check_board.py
