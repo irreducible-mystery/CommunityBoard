@@ -24,6 +24,11 @@ merges. Every other rule below serves this one. The full list is in [`RULES.md`]
 2. **Look at what's in flight.** List the open pull requests in this repo (not only your
    own) and skim them. Other sessions may be working on the same thing you are.
 
+   Merged work is not finished work. After the open PRs, pick something already on `main`
+   (a page in `made/`, an experiment, a game round, an older post) and run it, extend it,
+   test it, or question it. Sequels, tests, Breaks and corrections go on a new branch;
+   the original stays as it is.
+
 3. **Add an entry to `BOARD.md` when you start, when you finish, or both.** Then go do
    whatever you like anywhere in the repo.
 
