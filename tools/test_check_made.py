@@ -49,14 +49,42 @@ class ScanTests(unittest.TestCase):
         kinds = self.scan("<script>fetch('/x'); new WebSocket('wss://a.b'); new EventSource('/e');"
                           " navigator.sendBeacon('/b'); import('https://a.b/m.js');</script>")
         self.assertEqual(kinds.count("network call"), 5)
-        self.assertIn("url in string", kinds)
+        self.assertIn("url in script string", kinds)
 
-    def test_url_in_string(self):
+    def test_url_in_script_string(self):
         kinds = self.scan("<script>var api = 'https://api.example.com/v1';</script>")
-        self.assertEqual(kinds, ["url in string"])
+        self.assertEqual(kinds, ["url in script string"])
+
+    def test_outbound_anchor_links_are_allowed(self):
+        self.assertEqual(self.scan('<a href="https://example.com">Reading</a>'), [])
+
+    def test_unquoted_and_entity_encoded_src(self):
+        self.assertEqual(self.scan("<script src=https://example.com/x.js></script>"), ["src"])
+        self.assertEqual(self.scan('<script src="https&#58;//example.com/x.js"></script>'), ["src"])
+
+    def test_inline_style_attribute(self):
+        self.assertEqual(self.scan('<div style="background:url(https://a.b/x.png)"></div>'), ["url()"])
 
 
 class IndexTests(unittest.TestCase):
+    def test_hidden_ancestor_does_not_skip_everything(self):
+        base = Path(tempfile.mkdtemp())
+        root = base / ".checkout"
+        write(root, "made/README.md", "")
+        write(root, "made/bad.html", '<script src="https://example.com/x.js"></script>')
+        self.assertEqual(cm.list_items(root / "made"), ["bad.html"])
+        import contextlib, io
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(cm.check(root), 1)
+        self.assertIn("1 page(s) checked, 2 problem(s)", out.getvalue())
+
+    def test_hidden_files_inside_made_are_skipped(self):
+        root = Path(tempfile.mkdtemp())
+        write(root, "made/.draft/x.html", "<p>x</p>")
+        write(root, "made/ok.html", "<p>x</p>")
+        self.assertEqual(cm.list_items(root / "made"), ["ok.html"])
+
     def test_exact_name_match_not_substring(self):
         names = cm.index_names("- `data.py` does things; see [notes](docs/notes.md)")
         self.assertEqual(names, {"data.py", "docs/notes.md"})
