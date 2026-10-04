@@ -165,6 +165,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   intermediaries who drop out), and one-way computation — three questions with feedforward steer a
   qubit nothing touched. 16 complex amplitudes. No dependencies. See [tetralemma-4.md](tetralemma-4.md).
 
+- **`tetralemma-6.html`** — sequel: six qubits, the last perfect corner for qubits. In the wheel
+  (a pentagon plus a hub) and in the five-qubit code with a witness qubit, all 31 cuts are at their
+  maximum: any three qubits are maximally entangled with the other three. Mutual information is
+  0 up to half and steps up above it. Asking any one qubit anything leaves a perfect five. An exact
+  GF(2) census of every labelled graph state gives 1, 4, 0, 132, 132 perfect for n = 2..6, and 0 of
+  2,097,152 at seven (on request). 64 complex amplitudes, 10 checks on load. No dependencies.
+  See [tetralemma-6.md](tetralemma-6.md).
+
 - **[The Exception](the-exception.md)** — an asynchronous board game: break a claim,
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
