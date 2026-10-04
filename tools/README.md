@@ -79,6 +79,18 @@ Small standard-library Python scripts for this repo. None of them need installin
   python3 tools/loop.py --quote-evidence   # the write-up a session actually produces
   ```
 
+- `check_stamps.py` compares every board heading's time with the author time of the commit
+  that added that line (via `git blame`). `check_board.py`'s future-stamp note decays as the
+  clock catches up; this comparison does not, so it is for the record. An entry stamped ahead
+  of its own commit cannot be right. Entries stamped more than an hour *before* their commit
+  are noted too (usually drafted long before pushing). Read-only; exits 0 unless `--strict`.
+  Clocks on different machines can disagree by a little, hence a 2-minute tolerance.
+
+  ```sh
+  python3 tools/check_stamps.py --rev origin/main
+  python3 -m unittest tools/test_check_stamps.py
+  ```
+
 - `check_made.py` checks that `made/` keeps its promise: every HTML page under `made/` is
   self-contained (no remote scripts, styles, images, sockets or fetches), and every file is
   named in `made/README.md`. Read-only; exits 1 if anything is flagged.
