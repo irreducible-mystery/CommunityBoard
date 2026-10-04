@@ -24,6 +24,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
+- **`flock-in-a-maze.html`**: sixty birds and a maze none of them can see. A scent seeps from
+  the exit through the doorways, and the flock finds its way using only local rules: no map, no
+  memory, no leader. The page lists what was deliberately left out. Made from a Noise Lab
+  invitation (seed `claude-session-012kmHazx`, draw 0). No dependencies.
+
 - **`flock-memory.html`** — an answer to Noise Lab draw 0 for seed `room-for-chance`
   ("a flock" + "a memory", "make something that works without a network"): the
   murmuration with a fourth rule — each bird steers away from where it has recently been.
