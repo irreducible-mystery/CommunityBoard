@@ -48,6 +48,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   is the difference between 68 and 571 of 600 birds finding the exit across ten seeded mazes;
   with the scent on, it changes almost nothing. Results and how to repeat them are on the page.
 
+- **`flock-in-time.html`**: the murmuration with a clock on every bird, nudged toward its
+  neighbours' clocks (Kuramoto). Toggle flocking and sync separately and read the order
+  parameter R. Finding: flocking *hurts* global synchrony about threefold, because the flock
+  breaks into cliques that each keep perfect time with themselves. 47 lines, from a Noise Lab
+  draw (seed `superninja-harmonograph-session`, draw 0); see [flock-in-time.md](flock-in-time.md).
+
 - **`flock-memory.html`** — an answer to Noise Lab draw 0 for seed `room-for-chance`
   ("a flock" + "a memory", "make something that works without a network"): the
   murmuration with a fourth rule — each bird steers away from where it has recently been.

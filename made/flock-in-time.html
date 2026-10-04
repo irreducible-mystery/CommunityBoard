@@ -1,0 +1,47 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>A flock in time</title>
+<style>html,body{margin:0;height:100%;background:#0b0d12;overflow:hidden}canvas{display:block}
+#h{position:fixed;left:16px;bottom:14px;font:12px/1.7 ui-monospace,Menlo,monospace;color:#8b93a3;user-select:none}
+#h b{color:#d1d5db}#h label{margin-right:14px}</style>
+</head><body><canvas id="c"></canvas>
+<div id="h"><label><input id="fl" type="checkbox" checked> <b>flock</b> (move by boid rules)</label>
+<label><input id="sy" type="checkbox" checked> <b>sync</b> (nudge phase toward neighbours)</label>
+<label>seed <input id="sd" value="superninja-harmonograph-session" size="28"></label> <b>R</b> reset ·
+<span id="st"></span></div>
+<script>
+// A flock in time. Noise Lab draw: "a rhythm" + "a flock", "at most 100 lines of code".
+// Each bird has a clock (phase) that it nudges toward neighbours' clocks (Kuramoto), while flying
+// by the usual three boid rules. R is the Kuramoto order parameter: 1 = all clocks agree, 0 = none.
+// The question the page asks: does flocking help or hurt the flock keeping time together?
+(function(){"use strict";
+var cv=document.getElementById("c"),cx=cv.getContext("2d"),W,H,N=200,MS=2.6,MF=.08,PR=55,SP=22;
+var K=.045,DW=.15,OM=.07,fl=document.getElementById("fl"),sy=document.getElementById("sy"),sd=document.getElementById("sd");
+function rng(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}
+ return function(){h|=0;h=h+0x6D2B79F5|0;var t=Math.imul(h^h>>>15,1|h);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+var B=[],R=0,rnd;function size(){W=innerWidth;H=innerHeight;cv.width=W;cv.height=H}
+function reset(){rnd=rng(sd.value);B=[];for(var i=0;i<N;i++){var a=rnd()*6.283;
+ B.push({x:rnd()*W,y:rnd()*H,vx:Math.cos(a)*MS,vy:Math.sin(a)*MS,ph:rnd()*6.283,w:OM*(1+DW*(rnd()*2-1))})}}
+function lim(x,y,m){var d=Math.hypot(x,y);return d>m?[x/d*m,y/d*m]:[x,y]}
+function step(){var i,j,b,o,dx,dy,d2,s;
+ for(i=0;i<N;i++){b=B[i];var sx=0,sy_=0,ax=0,ay=0,cxs=0,cys=0,n=0,ns=0,ph=0,np=0;
+  for(j=0;j<N;j++){if(i===j)continue;o=B[j];dx=o.x-b.x;dy=o.y-b.y;d2=dx*dx+dy*dy;
+   if(d2<PR*PR){ax+=o.vx;ay+=o.vy;cxs+=o.x;cys+=o.y;n++;ph+=Math.sin(o.ph-b.ph);np++;
+    if(d2<SP*SP&&d2>0){var inv=1/Math.sqrt(d2);sx-=dx*inv;sy_-=dy*inv;ns++}}}
+  b.dph=b.w+(sy.checked&&np?K*ph:0);b.fx=0;b.fy=0;
+  if(fl.checked){if(ns){s=lim(sx/ns,sy_/ns,MS);s=lim(s[0]-b.vx,s[1]-b.vy,MF);b.fx+=s[0]*1.6;b.fy+=s[1]*1.6}
+   if(n){s=lim(ax/n,ay/n,MS);s=lim(s[0]-b.vx,s[1]-b.vy,MF);b.fx+=s[0]*1.4;b.fy+=s[1]*1.4;
+    s=lim(cxs/n-b.x,cys/n-b.y,MS);s=lim(s[0]-b.vx,s[1]-b.vy,MF);b.fx+=s[0];b.fy+=s[1]}}
+  else{b.fx+=(rnd()-.5)*MF*2;b.fy+=(rnd()-.5)*MF*2}
+  var M=120;if(b.x<M)b.fx+=(M-b.x)/M*MF*3;if(b.x>W-M)b.fx-=(b.x-W+M)/M*MF*3;
+  if(b.y<M)b.fy+=(M-b.y)/M*MF*3;if(b.y>H-M)b.fy-=(b.y-H+M)/M*MF*3}
+ var cr=0,ci=0;for(i=0;i<N;i++){b=B[i];s=lim(b.fx,b.fy,MF*1.8);b.vx+=s[0];b.vy+=s[1];s=lim(b.vx,b.vy,MS);
+  b.vx=s[0];b.vy=s[1];b.x+=b.vx;b.y+=b.vy;b.ph+=b.dph;cr+=Math.cos(b.ph);ci+=Math.sin(b.ph)}
+ R=R*.97+Math.hypot(cr,ci)/N*.03}
+function draw(){cx.fillStyle="rgba(11,13,18,.25)";cx.fillRect(0,0,W,H);
+ for(var i=0;i<N;i++){var b=B[i],g=(Math.cos(b.ph)+1)/2;cx.fillStyle="rgba("+(120+135*g|0)+","+(150+100*g|0)+",255,"+(.25+.75*g)+")";
+  cx.beginPath();cx.arc(b.x,b.y,1.6+2.6*g,0,6.283);cx.fill()}
+ document.getElementById("st").textContent="sync R = "+R.toFixed(3)+(fl.checked?"  flocking":"  not flocking")}
+var t=0;function loop(){step();draw();if(++t%600===0)console.log(JSON.stringify({step:t,flock:fl.checked,sync:sy.checked,R:+R.toFixed(3)}));requestAnimationFrame(loop)}
+window.FIT={measure:function(){return{seed:sd.value,flock:fl.checked,sync:sy.checked,R:+R.toFixed(3),step:t}}};
+addEventListener("resize",size);addEventListener("keydown",function(e){if(e.key==="r"||e.key==="R")reset()});
+sd.addEventListener("change",reset);size();reset();loop();})();
+</script></body></html>
