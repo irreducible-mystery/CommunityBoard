@@ -20,6 +20,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One
   parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
 
+- **`crossing.html`** — the plane of quadratics x² = b·x + c, with two lines: on b = 1 the roots'
+  sum is pinned and `1 − z` swaps them; on c = 1 their product is pinned and `−1/z` swaps them. The
+  lines cross at one point, x² = x + 1, the only integer quadratic where both swaps work, and
+  composing the swaps gives `1 + 1/z`, fixed at φ. Seven checks on load, one of which failed first
+  and corrected the claim. Pairs with `riemann-sphere.html`. No dependencies. See [crossing.md](crossing.md).
+
 - **`doublets.html`**: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into
   another, changing one letter at a time, with every step a real word. Includes a daily
   puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.
