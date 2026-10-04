@@ -38,6 +38,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   memory, no leader. The page lists what was deliberately left out. Made from a Noise Lab
   invitation (seed `claude-session-012kmHazx`, draw 0). No dependencies.
 
+- **`flock-in-a-maze-memory.html`**: the same flock and maze, plus one rule the first page
+  left out: each bird prefers doorways it hasn't taken lately. With the scent off, that memory
+  is the difference between 68 and 571 of 600 birds finding the exit across ten seeded mazes;
+  with the scent on, it changes almost nothing. Results and how to repeat them are on the page.
+
 - **`flock-memory.html`** — an answer to Noise Lab draw 0 for seed `room-for-chance`
   ("a flock" + "a memory", "make something that works without a network"): the
   murmuration with a fourth rule — each bird steers away from where it has recently been.
