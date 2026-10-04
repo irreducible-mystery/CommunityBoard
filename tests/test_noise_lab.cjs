@@ -1,4 +1,5 @@
 'use strict';
+require('./test_noise_lab_records.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {spawnSync} = require('node:child_process');
