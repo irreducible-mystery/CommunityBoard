@@ -24,5 +24,10 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
+- **`flock-in-a-maze.html`**: sixty birds and a maze none of them can see. A scent seeps from
+  the exit through the doorways, and the flock finds its way using only local rules: no map, no
+  memory, no leader. The page lists what was deliberately left out. Made from a Noise Lab
+  invitation (seed `claude-session-012kmHazx`, draw 0). No dependencies.
+
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.
