@@ -254,11 +254,16 @@ class ReviewFoundGapTests(unittest.TestCase):
         self.assertEqual(self.scan('<iframe srcdoc="&lt;p&gt;hello&lt;/p&gt;"></iframe>'), [])
 
     def test_srcdoc_nesting_terminates(self):
-        # A srcdoc inside a srcdoc inside a srcdoc still reports, and does not
-        # recurse without bound.
-        deep = ('<iframe srcdoc="&lt;iframe srcdoc=&amp;quot;'
-                '&amp;lt;img src=https://evil.example/x.png&amp;gt;&amp;quot;&gt;"></iframe>')
-        self.assertIsInstance(self.scan(deep), list)  # terminates at all
+        # ORIGINAL ASSERTION, kept visible because it is the point:
+        #     self.assertIsInstance(self.scan(deep), list)
+        # scan() returns a list unconditionally, so that could not fail for the
+        # reason that mattered. A test whose failure path does not exist, written
+        # in a PR about failure paths that do not exist. Replaced below with an
+        # assertion about detection; see ReviewFoundGapTests for the three
+        # two-level variants worked out properly.
+        deep = ("<iframe srcdoc=\"&lt;iframe srcdoc=&#39;"
+                "&lt;img src=https://evil.example/x.png&gt;&#39;>\"></iframe>")
+        self.assertIn("srcdoc srcdoc src", self.scan(deep))
 
     # 4. image-set() takes bare strings, which url() never matched
     def test_css_image_set(self):
@@ -283,3 +288,62 @@ class ReviewFoundGapTests(unittest.TestCase):
     def test_outbound_anchor_href_is_still_allowed(self):
         # The norm this checker has always held: a link is not a dependency.
         self.assertEqual(self.scan('<a href="https://example.com/">read</a>'), [])
+
+
+class SrcdocDepthTests(unittest.TestCase):
+    """Two-level srcdoc, worked out from the payloads rather than from theory.
+
+    PR #42's reviewer reported a two-deep srcdoc as a hole and attributed it to
+    the depth guard. Checking it turned up something different: the guard was
+    never the problem -- a well-formed two-level payload was already caught, by
+    the same recursion that caught one level. What their specific payload hit
+    was that every ">" in it had been escaped, leaving a tag the parser can
+    never terminate, which a browser also drops at EOF. So it was inert, and
+    the "ok" was correct about the world and silent about its own reasoning.
+    That silence is what this commit fixes.
+    """
+
+    def scan(self, html: str) -> list[str]:
+        root = Path(tempfile.mkdtemp())
+        write(root, "page.html", html)
+        return [kind for _, kind, _ in cm.scan_markup(root / "page.html")]
+
+    def test_two_deep_well_formed_is_caught(self):
+        # Level-1 srcdoc single-quoted, so level 2 is well-formed markup.
+        payload = ("<iframe srcdoc=\"&lt;iframe srcdoc=&#39;"
+                   "&lt;img src=https://evil.example/b.png&gt;&#39;>\"></iframe>")
+        self.assertIn("srcdoc srcdoc src", self.scan(payload))
+
+    def test_two_deep_mangled_parse_still_exposes_the_load(self):
+        # Level-1 closes with a literal ">". The unquoted inner attribute
+        # mangles into a bare src= on the iframe, which is still a load.
+        payload = ("<iframe srcdoc=\"&lt;iframe srcdoc=&amp;quot;"
+                   "&amp;lt;img src=https://evil.example/a.png&amp;gt;&amp;quot;>\"></iframe>")
+        self.assertIn("srcdoc src", self.scan(payload))
+
+    def test_unterminated_inner_tag_is_reported_not_passed(self):
+        # The reviewer's payload. No literal ">" survives to level 1, so the
+        # tag never terminates and nothing parses. Inert in a browser -- but
+        # "found nothing" and "nothing to find" are different claims, and only
+        # one of them is checkable from here, so say which.
+        payload = ("<iframe srcdoc=\"&lt;iframe srcdoc=&amp;quot;"
+                   "&amp;lt;img src=https://evil.example/r.png&amp;gt;&amp;quot;&amp;gt;\">"
+                   "</iframe>")
+        self.assertIn("srcdoc unparsed markup", self.scan(payload))
+
+    def test_local_and_plain_srcdoc_stay_silent(self):
+        self.assertEqual(self.scan('<iframe srcdoc="&lt;p&gt;hello&lt;/p&gt;"></iframe>'), [])
+        self.assertEqual(self.scan('<iframe srcdoc="just some text"></iframe>'), [])
+        self.assertEqual(self.scan('<iframe srcdoc="&lt;img src=./local.png&gt;"></iframe>'), [])
+
+    def test_depth_limit_reports_instead_of_returning_silently(self):
+        s = cm._Scanner(depth=cm.SRCDOC_MAX_DEPTH)
+        s.feed('<iframe srcdoc="&lt;img src=https://evil.example/deep.png&gt;"></iframe>')
+        s.close()
+        self.assertIn("srcdoc depth limit", [kind for _, kind, _ in s.problems])
+
+    def test_depth_limit_silent_on_non_markup(self):
+        s = cm._Scanner(depth=cm.SRCDOC_MAX_DEPTH)
+        s.feed('<iframe srcdoc="plain text, no tags"></iframe>')
+        s.close()
+        self.assertEqual(s.problems, [])

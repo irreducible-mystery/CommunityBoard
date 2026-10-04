@@ -54,6 +54,13 @@ EXTERNAL = re.compile(r"^\s*(?:(?:https?|wss?):)?//", re.IGNORECASE)
 # Attributes whose value the browser loads while rendering.
 LOAD_ATTRS = {"src", "srcset", "data", "poster", "action"}
 
+# How deep a srcdoc-inside-a-srcdoc is followed before the limit is reported.
+SRCDOC_MAX_DEPTH = 3
+
+# Does this attribute value open a tag? Used only to decide whether silence
+# from the inner parser is worth reporting.
+LOOKS_LIKE_MARKUP = re.compile(r"<\s*[A-Za-z!/]")
+
 # <a ping="https://..."> POSTs to every listed URL when the link is clicked.
 # Space-separated list, so it is handled like srcset rather than as one value.
 PING_ATTRS = {"ping"}
@@ -160,6 +167,7 @@ class _Scanner(HTMLParser):
     def __init__(self, depth: int = 0) -> None:
         super().__init__(convert_charrefs=True)
         self._depth = depth  # srcdoc nests a whole document inside an attribute
+        self.tags_seen = 0   # did the inner markup parse at all?
         self.problems: list[Problem] = []
         self._seen: set[tuple[int, str]] = set()
         self._in: str | None = None  # "script" | "style" | None
@@ -190,15 +198,30 @@ class _Scanner(HTMLParser):
                 for one in value.split():
                     if is_external(one):
                         self._add(line, "ping", one.strip())
-            elif name == "srcdoc" and self._depth < 3:
+            elif name == "srcdoc":
                 # A complete document inside an attribute. HTMLParser has
                 # already decoded the character references, so the value is
                 # markup by the time we see it -- scan it as such.
+                if self._depth >= SRCDOC_MAX_DEPTH:
+                    # Report the limit rather than returning silently: an
+                    # unexamined document is a gap, and a gap the instrument
+                    # names is not the same thing as a gap it hides.
+                    if LOOKS_LIKE_MARKUP.search(value):
+                        self._add(line, "srcdoc depth limit", value[:60])
+                    continue
                 inner = _Scanner(self._depth + 1)
                 inner.feed(value)
                 inner.close()
                 for _inner_line, kind, detail in inner.problems:
                     self._add(line, f"srcdoc {kind}", detail)
+                if inner.tags_seen == 0 and LOOKS_LIKE_MARKUP.search(value):
+                    # The value opens a tag but no tag ever parsed -- typically
+                    # an unterminated tag, every ">" having been escaped away.
+                    # A browser drops such a tag at EOF, so this is usually
+                    # inert, but "the parser found nothing" and "there is
+                    # nothing to find" are different claims and only one of
+                    # them is checkable from here. Say which one this is.
+                    self._add(line, "srcdoc unparsed markup", value[:60])
             elif name in LOAD_ATTRS:
                 if name == "srcset":
                     parts = [c.strip().split()[0] for c in value.split(",") if c.strip()]
@@ -232,6 +255,7 @@ class _Scanner(HTMLParser):
             self._add(line, kind, detail)
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.tags_seen += 1
         tag = tag.lower()
         self._attr_check(tag, attrs)
         if tag in ("script", "style"):
@@ -240,6 +264,7 @@ class _Scanner(HTMLParser):
             self._block = []
 
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.tags_seen += 1
         self._attr_check(tag.lower(), attrs)
 
     def handle_endtag(self, tag: str) -> None:
