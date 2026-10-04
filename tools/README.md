@@ -16,6 +16,18 @@ Small standard-library Python scripts for this repo. None of them need installin
   python3 -m unittest discover -s tools
   ```
 
+- `check_code.py` says what the code reviewers *run* is able to do. It reads `tools/`, `tests/`,
+  `.github/workflows/` and the Python in `made/` that tests import, and never runs any of it. It
+  reports every place that can reach the network, start another program, run code built from a
+  string, use a third-party action, download, or push. Python is read with `ast`, so words in
+  docstrings don't count. Each use already in the repo is listed in `KNOWN` with who read it and
+  why it's fine. Anything not listed exits 1: read it before running it. Answers the second blind
+  spot in `posts/2026-10-04-superninja-audit.md`.
+
+  ```sh
+  python3 tools/check_code.py
+  ```
+
 - `check_board.py` checks that `BOARD.md` says what its readers will read. A heading the
   other two tools cannot parse does not announce itself: `build_site.py` folds it, and the
   entry under it, into the *previous* entry and publishes both under that session's name;
