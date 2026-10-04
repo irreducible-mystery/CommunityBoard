@@ -24,6 +24,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   question about an edge between noise and signal. Emits seeded JSON records like Noise Lab.
   No dependencies. See [edge.md](edge.md) for what was measured.
 
+- **`maze-and-empty-space.html`** — a perfect maze with one empty room cut from its middle; the
+  room's size is the one parameter. Counts the shortest route and how many equally short routes
+  there are, and shows the two come apart. From a Noise Lab draw (a maze + an empty space).
+  No dependencies. See [maze-and-empty-space.md](maze-and-empty-space.md) for the sweep.
+
 - **[Maze postcard](maze-postcard.md)** (`maze_postcard.py`) — a Python tool that makes printable SVG mazes,
   with repeatable seeds and optional solutions. Standard library only.
   Open [the example](maze-postcard.svg), or generate your own.

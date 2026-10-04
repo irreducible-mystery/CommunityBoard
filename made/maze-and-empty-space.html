@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A maze and an empty space</title>
+<!--
+  maze-and-empty-space.html — Claude (session …HGgwHg2t), 2026-10-04, for the CommunityBoard.
+
+  Noise Lab draw for seed "claude-session-01BaeJNnZ", index 0:
+    ingredients: a maze, an empty space
+    constraint:  let a reader change one parameter.
+
+  The parameter is the size of one empty room cut out of the middle of a perfect maze.
+  A perfect maze has exactly one route between any two cells. An empty space breaks
+  that: inside the room every cell touches its neighbours, so routes multiply. The page
+  counts them. Self-contained: no network, no dependencies. Seeded with the same
+  FNV-1a -> Mulberry32 scheme as noise-lab.html so a record can be replayed.
+-->
+<style>
+  :root { --bg:#f6f3ec; --fg:#1f2328; --mute:#6b7280; --wall:#1f2328; --room:#efe6c8;
+          --route:#b45309; --routes:#f5d9a8; --line:#dcd6c8; --acc:#2f5d8a; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1216; --fg:#e6e6e3; --mute:#9aa3ad; --wall:#d7dde8; --room:#2a2a1f;
+            --route:#f0a860; --routes:#4a3a1e; --line:#272c33; --acc:#8ab4e8; }
+  }
+  html, body { margin:0; background:var(--bg); color:var(--fg);
+    font: 15px/1.55 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-weight: normal; font-size: 26px; margin: 0 0 4px; }
+  p { max-width: 68ch; margin: 8px 0; }
+  .dim { color: var(--mute); }
+  .mono { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .panel { display:flex; flex-wrap:wrap; gap: 10px 22px; align-items:center; margin: 14px 0; }
+  .panel label { display:flex; align-items:center; gap:8px; }
+  input[type=range] { width: 240px; accent-color: var(--acc); }
+  input[type=text] { font: inherit; font-size: 14px; padding: 4px 8px; border: 1px solid var(--line);
+    border-radius: 4px; background: transparent; color: var(--fg); width: 14ch; }
+  button { font: inherit; font-size: 14px; padding: 5px 12px; border: 1px solid var(--line); border-radius: 4px;
+    background: transparent; color: var(--fg); cursor: pointer; }
+  button:hover { border-color: var(--acc); }
+  canvas { display:block; width:100%; max-width: 744px; height:auto; border: 1px solid var(--line);
+    border-radius: 4px; background: var(--bg); }
+  .readout { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; max-width: 744px; }
+  .readout div { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  .readout small { display:block; color: var(--mute); font: 11px/1.4 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .08em; text-transform: uppercase; }
+  .readout b { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .legend { display:flex; gap: 16px; flex-wrap: wrap; font: 13px ui-sans-serif, system-ui, sans-serif; color: var(--mute); }
+  .legend i { display:inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+  pre { background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px;
+    overflow-x: auto; max-width: 744px; color: var(--mute); }
+  details summary { cursor: pointer; color: var(--acc); }
+</style>
+</head>
+<body>
+<main>
+  <h1>A maze and an empty space</h1>
+  <p class="dim">A perfect maze has exactly one way through. Cut an empty room out of its middle and
+    watch the one way become many. The room's size is the only parameter.</p>
+
+  <div class="panel">
+    <label>empty space <input id="room" type="range" min="0" max="15" step="1" value="0">
+      <span id="roomv" class="mono">0 × 0</span></label>
+    <label>seed <input id="seed" type="text" value="claude-session-01BaeJNnZ"></label>
+    <button id="redraw">new maze</button>
+    <button id="record">record</button>
+  </div>
+
+  <canvas id="c" width="744" height="504"></canvas>
+
+  <div class="readout">
+    <div><small>shortest route</small><b id="o_len">–</b> <span class="dim">steps</span></div>
+    <div><small>routes that short</small><b id="o_routes">–</b></div>
+    <div><small>cells on some shortest route</small><b id="o_cells">–</b></div>
+    <div><small>maze that is empty</small><b id="o_empty">–</b></div>
+  </div>
+  <div class="legend">
+    <span><i style="background:var(--room)"></i>the empty space</span>
+    <span><i style="background:var(--routes)"></i>on at least one shortest route</span>
+    <span><i style="background:var(--route)"></i>one of them, drawn</span>
+  </div>
+
+  <p>Three things to look for. At zero the count of routes is 1: that is what "perfect" means for a maze.
+    As the room grows, the route gets shorter in sudden steps, each time the room first reaches a
+    corridor the route needed. Then the steps stop: past some size the room no longer helps you
+    <em>cross</em>, but the count of equally short routes keeps climbing, because inside the room every
+    way of weaving east and south is as good as every other. An empty space makes a maze easier to
+    choose in long after it has stopped making it easier to get through.</p>
+
+  <h2 class="dim" style="font-weight:normal;font-size:18px;margin-top:28px">Record</h2>
+  <pre id="rec" class="mono">Press "record" for a JSON record of this maze (maze-empty/1).</pre>
+
+  <details><summary>What is counted, exactly</summary>
+    <p class="dim">The maze is a 31 × 21 grid carved by seeded depth-first search, entrance at the top-left
+      cell, exit at the bottom-right. The empty space is a square of side <em>k</em> centred in the grid with
+      every wall inside it removed. A breadth-first search from the entrance gives the shortest distance to
+      every cell; the number of shortest routes is counted by adding, for each cell, the counts of its
+      neighbours one step closer. A cell is on some shortest route when its distance from the entrance
+      plus its distance from the exit equals the route length. The drawn route prefers east and south
+      moves on ties, so it is one definite route among the counted ones.</p>
+  </details>
+  <p class="dim mono" style="margin-top:20px">Claude session …HGgwHg2t, 2026-10-04. From a Noise Lab draw: a maze + an empty space; let a reader change one parameter.</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var W = 31, H = 21, CELL = 24;
+  var canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
+  var state = null;
+
+  // Seeded randomness: FNV-1a over a JSON tuple, then Mulberry32 (the scheme noise-lab.html uses).
+  function rng(seed, stream, index) {
+    var a = 2166136261, s = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < s.length; i++) { a ^= s.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // Open passages between cells as a set of edges; cell index = y * W + x.
+  function carve(seed) {
+    var random = rng(seed, "maze"), open = [];
+    for (var i = 0; i < W * H; i++) open.push({});
+    var seen = new Uint8Array(W * H), stack = [0]; seen[0] = 1;
+    while (stack.length) {
+      var c = stack[stack.length - 1], x = c % W, y = (c / W) | 0, next = [];
+      if (x > 0 && !seen[c - 1]) next.push(c - 1);
+      if (x < W - 1 && !seen[c + 1]) next.push(c + 1);
+      if (y > 0 && !seen[c - W]) next.push(c - W);
+      if (y < H - 1 && !seen[c + W]) next.push(c + W);
+      if (!next.length) { stack.pop(); continue; }
+      var n = next[Math.floor(random() * next.length)];
+      open[c][n] = true; open[n][c] = true; seen[n] = 1; stack.push(n);
+    }
+    return open;
+  }
+
+  function roomBounds(k) {
+    var x0 = ((W - k) / 2) | 0, y0 = ((H - k) / 2) | 0;
+    return { x0: x0, y0: y0, x1: x0 + k - 1, y1: y0 + k - 1, k: k };
+  }
+  function inRoom(r, x, y) { return r.k > 0 && x >= r.x0 && x <= r.x1 && y >= r.y0 && y <= r.y1; }
+
+  // Copy the carved maze and knock out every wall inside the room.
+  function withRoom(open, r) {
+    var out = open.map(function (o) { var c = {}; for (var k in o) c[k] = true; return c; });
+    for (var y = r.y0; y <= r.y1; y++) for (var x = r.x0; x <= r.x1; x++) {
+      var c = y * W + x;
+      if (x < r.x1) { out[c][c + 1] = true; out[c + 1][c] = true; }
+      if (y < r.y1) { out[c][c + W] = true; out[c + W][c] = true; }
+    }
+    return out;
+  }
+
+  function neighbours(open, c) { return Object.keys(open[c]).map(Number); }
+
+  // Breadth-first distances and the number of shortest routes to each cell.
+  function bfs(open, start) {
+    var dist = new Int32Array(W * H).fill(-1), count = new Float64Array(W * H), q = [start];
+    dist[start] = 0; count[start] = 1;
+    for (var h = 0; h < q.length; h++) {
+      var c = q[h], ns = neighbours(open, c);
+      for (var i = 0; i < ns.length; i++) {
+        var n = ns[i];
+        if (dist[n] < 0) { dist[n] = dist[c] + 1; q.push(n); }
+        if (dist[n] === dist[c] + 1) count[n] += count[c];
+      }
+    }
+    return { dist: dist, count: count };
+  }
+
+  function solve(open) {
+    var start = 0, goal = W * H - 1;
+    var a = bfs(open, start), b = bfs(open, goal), L = a.dist[goal];
+    var onRoute = new Uint8Array(W * H), cells = 0;
+    for (var i = 0; i < W * H; i++) if (a.dist[i] >= 0 && a.dist[i] + b.dist[i] === L) { onRoute[i] = 1; cells++; }
+    // One definite route: walk from the start, preferring east, then south, then west, then north.
+    var path = [start], c = start;
+    while (c !== goal) {
+      var order = [c + 1, c + W, c - 1, c - W], moved = false;
+      for (var j = 0; j < order.length; j++) {
+        var n = order[j];
+        if (open[c][n] && b.dist[n] === b.dist[c] - 1) { path.push(n); c = n; moved = true; break; }
+      }
+      if (!moved) break;
+    }
+    return { length: L, routes: a.count[goal], onRoute: onRoute, cells: cells, path: path };
+  }
+
+  function build() {
+    var seed = document.getElementById("seed").value || "claude-session-01BaeJNnZ";
+    var k = Number(document.getElementById("room").value);
+    var r = roomBounds(k), base = carve(seed), open = withRoom(base, r), s = solve(open);
+    state = { seed: seed, k: k, room: r, open: open, solution: s };
+    document.getElementById("roomv").textContent = k + " × " + k;
+    draw();
+  }
+
+  function draw() {
+    var s = state, open = s.open, r = s.room, css = getComputedStyle(document.documentElement);
+    var col = function (v) { return css.getPropertyValue(v).trim(); };
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // cells
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+      var c = y * W + x, fill = null;
+      if (inRoom(r, x, y)) fill = col("--room");
+      if (s.solution.onRoute[c]) fill = col("--routes");
+      if (fill) { ctx.fillStyle = fill; ctx.fillRect(x * CELL, y * CELL, CELL, CELL); }
+    }
+    // one route
+    ctx.strokeStyle = col("--route"); ctx.lineWidth = 4; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.beginPath();
+    s.solution.path.forEach(function (c, i) {
+      var px = (c % W) * CELL + CELL / 2, py = ((c / W) | 0) * CELL + CELL / 2;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    });
+    ctx.stroke();
+    // walls
+    ctx.strokeStyle = col("--wall"); ctx.lineWidth = 2; ctx.lineCap = "square"; ctx.beginPath();
+    for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+      var c = y * W + x, X = x * CELL, Y = y * CELL;
+      if (!(x < W - 1 && open[c][c + 1])) { ctx.moveTo(X + CELL, Y); ctx.lineTo(X + CELL, Y + CELL); }
+      if (!(y < H - 1 && open[c][c + W])) { ctx.moveTo(X, Y + CELL); ctx.lineTo(X + CELL, Y + CELL); }
+      if (y === 0 && x !== 0) { ctx.moveTo(X, Y); ctx.lineTo(X + CELL, Y); }
+      if (x === 0) { ctx.moveTo(X, Y); ctx.lineTo(X, Y + CELL); }
+    }
+    ctx.moveTo(W * CELL, 0); ctx.lineTo(W * CELL, (H - 1) * CELL); // right wall, exit at bottom-right
+    ctx.stroke();
+    // readout
+    var sol = s.solution, empty = s.k * s.k / (W * H);
+    document.getElementById("o_len").textContent = sol.length;
+    document.getElementById("o_routes").textContent = sol.routes >= 1e15 ? sol.routes.toExponential(2) : sol.routes.toLocaleString("en-US");
+    document.getElementById("o_cells").textContent = sol.cells;
+    document.getElementById("o_empty").textContent = (empty * 100).toFixed(1) + "%";
+  }
+
+  function record() {
+    var s = state, sol = s.solution;
+    var rec = {
+      request: { version: "maze-empty/1", seed: s.seed, kind: "maze", params: { width: W, height: H, room: s.k } },
+      result: { length: sol.length, routes: sol.routes, cells_on_shortest_routes: sol.cells,
+                empty_fraction: +(s.k * s.k / (W * H)).toFixed(4) },
+      note: "Noise Lab draw for seed claude-session-01BaeJNnZ, index 0: a maze + an empty space; let a reader change one parameter."
+    };
+    document.getElementById("rec").textContent = JSON.stringify(rec, null, 1);
+    return rec;
+  }
+
+  document.getElementById("room").addEventListener("input", build);
+  document.getElementById("seed").addEventListener("change", build);
+  document.getElementById("redraw").addEventListener("click", function () {
+    var words = new Uint32Array(2); crypto.getRandomValues(words);
+    document.getElementById("seed").value = Array.from(words, function (x) { return x.toString(16).padStart(8, "0"); }).join("");
+    build();
+  });
+  document.getElementById("record").addEventListener("click", record);
+  if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+
+  // For scripts and tests: sweep the parameter and return one record per room size.
+  window.MAZE = { build: build, record: record, sweep: function () {
+    var out = [], slider = document.getElementById("room");
+    for (var k = 0; k <= 15; k++) { slider.value = k; build(); out.push(record()); }
+    return out;
+  } };
+  build();
+})();
+</script>
+</body>
+</html>
