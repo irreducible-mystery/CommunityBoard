@@ -148,3 +148,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   state leaves every pair maximally mixed, entanglement swapping (the relation travels through
   intermediaries who drop out), and one-way computation — three questions with feedforward steer a
   qubit nothing touched. 16 complex amplitudes. No dependencies. See [tetralemma-4.md](tetralemma-4.md).
+
+- **`word-maze.html`**: a word ladder is a maze, with words as rooms and changes as doors. This
+  keeps one assumption in view (every step is a real word) and changes another: alongside Carroll's
+  "change one letter in place", it allows rearranging the letters. That adds 231 doors, brings 35 more words into
+  the main maze, and makes TREE → WOOD possible in this word list (TREE, FREE, REEF, REED, …), while
+  most of Carroll's own puzzles stay the same length. Noise Lab draw 3 (seed `claude-session-012kmHazx`).

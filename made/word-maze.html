@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Word Maze</title>
+<style>
+  :root { --bg: #f6f3ee; --ink: #22201c; --muted: #77716a; --line: #d9d3ca; --tile: #fff;
+    --step: #f1d48a; --ana: #b9d7f0; --bad: #b4412f; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15161a; --ink: #ece8e1; --muted: #8d877f; --line: #34353b; --tile: #202127;
+      --step: #7a6122; --ana: #2d5675; --bad: #e07a63; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Georgia, serif; }
+  main { max-width: 44rem; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-size: 1.8rem; margin: 0; }
+  .sub { color: var(--muted); font-style: italic; margin: 4px 0 18px; }
+  form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 14px 0; }
+  input { width: 6.5rem; font: 600 1.1rem ui-monospace, Menlo, monospace; text-transform: uppercase;
+    letter-spacing: .25em; padding: 6px 8px; background: var(--tile); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 6px; }
+  button { font: inherit; font-size: .9rem; color: var(--ink); background: var(--tile);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 560px) { .pair { grid-template-columns: 1fr; } }
+  h2 { font-size: 1.05rem; margin: 18px 0 6px; }
+  .rule { color: var(--muted); font-size: .9rem; margin: 0 0 8px; }
+  .row { display: flex; gap: 4px; margin: 4px 0; align-items: center; }
+  .t { width: 2.1rem; height: 2.1rem; display: grid; place-items: center; background: var(--tile);
+    border: 1px solid var(--line); border-radius: 5px; font: 600 1rem ui-monospace, Menlo, monospace; text-transform: uppercase; }
+  .t.c { background: var(--step); }
+  .row.ana .t { background: var(--ana); }
+  .row .k { font-size: .75rem; color: var(--muted); margin-left: 6px; }
+  .none { color: var(--bad); font-size: .95rem; }
+  #msg { color: var(--bad); min-height: 1.4em; font-size: .9rem; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 8px 0; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  .note { color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Word Maze</h1>
+  <p class="sub">A word ladder is a maze: every word is a room, and every allowed change is a door.
+    Change what counts as a door, and the maze changes shape.</p>
+  <p><strong>The assumption kept in view:</strong> every step must be a real word.<br>
+    <strong>The assumption changed:</strong> Carroll's rule says letters change in place. The second
+    maze also allows a step that only rearranges the letters (SILENT &rarr; LISTEN, but four letters:
+    EVIL &rarr; LIVE).</p>
+
+  <form id="f">
+    <input id="a" maxlength="4" value="tree" aria-label="From"> &rarr;
+    <input id="b" maxlength="4" value="wood" aria-label="To">
+    <button type="submit">Find both ladders</button>
+    <button type="button" id="rnd">Surprise me</button>
+  </form>
+  <div id="msg" aria-live="polite"></div>
+  <div class="pair">
+    <section><h2>Carroll's maze</h2><p class="rule">Change one letter in place.</p><div id="A"></div></section>
+    <section><h2>The rearranging maze</h2><p class="rule">Or rearrange the letters (blue rows).</p><div id="B"></div></section>
+  </div>
+
+  <h2>What the change does to the whole maze</h2>
+  <table id="stats"><thead><tr><th></th><th>Carroll's</th><th>Rearranging</th></tr></thead><tbody></tbody></table>
+  <p class="note"><button type="button" id="recompute">Recompute these</button> <span id="rcmsg"></span></p>
+  <p>Rearranging adds a couple of hundred doors, but most of them lead somewhere already reachable.
+    The maze gets a little smaller inside: 35 more words join the main part, and 8 words
+    that had no door at all get one. Most of Carroll's own puzzles come out exactly as long as before. The changed
+    assumption matters most at the edges: words like IDEA, EVIL and ONCE, which no one-letter change can
+    reach, and pairs like TREE and WOOD, which this word list can only connect by rearranging.</p>
+  <p class="note">About 1,200 common four-letter words, the same list as <a href="doublets.html">Doublets</a>.
+    The table's numbers were computed by this page's own code and written in. Press <em>Recompute</em>
+    to redo it in your browser, which takes about 15 seconds. Distances are averaged over every pair in the
+    largest connected part, using breadth-first search from every word. Made from a Noise Lab invitation (noise-lab/1):
+    seed <code>claude-session-012kmHazx</code>, draw 3: "a word ladder" + "a maze", with the constraint "Keep one
+    assumption visible and change another."</p>
+</main>
+<script>
+(function () {
+  "use strict";
+  var WORDS = "able ache acid acre aged aide airs ally also arch area arms army arts aunt auto avid away awry axes back bade bail bait bake bald bale ball balm band bane bang bank bans bare bark barn base bash bass bath bats bead beak beam bean bear beat beds beef been beer bees beet bell belt bend bent best bets bias bike bile bill bind bird bite bits blew blot blow blue blur boar boat body boil bold bolt bomb bond bone book boom boon boot bore born boss both bout bowl bows brag bran brew brim bulb bulk bull bump bunk buns burn bury bush bust busy buys buzz cafe cage cake calf call calm came camp cane cans cape caps card care carp cars cart case cash cask cast cats cave cell cent chap chat chef chin chip chop cite city clad clam clan clap claw clay clip clod clog clot club clue coal coat code coil coin cold colt comb come cone cook cool cope cops copy cord core cork corn cost cosy cots cove cows crab crew crib crop crow cube cubs cuff cult curb cure curl cute cuts dame damp dare dark darn dart dash data date dawn days daze dead deaf deal dean dear debt deck deed deem deep deer dent deny desk dial dice died dies diet digs dill dime dine dips dire dirt disc dish disk dive dock does dogs dole doll dome done doom door dose dots dove down doze drab drag draw drew drip drop drug drum dual duck duel dues dull duly dumb dump dune dung dusk dust duty each earn ears ease east easy eats echo edge edit eggs else envy epic even ever evil exam exit eyes face fact fade fail fair fake fall fame fang fare farm fast fate fear feat feed feel fees feet fell felt fern feud fill film find fine fire firm fish fist fits five flag flap flat flaw flea fled flew flip flit flog flow foam foil fold folk fond font food fool foot ford fore fork form fort foul four fowl free frog from fuel full fume fund fuse fuss gain gait gale game gang gape gaps garb gash gasp gate gave gaze gear gems gift gild gill gilt girl gist give glad glee glow glue glum gnat goad goal goat gold golf gone gong good gore gown grab gram gray grew grey grid grim grin grip grit grow grub gulf gull gulp gush gust guts hail hair half hall halt hand hang hard hare harm harp hash hate haul have hawk haze hazy head heal heap hear heat heed heel held hell helm help herb herd here hero hide high hike hill hilt hind hint hire hiss hits hive hoax hold hole holy home hone hood hoof hook hoop hoot hope horn hose host hour howl huge hulk hull hump hung hunt hurl hurt hush hymn icon idea idle inch info iron isle item jabs jack jade jail jams jars jaws jazz jeer jest jets jobs jogs join joke jolt jump junk jury just keel keen keep kelp kept keys kick kids kill kiln kind king kiss kite knee knew knit knob knot know lace lack lacy lady laid lake lamb lame lamp land lane lard lark lash last late lawn laws lazy lead leaf leak lean leap left legs lend lens lent less liar lice lick lied lies life lift like lily limb lime limp line link lint lion lips list live load loaf loan lobe lock loft logo logs lone long look loom loop loot lord lore lose loss lost lots loud love luck lull lump lung lure lurk lush lust made maid mail main make male mall malt mane many maps mare mark mash mask mass mast mate math maze meal mean meat meek meet melt memo mend menu mere mesh mess mice mild mile milk mill mime mind mine mint miss mist mite moan moat mock mode mold mole monk mood moon moor moss most moth move much muck mule muse mush must mute myth nail name nape navy near neat neck need nest news newt next nice nick nine node none nook noon norm nose note noun null numb nuts oath obey odds oils okay omen once ones only onto ooze open oral oven over owed owes owls owns pace pack pact page paid pail pain pair pale palm pane pang pans park part pass past path pave pawn pays peak peal pear peas peat peck peek peel peep peer pegs pelt pens pest pets pick pier pies pike pile pill pine pink pins pint pipe pity plan play plea plod plot plow ploy plug plum plus pods poem poet poke pole poll pond pony pool poor pops pore pork port pose post pour pout pray prey prim prod prom prop pros pull pulp pump punk puns pure push puts quit quiz race rack raft rage rags raid rail rain rake ramp rang rank rant rare rash rate rats rave rays read real ream reap rear reed reef reek reel rely rent rest rice rich ride rife rift ring rink riot ripe rise risk rite road roam roar robe rock rode role roll roof room root rope rose rosy rots rout rows rude rugs ruin rule rump rung runs rush rust sack safe saga sage said sail sake sale salt same sand sane sang sank sash save scan scar seal seam sear seas seat sect seed seek seem seen seep self sell send sent sets sewn shed shin ship shoe shop shot show shut sick side sigh sign silk sill silo sing sink sips sire site sits size skin skip slab slam slap slat sled slew slid slim slip slit slob slot slow slug slum slur smog snag snap snip snob snow snug soak soap soar sock soda sofa soft soil sold sole solo some song soon soot sore sort soul soup sour sown span spar spat sped spin spit spot spun spur stab stag star stay stem step stew stir stop stub stud stun such suck suit sulk sung sunk sure surf swam swan swap sway swim tack tact tail take tale talk tall tame tang tank tape taps tart task taxi teak teal team tear teas tees tell tend tent term test text than that thaw them then they thin this thud thus tick tide tidy tied tier ties tile till tilt time tint tiny tips tire toad toes tofu told toll tomb tone tons took tool toot tops tore torn toss tour town toys tram trap tray tree trek trim trio trip trod true tube tuck tuna tune turf turn tusk twig twin type ugly undo unit upon urge used user uses vain vale vane vary vase vast veal veil vein vent verb very vest veto vets vice view vile vine visa void vole vote vows wade wage wail wait wake walk wall wand want ward warm warn warp wars wart wary wash wasp wave wavy waxy ways weak wear weed week weep weld well went wept were west what when whim whip whom wick wide wife wild will wilt wily wind wine wing wink wipe wire wiry wise wish wisp with wits woke wolf womb wood wool word wore work worm worn wove wrap wren writ yard yarn yawn year yell yelp yoga yoke yolk your zany zeal zero zest zinc zone zoom".split(" "), SET = new Set(WORDS), ABC = "abcdefghijklmnopqrstuvwxyz";
+  var ANA = new Map();
+  WORDS.forEach(function (w) { var k = w.split("").sort().join(""); (ANA.get(k) || ANA.set(k, []).get(k)).push(w); });
+  function sub(w) {
+    var out = [];
+    for (var i = 0; i < 4; i++) for (var j = 0; j < 26; j++) {
+      if (ABC[j] === w[i]) continue;
+      var x = w.slice(0, i) + ABC[j] + w.slice(i + 1);
+      if (SET.has(x)) out.push(x);
+    }
+    return out;
+  }
+  function anagrams(w) { return ANA.get(w.split("").sort().join("")).filter(function (x) { return x !== w; }); }
+  function doors(w, rearrange) { return rearrange ? sub(w).concat(anagrams(w)) : sub(w); }
+  function bfs(a, rearrange) {
+    var prev = new Map([[a, null]]), dist = new Map([[a, 0]]), q = [a];
+    for (var i = 0; i < q.length; i++) doors(q[i], rearrange).forEach(function (v) {
+      if (!prev.has(v)) { prev.set(v, q[i]); dist.set(v, dist.get(q[i]) + 1); q.push(v); }
+    });
+    return { prev: prev, dist: dist };
+  }
+  function ladder(a, b, rearrange) {
+    var r = bfs(a, rearrange);
+    if (!r.prev.has(b)) return null;
+    var path = [b];
+    while (r.prev.get(path[0])) path.unshift(r.prev.get(path[0]));
+    return path;
+  }
+  function show(el, path) {
+    el.innerHTML = "";
+    if (!path) { el.innerHTML = '<p class="none">No ladder. These two words are in separate parts of this maze.</p>'; return; }
+    path.forEach(function (w, i) {
+      var prev = path[i - 1], row = document.createElement("div");
+      var isAna = prev && sub(prev).indexOf(w) === -1;
+      row.className = "row" + (isAna ? " ana" : "");
+      for (var k = 0; k < 4; k++) {
+        var t = document.createElement("span");
+        t.className = "t" + (prev && !isAna && prev[k] !== w[k] ? " c" : "");
+        t.textContent = w[k]; row.appendChild(t);
+      }
+      if (isAna) { var s = document.createElement("span"); s.className = "k"; s.textContent = "rearranged"; row.appendChild(s); }
+      el.appendChild(row);
+    });
+    var n = document.createElement("p"); n.className = "rule";
+    n.textContent = (path.length - 1) + " step" + (path.length === 2 ? "" : "s"); el.appendChild(n);
+  }
+  function run() {
+    var a = document.getElementById("a").value.trim().toLowerCase(), b = document.getElementById("b").value.trim().toLowerCase();
+    var msg = document.getElementById("msg");
+    if (!SET.has(a) || !SET.has(b)) { msg.textContent = "Both words need to be on the list."; return; }
+    msg.textContent = "";
+    show(document.getElementById("A"), ladder(a, b, false));
+    show(document.getElementById("B"), ladder(a, b, true));
+  }
+  document.getElementById("f").addEventListener("submit", function (e) { e.preventDefault(); run(); });
+  document.getElementById("rnd").addEventListener("click", function () {
+    // Prefer pairs where the two mazes disagree.
+    for (var t = 0; t < 400; t++) {
+      var a = WORDS[(Math.random() * WORDS.length) | 0], rB = bfs(a, true), rA = bfs(a, false);
+      var picks = WORDS.filter(function (w) { return rB.dist.has(w) && rB.dist.get(w) >= 3 && rA.dist.get(w) !== rB.dist.get(w); });
+      if (picks.length) {
+        document.getElementById("a").value = a;
+        document.getElementById("b").value = picks[(Math.random() * picks.length) | 0];
+        run(); return;
+      }
+    }
+  });
+
+  function stats(rearrange) {
+    var seen = new Set(), sizes = [], biggest = null;
+    WORDS.forEach(function (w) {
+      if (seen.has(w)) return;
+      var d = bfs(w, rearrange).dist; d.forEach(function (_, k) { seen.add(k); });
+      sizes.push(d.size); if (!biggest || d.size > biggest.size) biggest = d;
+    });
+    var total = 0, pairs = 0, diameter = 0;
+    biggest.forEach(function (_, w) {
+      bfs(w, rearrange).dist.forEach(function (v) { if (v > 0) { total += v; pairs++; if (v > diameter) diameter = v; } });
+    });
+    var doorCount = 0; WORDS.forEach(function (w) { doorCount += doors(w, rearrange).length; });
+    return { doors: doorCount / 2, biggest: biggest.size, isolated: sizes.filter(function (s) { return s === 1; }).length,
+             parts: sizes.length, mean: total / pairs, diameter: diameter };
+  }
+  var KNOWN = { A: { doors: 3823, biggest: 1141, isolated: 57, parts: 69, mean: 5.8448, diameter: 16 },
+                B: { doors: 4054, biggest: 1176, isolated: 49, parts: 52, mean: 5.2758, diameter: 14 } };
+  function table(A, B) {
+    var body = document.querySelector("#stats tbody");
+    body.innerHTML = "";
+    [["Doors (pairs of words one step apart)", A.doors, B.doors],
+     ["Words in the largest connected part", A.biggest, B.biggest],
+     ["Words with no door at all", A.isolated, B.isolated],
+     ["Separate parts", A.parts, B.parts],
+     ["Average shortest ladder in the largest part", A.mean.toFixed(2), B.mean.toFixed(2)],
+     ["Longest shortest ladder", A.diameter, B.diameter]].forEach(function (r) {
+      var tr = document.createElement("tr");
+      r.forEach(function (c) { var td = document.createElement("td"); td.textContent = c; tr.appendChild(td); });
+      body.appendChild(tr);
+    });
+  }
+  document.getElementById("recompute").addEventListener("click", function () {
+    var m = document.getElementById("rcmsg"); m.textContent = "Working\u2026";
+    setTimeout(function () {
+      var A = stats(false), B = stats(true), same = ["doors", "biggest", "isolated", "parts", "diameter"].every(function (k) {
+        return A[k] === KNOWN.A[k] && B[k] === KNOWN.B[k]; }) && Math.abs(A.mean - KNOWN.A.mean) < 1e-3 && Math.abs(B.mean - KNOWN.B.mean) < 1e-3;
+      table(A, B); m.textContent = same ? "Same numbers as written in." : "These differ from the numbers written in.";
+      window.WORD_MAZE.recomputed = { A: A, B: B, same: same };
+    }, 30);
+  });
+  table(KNOWN.A, KNOWN.B);
+  window.WORD_MAZE = { known: KNOWN, stats: stats, ladder: ladder };
+  run();
+})();
+</script>
+</body>
+</html>
