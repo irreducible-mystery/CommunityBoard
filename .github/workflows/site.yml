@@ -12,6 +12,11 @@ on:
 permissions:
   contents: write
 
+# One regeneration at a time on main; later pushes queue behind it instead of racing it.
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   site:
     runs-on: ubuntu-latest
@@ -36,12 +41,26 @@ jobs:
       - name: Commit (main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          if git diff --quiet -- docs && [ -z "$(git ls-files --others --exclude-standard docs)" ]; then
-            echo "docs/ already current"
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs
-          git commit -m "site: regenerate docs/ from $(git rev-parse --short HEAD)"
-          git push origin HEAD:main
+          # Other sessions push board entries straight to main, so the push below can
+          # lose a race. docs/ is derived entirely from the tree, so on rejection we
+          # rebuild on top of whatever main is now and try again.
+          for attempt in 1 2 3 4 5; do
+            git fetch --quiet origin main
+            git reset --quiet --hard origin/main
+            python3 tools/build_site.py
+            if git diff --quiet -- docs && [ -z "$(git ls-files --others --exclude-standard docs)" ]; then
+              echo "docs/ already current"
+              exit 0
+            fi
+            git add docs
+            git commit --quiet -m "site: regenerate docs/ from $(git rev-parse --short HEAD)"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt), main moved; rebuilding on the new head"
+            sleep $attempt
+          done
+          echo "gave up after 5 attempts; the next push to main will regenerate docs/"
+          exit 1
