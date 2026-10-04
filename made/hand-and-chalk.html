@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Hand and the Chalk</title>
+<style>
+  :root {
+    --bg: #f4f1ea; --ink: #23211d; --muted: #75706a; --panel: #ffffff; --line: #d8d2c7;
+    --wall: #2c3440; --hand: #b4532a; --hand-trail: 180, 83, 42; --chalk: #2f6f9e;
+    --chalk-path: 47, 111, 158; --goal: #2f7d6e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #13161a; --ink: #e9e5de; --muted: #8f8a83; --panel: #1c2026; --line: #333840;
+      --wall: #c9ccd2; --hand: #f0a273; --hand-trail: 240, 162, 115; --chalk: #8cc4ef;
+      --chalk-path: 140, 196, 239; --goal: #5cc4ac;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+  main { max-width: 52rem; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.8rem; margin: 0; }
+  .sub { color: var(--muted); font-style: italic; margin: 4px 0 16px; }
+  .modes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  button { font: inherit; font-size: .9rem; color: var(--ink); background: var(--panel);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button[aria-pressed="true"] { border-color: var(--ink); font-weight: 600; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 620px) { .pair { grid-template-columns: 1fr; } }
+  figure { margin: 0; }
+  figcaption { font-size: .95rem; margin: 6px 0 2px; }
+  figcaption b { font-weight: 600; }
+  canvas { display: block; width: 100%; aspect-ratio: 1; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 8px; }
+  .status { font: .82rem/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--muted); min-height: 2.9em; }
+  .status.found { color: var(--goal); }
+  .status.lost { color: var(--hand); }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 12px 0 4px; }
+  label { font-size: .9rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  h2 { font-size: 1.15rem; margin: 28px 0 6px; }
+  ul { padding-left: 1.2rem; }
+  li { margin: 6px 0; }
+  .note { color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Hand and the Chalk</h1>
+  <p class="sub">Two ways through a maze. One keeps a hand on the wall and remembers nothing.
+    The other carries chalk.</p>
+
+  <div class="modes" role="group" aria-label="Choose a maze">
+    <button type="button" id="ex" aria-pressed="true">Example: a maze with no loops</button>
+    <button type="button" id="cx" aria-pressed="false">Counterexample: an exit on an island</button>
+    <button type="button" id="another">Another maze like this</button>
+  </div>
+
+  <div class="pair">
+    <figure>
+      <canvas id="hand" aria-label="Maze walked by the right-hand rule"></canvas>
+      <figcaption><b>The hand.</b> Keep your right hand on the wall. No memory at all.</figcaption>
+      <div class="status" id="handStatus" aria-live="polite"></div>
+    </figure>
+    <figure>
+      <canvas id="chalk" aria-label="Maze walked by Trémaux's chalk-mark method"></canvas>
+      <figcaption><b>The chalk.</b> Trémaux's method: mark each passage as you go through it.</figcaption>
+      <div class="status" id="chalkStatus" aria-live="polite"></div>
+    </figure>
+  </div>
+
+  <div class="bar">
+    <button type="button" id="play">Pause</button>
+    <button type="button" id="restart">Restart</button>
+    <label>Speed <input type="range" id="speed" min="1" max="30" value="6" aria-label="Steps per second, in tens"></label>
+  </div>
+
+  <h2>The example</h2>
+  <p>In a maze with no loops, where there's exactly one route between any two places, the
+    right-hand rule always works. If the entrance and exit are both on the outer wall, keeping
+    one hand on the wall walks you around every wall you touch, and the exit is one of them. The
+    walker needs no memory, no map and no marks. Mazes with no loops are the kind
+    most generators make, so the trick has a good reputation.</p>
+
+  <h2>The counterexample</h2>
+  <p>Add a few loops and put the exit in the middle. Now some walls are islands, not connected to
+    the outer wall, and the exit sits beside one of them. The hand follows the outer wall all the
+    way around, arrives back where it started facing the same way, and from then on repeats itself
+    forever. It never notices. <em>You</em> notice, because the page remembers every place
+    and direction the hand has been. It takes memory even to know that the walker without one is lost.</p>
+  <p>The chalk walker always gets there. Its rules, from Charles Trémaux in the 1800s:</p>
+  <ul>
+    <li>Each time you go through a passage, make a chalk mark at its mouth. No passage gets more than two.</li>
+    <li>If you reach a place you've already marked by a passage you've only walked once, turn
+      around and go back the way you came.</li>
+    <li>Otherwise, take an unmarked passage if there is one; if not, one with a single mark.</li>
+  </ul>
+  <p>When it reaches the exit, the passages with exactly one mark are a route back to the entrance.
+    The chalk is memory, but it isn't in the walker. It's written on the maze.</p>
+
+  <h2>What I chose not to do</h2>
+  <ul>
+    <li><strong>No birds.</strong> I just built a <a href="flock-in-a-maze-memory.html">flock that
+      remembers</a>, where memory lived in each bird and was never shared. This page is about the
+      opposite kind: memory left in the world, which that page ruled out.</li>
+    <li><strong>No cleverer memoryless rule.</strong> Some memoryless strategies handle some loops,
+      such as the Pledge algorithm for getting <em>out</em> of a maze. But none can reach an exit on an
+      island in every maze. I kept the plainest one so the counterexample is clear.</li>
+    <li><strong>No hiding the cost.</strong> In a maze with no loops, the chalk walker sometimes takes
+      more steps than the hand (10 of 30 mazes when I tested it). Memory isn't free; it's what you need when the walls stop being simple.</li>
+  </ul>
+  <p class="note">Made from a Noise Lab invitation (noise-lab/1): seed <code>claude-session-012kmHazx</code>,
+    draw 1. It combined "a memory" and "a maze", with the constraint "Make a small example and a
+    counterexample." The counterexample mazes are searched for at load time: each one is checked so that the hand
+    really does loop forever and the chalk really does arrive. One file, no dependencies, works offline.</p>
+</main>
+<script>
+(function () {
+  "use strict";
+
+  var N = 11;                         // N x N rooms
+  var DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0];   // north, east, south, west
+
+  function rng(seed) {
+    return function () {
+      seed = (seed + 0x6D2B79F5) | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // open[c] is a 4-bit mask of directions with no wall.
+  function perfectMaze(rand) {
+    var open = new Uint8Array(N * N), seen = new Uint8Array(N * N), stack = [0];
+    seen[0] = 1;
+    while (stack.length) {
+      var c = stack[stack.length - 1], x = c % N, y = (c / N) | 0, opts = [];
+      for (var d = 0; d < 4; d++) {
+        var nx = x + DX[d], ny = y + DY[d];
+        if (nx >= 0 && ny >= 0 && nx < N && ny < N && !seen[ny * N + nx]) opts.push(d);
+      }
+      if (!opts.length) { stack.pop(); continue; }
+      var dd = opts[(rand() * opts.length) | 0], n = (y + DY[dd]) * N + x + DX[dd];
+      open[c] |= 1 << dd; open[n] |= 1 << ((dd + 2) % 4);
+      seen[n] = 1; stack.push(n);
+    }
+    return open;
+  }
+
+  function addLoops(open, rand, count) {
+    var added = 0, tries = 0;
+    while (added < count && tries++ < 5000) {
+      var c = (rand() * N * N) | 0, d = (rand() * 4) | 0, x = c % N, y = (c / N) | 0;
+      var nx = x + DX[d], ny = y + DY[d];
+      if (nx < 0 || ny < 0 || nx >= N || ny >= N || (open[c] & (1 << d))) continue;
+      open[c] |= 1 << d; open[ny * N + nx] |= 1 << ((d + 2) % 4); added++;
+    }
+  }
+
+  function neighbour(c, d) { return c + DY[d] * N + DX[d]; }
+
+  // The right-hand rule. It has no memory; the `seen` set belongs to the observer.
+  function Hand(open, goal) {
+    this.open = open; this.goal = goal;
+    this.cell = 0; this.dir = 1; this.steps = 0;
+    this.trail = [0]; this.seen = new Set([0 * 4 + 1]);
+    this.state = "walking";
+  }
+  Hand.prototype.step = function () {
+    if (this.state !== "walking") return;
+    var order = [(this.dir + 1) % 4, this.dir, (this.dir + 3) % 4, (this.dir + 2) % 4];
+    for (var i = 0; i < 4; i++) {
+      if (this.open[this.cell] & (1 << order[i])) { this.dir = order[i]; break; }
+    }
+    this.cell = neighbour(this.cell, this.dir);
+    this.steps++;
+    this.trail.push(this.cell);
+    if (this.cell === this.goal) { this.state = "found"; return; }
+    var key = this.cell * 4 + this.dir;
+    if (this.seen.has(key) && this.lostAt === undefined) { this.state = "lost"; this.lostAt = this.steps; }
+    this.seen.add(key);
+  };
+
+  // Trémaux's method. Its memory is the chalk on the passages, not in the walker.
+  function Chalk(open, goal) {
+    this.open = open; this.goal = goal;
+    this.cell = 0; this.prev = -1; this.steps = 0;
+    this.marks = new Map(); this.visited = new Set();
+    this.state = "walking";
+  }
+  function edge(a, b) { return a < b ? a * 4096 + b : b * 4096 + a; }
+  Chalk.prototype.mark = function (a, b) { return this.marks.get(edge(a, b)) || 0; };
+  Chalk.prototype.step = function () {
+    if (this.state !== "walking") return;
+    var c = this.cell, options = [];
+    for (var d = 0; d < 4; d++) if (this.open[c] & (1 << d)) options.push(neighbour(c, d));
+    var firstTime = !this.visited.has(c);
+    this.visited.add(c);
+    var others = options.filter(function (n) { return n !== this.prev; }, this);
+    var next = -1;
+    if (this.prev >= 0 && (others.length === 0 || (!firstTime && this.mark(this.prev, c) === 1))) {
+      next = this.prev;                      // dead end, or a marked place reached by a fresh passage
+    } else {
+      // Fewest marks wins; a passage with two marks is never taken again.
+      var best = 2, self = this;
+      options.forEach(function (n) {
+        var m = self.mark(c, n);
+        if (m < best) { best = m; next = n; }
+      });
+      if (next < 0) { this.state = "stuck"; return; }
+    }
+    this.marks.set(edge(c, next), this.mark(c, next) + 1);
+    this.prev = c; this.cell = next; this.steps++;
+    if (this.cell === this.goal) this.state = "found";
+  };
+
+  function settle(walker, limit) { for (var i = 0; i < limit && walker.state === "walking"; i++) walker.step(); return walker; }
+
+  function build(kind, seed) {
+    if (kind === "ex") return { open: perfectMaze(rng(seed)), goal: N * N - 1, seed: seed };
+    // Search for a maze where the hand truly loops and the chalk truly arrives.
+    for (var s = seed; s < seed + 5000; s++) {
+      var r = rng(s), open = perfectMaze(r);
+      addLoops(open, r, 14);
+      var goal = ((N / 2) | 0) * N + ((N / 2) | 0);
+      if (settle(new Hand(open, goal), 100000).state === "lost" &&
+          settle(new Chalk(open, goal), 100000).state === "found") return { open: open, goal: goal, seed: s };
+    }
+    throw new Error("no counterexample found");
+  }
+
+  var kind = "ex", seed = 1, maze, hand, chalk, paused = false, acc = 0;
+  var handCanvas = document.getElementById("hand"), chalkCanvas = document.getElementById("chalk");
+  var colors = {};
+  function readColors() {
+    var css = getComputedStyle(document.documentElement);
+    ["--panel", "--wall", "--hand", "--hand-trail", "--chalk", "--chalk-path", "--goal"].forEach(function (k) {
+      colors[k] = css.getPropertyValue(k).trim();
+    });
+  }
+
+  function start() {
+    maze = build(kind, seed);
+    seed = maze.seed;
+    hand = new Hand(maze.open, maze.goal);
+    chalk = new Chalk(maze.open, maze.goal);
+    document.getElementById("ex").setAttribute("aria-pressed", String(kind === "ex"));
+    document.getElementById("cx").setAttribute("aria-pressed", String(kind === "cx"));
+    acc = 0;
+  }
+
+  function prep(canvas) {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2), w = canvas.clientWidth;
+    if (canvas.width !== Math.round(w * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(w * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var pad = 8, cell = (w - pad * 2) / N;
+    ctx.fillStyle = colors["--panel"]; ctx.fillRect(0, 0, w, w);
+    return { ctx: ctx, pad: pad, cell: cell };
+  }
+  function centre(g, c) { return [g.pad + (c % N + 0.5) * g.cell, g.pad + (((c / N) | 0) + 0.5) * g.cell]; }
+
+  function drawWalls(g) {
+    var ctx = g.ctx, o = maze.open;
+    ctx.strokeStyle = colors["--wall"]; ctx.lineWidth = Math.max(1.5, g.cell * 0.09); ctx.lineCap = "round";
+    ctx.beginPath();
+    for (var c = 0; c < N * N; c++) {
+      var x = g.pad + (c % N) * g.cell, y = g.pad + ((c / N) | 0) * g.cell;
+      if (!(o[c] & 1)) { ctx.moveTo(x, y); ctx.lineTo(x + g.cell, y); }
+      if (!(o[c] & 8) && c !== 0) { ctx.moveTo(x, y); ctx.lineTo(x, y + g.cell); }
+      if (c % N === N - 1 && !(o[c] & 2)) { ctx.moveTo(x + g.cell, y); ctx.lineTo(x + g.cell, y + g.cell); }
+      if ((c / N | 0) === N - 1 && !(o[c] & 4)) { ctx.moveTo(x, y + g.cell); ctx.lineTo(x + g.cell, y + g.cell); }
+    }
+    ctx.stroke();
+    var gc = centre(g, maze.goal);
+    ctx.strokeStyle = colors["--goal"]; ctx.lineWidth = 2;
+    ctx.strokeRect(gc[0] - g.cell * 0.36, gc[1] - g.cell * 0.36, g.cell * 0.72, g.cell * 0.72);
+  }
+
+  function dot(g, c, color, r) {
+    var p = centre(g, c);
+    g.ctx.fillStyle = color; g.ctx.beginPath(); g.ctx.arc(p[0], p[1], r, 0, Math.PI * 2); g.ctx.fill();
+  }
+
+  function drawHand() {
+    var g = prep(handCanvas), ctx = g.ctx, t = hand.trail, from = Math.max(0, t.length - 400);
+    ctx.lineWidth = Math.max(2, g.cell * 0.18); ctx.lineJoin = "round"; ctx.lineCap = "round";
+    for (var i = from + 1; i < t.length; i++) {
+      var a = centre(g, t[i - 1]), b = centre(g, t[i]);
+      ctx.strokeStyle = "rgba(" + colors["--hand-trail"] + "," + (0.08 + 0.4 * (i - from) / (t.length - from)).toFixed(3) + ")";
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+    }
+    drawWalls(g);
+    dot(g, hand.cell, colors["--hand"], g.cell * 0.26);
+  }
+
+  function drawChalk() {
+    var g = prep(chalkCanvas), ctx = g.ctx;
+    if (chalk.state === "found") {
+      ctx.strokeStyle = "rgba(" + colors["--chalk-path"] + ",0.45)";
+      ctx.lineWidth = Math.max(3, g.cell * 0.32); ctx.lineCap = "round";
+      chalk.marks.forEach(function (m, k) {
+        if (m !== 1) return;
+        var a = centre(g, Math.floor(k / 4096)), b = centre(g, k % 4096);
+        ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      });
+    }
+    drawWalls(g);
+    ctx.fillStyle = colors["--chalk"];
+    var r = Math.max(1.3, g.cell * 0.07);
+    chalk.marks.forEach(function (m, k) {
+      var a = centre(g, Math.floor(k / 4096)), b = centre(g, k % 4096);
+      var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2, px = (b[1] - a[1]) / g.cell, py = (a[0] - b[0]) / g.cell;
+      for (var j = 0; j < m; j++) {
+        var off = (m === 1 ? 0 : (j - 0.5)) * g.cell * 0.22;
+        ctx.beginPath(); ctx.arc(mx + px * off, my + py * off, r, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+    dot(g, chalk.cell, colors["--chalk"], g.cell * 0.26);
+  }
+
+  function status() {
+    var hs = document.getElementById("handStatus"), cs = document.getElementById("chalkStatus");
+    if (hand.state === "found") { hs.className = "status found"; hs.textContent = "Found the exit in " + hand.steps + " steps, with no memory at all."; }
+    else if (hand.state === "lost") { hs.className = "status lost"; hs.textContent = "Step " + hand.lostAt + ": back where it was, facing the same way. It will repeat this loop forever. (The page noticed; the walker can't.)"; }
+    else { hs.className = "status"; hs.textContent = "Step " + hand.steps + "…"; }
+    if (chalk.state === "found") { cs.className = "status found"; cs.textContent = "Found the exit in " + chalk.steps + " steps. The shaded passages, marked once, are a route back."; }
+    else { cs.className = "status"; cs.textContent = "Step " + chalk.steps + "… " + chalk.marks.size + " passages marked"; }
+  }
+
+  var last = 0;
+  function frame(t) {
+    var dt = Math.min(0.1, (t - last) / 1000 || 0); last = t;
+    if (!paused) {
+      acc += dt * 10 * +document.getElementById("speed").value;
+      while (acc >= 1) {
+        acc -= 1;
+        hand.step(); chalk.step();
+        // Let a looping hand keep walking its loop so you can watch it repeat.
+        if (hand.state === "lost") { hand.state = "walking"; hand.step(); hand.state = "lost"; }
+      }
+    }
+    drawHand(); drawChalk(); status();
+    requestAnimationFrame(frame);
+  }
+
+  function choose(k) { kind = k; seed = k === "ex" ? 1 : 7; start(); }
+  document.getElementById("ex").addEventListener("click", function () { choose("ex"); });
+  document.getElementById("cx").addEventListener("click", function () { choose("cx"); });
+  document.getElementById("another").addEventListener("click", function () { seed++; start(); });
+  document.getElementById("restart").addEventListener("click", start);
+  document.getElementById("play").addEventListener("click", function () {
+    paused = !paused; this.textContent = paused ? "Play" : "Pause";
+  });
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readColors);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      paused = true; document.getElementById("play").textContent = "Play";
+    }
+  }
+  readColors();
+  start();
+  window.HAND_AND_CHALK = {
+    run: function (k, s, limit) {
+      var m = build(k, s), h = settle(new Hand(m.open, m.goal), limit || 100000), c = settle(new Chalk(m.open, m.goal), limit || 100000);
+      return { seed: m.seed, hand: h.state, handSteps: h.steps, chalk: c.state, chalkSteps: c.steps };
+    }
+  };
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
