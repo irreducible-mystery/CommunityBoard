@@ -506,9 +506,30 @@ def build(root: Path, out: Path) -> dict[str, str]:
     return files
 
 
-def write_site(root: Path, out: Path) -> list[str]:
+def stale_made_copies(root: Path, out: Path,
+                      files: dict[str, str] | None = None) -> list[str]:
+    """Copies under out/made that the current tree no longer accounts for.
+
+    write_site() deletes these; check_site() now reports them. The two used to
+    disagree: --check only ever asked whether the files build() produces are
+    present and current, so it could not see a removal, and answered "docs/ is
+    up to date" while the very next build deleted a tracked file. Deriving both
+    answers here keeps them the same answer.
+    """
+    made_out = out / "made"
+    if not made_out.is_dir():
+        return []
+    if files is None:
+        files = build(root, out)
+    keep = {Path(rel).name for rel in files if rel.startswith("made/")}
+    return sorted(f"made/{p.name}" for p in made_out.iterdir()
+                  if p.is_file() and p.name not in keep)
+
+
+def write_site(root: Path, out: Path, files: dict[str, str] | None = None) -> list[str]:
     changed: list[str] = []
-    files = build(root, out)
+    if files is None:
+        files = build(root, out)
     out.mkdir(parents=True, exist_ok=True)
     for rel, content in files.items():
         dest = out / rel
@@ -523,25 +544,24 @@ def write_site(root: Path, out: Path) -> list[str]:
                 dest.write_text(content, encoding="utf-8")
                 changed.append(rel)
     # Remove copies of made/ files that no longer exist.
-    made_out = out / "made"
-    if made_out.is_dir():
-        keep = {Path(rel).name for rel in files if rel.startswith("made/")}
-        for p in made_out.iterdir():
-            if p.is_file() and p.name not in keep:
-                p.unlink()
-                changed.append(f"made/{p.name}")
+    for rel in stale_made_copies(root, out, files):
+        (out / rel).unlink()
+        changed.append(rel)
     return changed
 
 
-def check_site(root: Path, out: Path) -> list[str]:
+def check_site(root: Path, out: Path, files: dict[str, str] | None = None) -> list[str]:
     stale: list[str] = []
-    for rel, content in build(root, out).items():
+    if files is None:
+        files = build(root, out)
+    for rel, content in files.items():
         dest = out / rel
         if content.startswith("copy:"):
             if not dest.exists() or not filecmp.cmp(Path(content[5:]), dest, shallow=False):
                 stale.append(rel)
         elif not dest.exists() or dest.read_text(encoding="utf-8") != content:
             stale.append(rel)
+    stale.extend(stale_made_copies(root, out, files))
     return stale
 
 
@@ -557,19 +577,33 @@ def main(argv: list[str] | None = None) -> int:
     root = args.root.resolve()
     out = (args.out or root / "docs").resolve()
 
+    files = build(root, out)
+    # Computed before writing: afterwards the evidence is gone.
+    removals = stale_made_copies(root, out, files)
+    removed = set(removals)
+
     if args.check:
-        stale = check_site(root, out)
+        stale = check_site(root, out, files)
         if stale:
-            print("out of date: " + ", ".join(stale))
+            outdated = [rel for rel in stale if rel not in removed]
+            if outdated:
+                print("out of date: " + ", ".join(outdated))
+            if removals:
+                # Named separately, and as a removal: "nothing is deleted" is this
+                # repository's first rule, so a build that deletes says which files.
+                print("would remove: " + ", ".join(removals))
             print("run: python3 tools/build_site.py")
             return 1
         print("docs/ is up to date")
         return 0
 
-    changed = write_site(root, out)
-    if changed:
-        print("wrote: " + ", ".join(changed))
-    else:
+    changed = write_site(root, out, files)
+    wrote = [rel for rel in changed if rel not in removed]
+    if wrote:
+        print("wrote: " + ", ".join(wrote))
+    if removals:
+        print("removed: " + ", ".join(removals))
+    if not changed:
         print("no changes")
     return 0
 
