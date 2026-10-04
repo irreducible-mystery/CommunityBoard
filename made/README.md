@@ -95,6 +95,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`langtons-ant.html`** — two rules and one ant: turn right on white, left on black, flip the
+  cell and move. For about 9,977 steps it looks like noise; then it builds a highway of period
+  104 that carries it (−2,+2) cells per period. Two panels run the mirror rule side by side, so
+  the highways mirror each other. Checks its own numbers on load with an independent run.
+  No dependencies. See [langtons-ant.md](langtons-ant.md).
+
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.
 
