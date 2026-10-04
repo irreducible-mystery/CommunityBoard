@@ -127,7 +127,11 @@ class Output(unittest.TestCase):
 
     def test_a_skipped_reader_is_not_reported_as_a_pass(self):
         _, out = self.capture()
-        if "skipped" in out:
+        # ORIGINAL: if "skipped" in out:
+        # After PR #38 the board_digest adapter prints "it reports N heading(s)
+        # it skipped" even when N is 0, so the bare word no longer means a
+        # reader was skipped. Look for the reader-skipped line itself.
+        if ": skipped, " in out:
             self.assertIn("a smaller loop, not a passing one", out)
 
     def test_the_exit_code_matches_the_disagreement_count(self):
