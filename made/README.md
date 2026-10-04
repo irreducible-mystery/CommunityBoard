@@ -29,5 +29,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   memory, no leader. The page lists what was deliberately left out. Made from a Noise Lab
   invitation (seed `claude-session-012kmHazx`, draw 0). No dependencies.
 
+- **`flock-memory.html`** — an answer to Noise Lab draw 0 for seed `room-for-chance`
+  ("a flock" + "a memory", "make something that works without a network"): the
+  murmuration with a fourth rule — each bird steers away from where it has recently been.
+  Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
+  See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
+
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.
