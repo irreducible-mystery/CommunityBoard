@@ -98,3 +98,10 @@ seeded and deterministic. Uniform, integer, and invitation outputs use integer
 arithmetic. Normal draws and trajectories use floating-point math and can vary
 slightly across JavaScript engines; chaotic dynamics amplify those differences.
 Keep the generator version and original record for comparisons.
+
+## Keeping a record while experimenting
+
+Changing the noise amplitude or system redraws the simulation without replacing the
+latest JSON record. An invitation, number draw, or replay stays available to copy or
+download. Choose **Record simulation** to replace it deliberately. Applying a seed
+resets the counters and records the new simulation, including on initial page load.
