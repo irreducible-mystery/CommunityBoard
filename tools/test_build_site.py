@@ -1,4 +1,6 @@
 """Tests for tools/build_site.py. Run with: python3 -m unittest discover -s tools"""
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
@@ -151,6 +153,81 @@ class RepoTests(unittest.TestCase):
         self.assertIn('<section id="rules">', page)
         self.assertIn("Nothing is deleted.", page)
         self.assertIn('<a href="#rules">Rules</a>', page)
+
+
+class CheckAgreesWithWriteTests(unittest.TestCase):
+    """--check used to be unable to see the one destructive thing the build does.
+
+    write_site() removes copies under docs/made that made/ no longer accounts for.
+    check_site() only asked whether the files build() produces are present and
+    current, so a pending removal left it answering "docs/ is up to date" with
+    exit 0 -- and the site workflow then ran the real build on main, staged the
+    deletion with `git add docs` and committed it. In a repository whose first
+    rule is that nothing is deleted, that deletion was never reviewed by anyone.
+    """
+
+    # Borrow the fixture without inheriting RepoTests' test methods, which would
+    # otherwise run a second time under this class's name.
+    make_repo = RepoTests.make_repo
+
+    def built_repo(self):
+        root = self.make_repo()
+        out = root / "docs"
+        bs.write_site(root, out)
+        self.assertEqual(bs.check_site(root, out), [])
+        return root, out
+
+    def test_check_sees_a_copy_the_build_would_remove(self):
+        root, out = self.built_repo()
+        (out / "made" / "stray.html").write_text("<p>x</p>", encoding="utf-8")
+        # Before: [] -- "docs/ is up to date".
+        self.assertEqual(bs.check_site(root, out), ["made/stray.html"])
+        self.assertEqual(bs.stale_made_copies(root, out), ["made/stray.html"])
+
+    def test_check_and_write_report_the_same_set(self):
+        root, out = self.built_repo()
+        (out / "made" / "stray.html").write_text("<p>x</p>", encoding="utf-8")
+        (root / "posts" / "2026-01-04-d.md").write_text("# D\n", encoding="utf-8")
+        predicted = set(bs.check_site(root, out))
+        actual = set(bs.write_site(root, out))
+        self.assertEqual(predicted, actual)
+        self.assertIn("made/stray.html", actual)
+        self.assertEqual(bs.check_site(root, out), [])
+
+    def test_check_exits_1_when_only_a_removal_is_pending(self):
+        root, out = self.built_repo()
+        (out / "made" / "stray.html").write_text("<p>x</p>", encoding="utf-8")
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = bs.main(["--root", str(root), "--check"])
+        text = buf.getvalue()
+        self.assertEqual(code, 1)                       # was 0
+        self.assertIn("would remove: made/stray.html", text)
+        self.assertNotIn("docs/ is up to date", text)
+
+    def test_build_calls_a_removal_a_removal(self):
+        root, out = self.built_repo()
+        (root / "made" / "thing.html").unlink()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = bs.main(["--root", str(root)])
+        text = buf.getvalue()
+        self.assertEqual(code, 0)
+        # Was "wrote: index.html, made/thing.html" -- a deletion under the word wrote.
+        self.assertIn("removed: made/thing.html", text)
+        self.assertIn("wrote: index.html", text)
+        self.assertNotIn("wrote: index.html, made/thing.html", text)
+
+    def test_clean_tree_still_reports_no_changes(self):
+        root, out = self.built_repo()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            bs.main(["--root", str(root)])
+        self.assertIn("no changes", buf.getvalue())
+
+    def test_stale_copies_empty_when_made_output_absent(self):
+        root = self.make_repo()
+        self.assertEqual(bs.stale_made_copies(root, root / "nowhere"), [])
 
 
 if __name__ == "__main__":
