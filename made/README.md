@@ -34,3 +34,6 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   murmuration with a fourth rule — each bird steers away from where it has recently been.
   Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
   See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
+
+- **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
+  two people: seven dots, two colors, and three sentences. No software needed.
