@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Rhythm That Forgets</title>
+<style>
+  :root { --bg: #f4f1ea; --ink: #23211d; --muted: #77716a; --beat: #b4532a; --cell: #fff; --line: #d8d2c7; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #13161a; --ink: #e9e5de; --muted: #8f8a83; --beat: #f0a273; --cell: #1c2026; --line: #333840; }
+  }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Georgia, serif; }
+  main { max-width: 36rem; margin: 0 auto; padding: 32px 16px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  p { color: var(--muted); }
+  #grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 22px 0 14px; }
+  #grid button { aspect-ratio: 1; border: 1px solid var(--line); border-radius: 50%; background: var(--cell);
+    cursor: pointer; transition: transform .08s, background .4s, opacity .4s; }
+  #grid button.on { background: var(--beat); border-color: var(--beat); }
+  #grid button.now { transform: scale(1.18); border-color: var(--ink); }
+  #grid button.gone { opacity: .35; border-style: dashed; }
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; color: var(--muted); font-size: .9rem; }
+  .bar button { font: inherit; color: var(--ink); background: var(--cell); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+  #state { font: .85rem ui-monospace, Menlo, monospace; color: var(--muted); min-height: 1.4em; margin-top: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>A Rhythm That Forgets</h1>
+  <p>Sixteen beats loop forever. Each time around, every beat that still sounds has a chance of
+    being forgotten. Tap a circle to remember it again.</p>
+  <div id="grid" aria-label="Sixteen beats; tap to toggle"></div>
+  <div class="bar">
+    <button type="button" id="sound">Listen</button>
+    <label>Memory <input type="range" id="mem" min="0.5" max="1" step="0.01" value="0.9"></label>
+  </div>
+  <div id="state" aria-live="polite"></div>
+  <p>Nothing here decides what the rhythm becomes. It just keeps what it keeps, and the silence it
+    ends in is the one thing that always arrives.</p>
+</main>
+<script>
+(function () {
+  "use strict";
+  var beats = [1,0,0,1, 0,0,1,0, 1,0,1,0, 0,1,0,0].map(Boolean), gone = beats.map(function () { return false; });
+  var grid = document.getElementById("grid"), mem = document.getElementById("mem"), state = document.getElementById("state");
+  var cells = beats.map(function (on, i) {
+    var b = document.createElement("button");
+    b.type = "button"; b.setAttribute("aria-label", "Beat " + (i + 1));
+    b.addEventListener("click", function () { beats[i] = !beats[i]; gone[i] = false; paint(); });
+    grid.appendChild(b); return b;
+  });
+  var audio = null, step = 0, bars = 0, silentBars = 0;
+  document.getElementById("sound").addEventListener("click", function () {
+    if (!audio) { audio = new (window.AudioContext || window.webkitAudioContext)(); this.textContent = "Mute"; }
+    else if (audio.state === "running") { audio.suspend(); this.textContent = "Listen"; }
+    else { audio.resume(); this.textContent = "Mute"; }
+  });
+  function click(accent) {
+    if (!audio || audio.state !== "running") return;
+    var t = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+    o.frequency.value = accent ? 220 : 165;
+    g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + 0.2);
+  }
+  function paint() {
+    cells.forEach(function (c, i) {
+      c.className = (beats[i] ? "on" : "") + (gone[i] ? " gone" : "") + (i === step ? " now" : "");
+      c.setAttribute("aria-pressed", String(beats[i]));
+    });
+    var left = beats.filter(Boolean).length;
+    state.textContent = left ? "bar " + bars + " · " + left + " of 16 beats remembered"
+                             : "silence · " + silentBars + (silentBars === 1 ? " bar" : " bars") + " of it so far";
+  }
+  function tick() {
+    step = (step + 1) % 16;
+    if (step === 0) {
+      bars++;
+      beats.forEach(function (on, i) { if (on && Math.random() > +mem.value) { beats[i] = false; gone[i] = true; } });
+      if (!beats.some(Boolean)) silentBars++;
+    }
+    if (beats[step]) click(step % 4 === 0);
+    paint();
+  }
+  paint();
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setInterval(tick, reduce ? 300 : 150);
+})();
+</script>
+</body>
+</html>

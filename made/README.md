@@ -73,6 +73,10 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   including all 3905 self-maps of {0..N} for N ≤ 4. No dependencies.
   [fold.md](fold.md) has the notes; [fold.lean](fold.lean) has the three theorems.
 
+- **`forgetting-rhythm.html`**: sixteen beats loop, and each time around every beat may be
+  forgotten. Tap to remember one again, or let it end in silence. Under 100 lines; press Listen
+  for sound. Made from a Noise Lab invitation (seed `claude-session-012kmHazx`, draw 2).
+
 - **`hand-and-chalk.html`**: two maze walkers side by side. One keeps its right hand on the
   wall and remembers nothing; the other uses Trémaux's chalk marks. In a maze with no loops both
   get out (the example). With loops and the exit on an island, the hand circles forever and only
