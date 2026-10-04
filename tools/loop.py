@@ -49,6 +49,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -121,13 +122,48 @@ def run_round(work: Path):
 EVIDENCE = "### 2026-10-04 02:00 utc \u00b7 Bob \u00b7 note"
 
 
-def entry_for(round_no: int, lines: list[str], quote_evidence: bool = False) -> str:
+# The time of a heading, as the readers see it. Used only to choose a stamp for
+# the synthetic entries that is neither ahead of the clock nor behind the board.
+HEADING_TIME = re.compile(r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·")
+
+
+def stamp_for(board_text: str) -> str:
+    """A stamp for a synthetic entry: the clock, but never behind the board's
+    latest heading.
+
+    The first version stamped rounds at a fixed "08:NN". Once `check_board.py`
+    (PR #41) learned to note a heading ahead of the clock, every such stamp was
+    a finding, one more per round in accumulate mode, so the plain write-up
+    "grew" for a reason that had nothing to do with the write-up and would
+    reverse itself when the real clock passed 08:00. A stamp read from the
+    clock keeps that decaying check out of the measurement. (If the live board
+    itself carries a stamp ahead of the clock, the synthetic entries inherit it
+    rather than fall behind it, and the loop grows in accumulate mode for that
+    reason alone; the check's decay, seen from the loop's side.)
+    """
+    now = datetime.now(timezone.utc).replace(tzinfo=None, second=0, microsecond=0)
+    latest = now
+    for line in board_text.splitlines():
+        m = HEADING_TIME.match(line)
+        if m:
+            try:
+                latest = max(latest, datetime.strptime(m.group(1), "%Y-%m-%d %H:%M"))
+            except ValueError:
+                pass
+    return f"{latest:%Y-%m-%d %H:%M}"
+
+
+def entry_for(round_no: int, lines: list[str], quote_evidence: bool = False,
+              stamp: str | None = None) -> str:
     """The board entry a session would write after running the checkers.
 
     With `quote_evidence`, the entry includes the offending heading verbatim,
-    the way a session writing up a heading problem actually does.
+    the way a session writing up a heading problem actually does. `stamp`
+    defaults to the original synthetic clock so the unit tests of the entry's
+    shape are unchanged; `iterate()` passes `stamp_for(...)`.
     """
-    stamp = f"2026-10-04 {8 + round_no // 60:02d}:{round_no % 60:02d}"
+    if stamp is None:
+        stamp = f"2026-10-04 {8 + round_no // 60:02d}:{round_no % 60:02d}"
     body = "\n".join(f"- {line}" for line in lines)
     quoted = ""
     if quote_evidence:
@@ -147,6 +183,7 @@ def iterate(mode: str, rounds: int, verbose: bool, quote_evidence: bool = False)
     shutil.copytree(ROOT, work, ignore=shutil.ignore_patterns(".git", "__pycache__"))
     board = work / "BOARD.md"
     original = board.read_text(encoding="utf-8")
+    stamp = stamp_for(original)
 
     seen: dict[tuple, int] = {}
     history = []
@@ -169,10 +206,10 @@ def iterate(mode: str, rounds: int, verbose: bool, quote_evidence: bool = False)
         history.append(lines)
         if mode == "accumulate":
             board.write_text(
-                board.read_text(encoding="utf-8") + entry_for(n, lines, quote_evidence),
+                board.read_text(encoding="utf-8") + entry_for(n, lines, quote_evidence, stamp),
                 encoding="utf-8")
         else:
-            board.write_text(original + entry_for(n, lines, quote_evidence),
+            board.write_text(original + entry_for(n, lines, quote_evidence, stamp),
                              encoding="utf-8")
     return {"mode": mode, "outcome": "GROWS", "rounds": rounds, "period": None,
             "first_seen": None, "history": history}

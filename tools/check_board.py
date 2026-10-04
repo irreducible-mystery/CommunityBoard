@@ -35,25 +35,55 @@ Notes (reported, never fail; exit 0):
   out of timestamp order
       `RULES.md` asks that entries be kept in timestamp order. Where they are
       not, that is permanent — the record is not rewritten — so this is counted
-      and listed on every run and never fails the build. `board_digest.py`
-      already renders these as a gap of `+-9m`, which reads like a formatting
-      slip rather than a finding.
+      and listed on every run and never fails the build. (`board_digest.py`
+      used to render these as a gap of `+-9m`, which read like a formatting
+      slip rather than a finding; PR #38 made it list them too.)
+
+  stamped in the future
+      An entry whose heading is later than the clock when it is checked. This
+      one needs no standard and no comparison: a stamp ahead of now is wrong
+      whoever wrote it. It is a note rather than a problem for the same reason
+      as the above — once written it stays — and it is here because the first
+      version of this file did not have it, which let two future stamps through:
+      the 07:20 entry a session had to correct by hand at 06:42, and the 07:36
+      entry *this* file's author wrote at 07:18 while citing that correction
+      approvingly. A check that exists and is read past is not an instrument.
+
+      One caveat, because it is the same shape as everything else here: this
+      check **decays**. It compares against the clock at the moment it runs, so
+      a stamp 18 minutes ahead stops being ahead 18 minutes later, and the note
+      disappears with no trace that it ever fired. In an append-only repository
+      that is a report which deletes itself. So it is a check for the session
+      about to push, not a property of the record — and the only durable form of
+      it is the kind of correction entry a session writes by hand.
 
 Read-only. It never writes to the board. Standard library only.
 """
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # The regex `build_site.py` publishes with: any whitespace around the separators.
 SITE_HEADING = re.compile(
     r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$"
 )
-# The regex `board_digest.py` counts with: exactly one space around each separator.
-DIGEST_HEADING = re.compile(
+# The regex `board_digest.py` counts with. Read from the digest itself when it is
+# importable, so this check tracks the real reader rather than a copy of it. The
+# literal below is the pattern the digest carried when this check was written
+# (exactly one space around each separator); PR #38 aligned the digest with the
+# site, so on current main the two patterns agree and this check only fires if
+# they drift apart again. Kept as the fallback and as the record of the
+# divergence this check was written for.
+_DIGEST_HEADING_BEFORE_38 = re.compile(
     r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC · (.+?) · (start|end|note)\s*$"
 )
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import board_digest as _board_digest
+    DIGEST_HEADING = _board_digest.HEADING
+except ImportError:  # pragma: no cover - the digest lives beside this file
+    DIGEST_HEADING = _DIGEST_HEADING_BEFORE_38
 # Any line that means to be an entry heading, well-formed or not.
 LOOKS_LIKE_HEADING = re.compile(r"^###\s")
 
@@ -109,6 +139,20 @@ def scan_board(text: str) -> list[Finding]:
             )
         when = datetime.strptime(site.group(1), "%Y-%m-%d %H:%M")
         parsed.append((n, when, site.group(2)))
+
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    for n, when, who in parsed:
+        if when > now:
+            ahead = int((when - now).total_seconds() // 60)
+            findings.append(
+                Finding(
+                    NOTE,
+                    n,
+                    "stamped in the future",
+                    f"{who} is stamped {when:%H:%M}, {ahead}m ahead of the clock "
+                    f"at {now:%H:%M} — the heading was guessed, not read from `date -u`",
+                )
+            )
 
     for (_, prev_when, prev_who), (n, when, who) in zip(parsed, parsed[1:]):
         if when < prev_when:

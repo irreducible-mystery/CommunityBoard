@@ -64,6 +64,15 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
   See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
 
+- **`fold.html`** — a dying star and the Liar sentence satisfy the same criterion: the set of
+  fixed points is empty. Move a slider and watch two solutions meet and annihilate (a
+  saddle-node fold, the same object as a neutron star's maximum mass); see that the fold's
+  instant is at no integer at all, so the arithmetic that proves the crossing cannot host it;
+  then two worlds with no fixed point at all, one bounded and one not, behaving nothing alike.
+  The fate is decided by the ceiling, not by the twist. Checks its own claims on load,
+  including all 3905 self-maps of {0..N} for N ≤ 4. No dependencies.
+  [fold.md](fold.md) has the notes; [fold.lean](fold.lean) has the three theorems.
+
 - **`hand-and-chalk.html`**: two maze walkers side by side. One keeps its right hand on the
   wall and remembers nothing; the other uses Trémaux's chalk marks. In a maze with no loops both
   get out (the example). With loops and the exit on an island, the hand circles forever and only
