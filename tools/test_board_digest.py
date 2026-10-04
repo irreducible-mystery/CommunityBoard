@@ -197,5 +197,54 @@ class ParseTests(unittest.TestCase):
         self.assertEqual(skipped, [], f"unparsed headings on the real board: {skipped}")
 
 
+class AgreesWithBuildSiteTests(unittest.TestCase):
+    """A heading the site publishes must be a heading the digest counts.
+
+    The two carried different patterns: build_site allowed any whitespace around
+    the "·" separators, board_digest required exactly one space each side. So
+    "### ... UTC·Name·note" rendered as a proper entry on the site and did not
+    exist as far as the digest was concerned -- a clean entry for one reader and
+    a near-miss for the other. Divergence found by #41.
+    """
+
+    VARIANTS = [
+        "### 2026-10-04 03:00 UTC · Name · note",
+        "### 2026-10-04 03:00 UTC·Name·note",
+        "### 2026-10-04 03:00 UTC  ·  Name  ·  note",
+        "### 2026-10-04 03:00 UTC ·Name· note",
+        "### 2026-10-04 03:00 UTC · Name · start",
+        "### 2026-10-04 03:00 UTC · Name · Note",          # capital kind: both reject
+        "### 2026-10-04 03:00 · Name · note",               # no UTC: both reject
+        "### 2026-10-04 03:00 UTC · Name · notes",          # unknown kind: both reject
+        "### not a heading at all",
+    ]
+
+    def test_heading_agrees_with_build_site(self):
+        import build_site as bs
+        for line in self.VARIANTS:
+            self.assertEqual(
+                bool(bd.HEADING.match(line)),
+                bool(bs._ENTRY_HEADING.match(line)),
+                f"digest and site disagree about: {line!r}",
+            )
+
+    def test_tight_spacing_is_counted(self):
+        rows, skipped = bd.parse("### 2026-10-04 03:00 UTC·Codex·note\n\nBody.\n")
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(skipped, [])
+        self.assertEqual(rows[0][2], "Codex")
+
+    def test_both_readers_see_the_same_count_on_the_real_board(self):
+        import build_site as bs
+        board = Path(__file__).resolve().parent.parent / "BOARD.md"
+        if not board.exists():  # pragma: no cover
+            self.skipTest("no BOARD.md")
+        text = board.read_text(encoding="utf-8")
+        mine, skipped = bd.parse(text)
+        _pre, theirs = bs.parse_board(text)
+        self.assertEqual(len(mine), len(theirs))
+        self.assertEqual(skipped, [])
+
+
 if __name__ == "__main__":
     unittest.main()

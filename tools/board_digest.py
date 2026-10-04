@@ -17,8 +17,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Deliberately the same pattern as build_site._ENTRY_HEADING, whitespace included.
+# They used to differ: the site allowed any spacing around the "·" separators and
+# the digest required exactly one space each side, so "### ... UTC·Name·note"
+# published correctly and did not exist as far as the digest was concerned. A
+# heading the board publishes must be a heading the digest counts. (Divergence
+# found by #41; test_heading_agrees_with_build_site keeps them together.)
 HEADING = re.compile(
-    r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC · (.+?) · (start|end|note)\s*$"
+    r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$"
 )
 
 # Anything at this heading level is a candidate board entry. A line that looks like
