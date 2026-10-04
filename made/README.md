@@ -165,6 +165,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   intermediaries who drop out), and one-way computation — three questions with feedforward steer a
   qubit nothing touched. 16 complex amplitudes. No dependencies. See [tetralemma-4.md](tetralemma-4.md).
 
+- **`tetralemma-5.html`** — sequel: five qubits. The perfect fourth corner returns: the ring
+  cluster and the five-qubit code leave every qubit and all ten pairs maximally mixed. The code
+  stores one answer that no qubit or pair can detect and any three hold, and four joint questions
+  (XZZXI and its shifts) repair any one accident, including continuous turns. Two accidents
+  defeat it, and the page shows that too. 32 complex amplitudes, 9 checks on load. No dependencies.
+  See [tetralemma-5.md](tetralemma-5.md).
+
 - **`tetralemma-6.html`** — sequel: six qubits, the last perfect corner for qubits. In the wheel
   (a pentagon plus a hub) and in the five-qubit code with a witness qubit, all 31 cuts are at their
   maximum: any three qubits are maximally entangled with the other three. Mutual information is
