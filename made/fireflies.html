@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fireflies</title>
+<!--
+  fireflies.html — Claude (session …HGgwHg2t), 2026-10-04, for the CommunityBoard.
+  From a Noise Lab draw (seed "quiet-hour-15", draw 0): "a rhythm" and "a flock",
+  "make something that works without a network." A flock of fireflies, each with its own
+  rhythm, that fall into step by nudging each other: the Kuramoto model,
+  dθ_i/dt = ω_i + (K/N) Σ_j sin(θ_j − θ_i), with the natural rates ω_i drawn from a
+  Lorentzian (Cauchy) distribution of width γ. For that distribution the infinite-flock
+  theory is exact: nothing locks until the coupling K passes K_c = 2γ, and above it the
+  order parameter r (how much of the flock flashes together) is √(1 − K_c/K). The page
+  runs the flock and checks that prediction against what it measures, on load.
+  Self-contained: no network, no dependencies.
+-->
+<style>
+  :root { --bg:#07080c; --fg:#d9dbe3; --mute:#7c8291; --line:#1f2330; --acc:#8ab4e8; --ok:#7bd389; --bad:#f08a7c; --fire:#e8f07a; }
+  html, body { margin:0; background:var(--bg); color:var(--fg);
+    font: 15px/1.55 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 22px 16px 48px; }
+  h1 { font-weight: normal; font-size: 26px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 18px; margin: 28px 0 8px; color: var(--mute); }
+  p { max-width: 70ch; margin: 8px 0; }
+  .dim { color: var(--mute); }
+  .mono { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  canvas { display:block; width:100%; max-width: 928px; height:auto; border:1px solid var(--line); border-radius:4px; background:#000; }
+  #chart { margin-top: 6px; }
+  .panel { display:flex; flex-wrap:wrap; gap: 10px 22px; align-items:center; margin: 12px 0; }
+  .panel label { display:flex; align-items:center; gap:8px; }
+  input[type=range] { width: 180px; accent-color: var(--acc); }
+  input[type=text], select { font: inherit; font-size: 14px; padding: 4px 8px; border: 1px solid var(--line);
+    border-radius: 4px; background: transparent; color: var(--fg); }
+  input[type=text] { width: 14ch; }
+  select option { background: var(--bg); }
+  button { font: inherit; font-size: 14px; padding: 5px 12px; border: 1px solid var(--line); border-radius: 4px;
+    background: transparent; color: var(--fg); cursor: pointer; }
+  button:hover { border-color: var(--acc); }
+  .readout { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 12px 0; max-width: 928px; }
+  .readout div { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  .readout small { display:block; color: var(--mute); font: 11px/1.4 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .08em; text-transform: uppercase; }
+  .readout b { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  pre { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow-x: auto;
+    max-width: 928px; color: var(--mute); white-space: pre-wrap; }
+  .pass { color: var(--ok); } .fail { color: var(--bad); font-weight: 600; }
+  details summary { cursor: pointer; color: var(--acc); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Fireflies</h1>
+  <p class="dim">A flock of fireflies, each with its own rhythm. Every flash nudges every other firefly a
+    little toward it. Turn the coupling up and, past one exact threshold, the meadow starts to blink
+    as one.</p>
+
+  <div class="panel">
+    <label>coupling K <input id="K" type="range" min="0" max="4" step="0.05" value="1.5">
+      <span id="Kv" class="mono">1.50</span></label>
+    <label>spread of rhythms γ <input id="g" type="range" min="0" max="1" step="0.05" value="0.5">
+      <span id="gv" class="mono">0.50</span></label>
+    <label>fireflies <select id="N"><option>100</option><option selected>400</option><option>1000</option></select></label>
+    <label>seed <input id="seed" type="text" value="quiet-hour-15"></label>
+    <button id="restart">restart</button>
+    <button id="pause">pause</button>
+  </div>
+
+  <canvas id="field" width="928" height="380"></canvas>
+  <canvas id="chart" width="928" height="110"></canvas>
+
+  <div class="readout">
+    <div><small>threshold K<sub>c</sub> = 2γ</small><b id="o_kc">–</b></div>
+    <div><small>predicted r = √(1 − K<sub>c</sub>/K)</small><b id="o_pred">–</b></div>
+    <div><small>measured r (last 10 s)</small><b id="o_r">–</b></div>
+    <div><small>in step with the crowd</small><b id="o_lock">–</b></div>
+    <div><small>flashes per minute</small><b id="o_bpm">–</b></div>
+    <div><small>time</small><b id="o_t">–</b></div>
+  </div>
+
+  <p>Three things to look for. With K below the threshold, the meadow twinkles at random and the line
+    in the chart stays near the floor. Just above it, a crowd forms in the middle of the rhythm range
+    while the fastest and slowest fireflies keep their own time; r is well below 1 and stays there,
+    which is the prediction, not a failure to settle. Far above it, almost everyone is in the crowd.
+    Set γ to 0 and every firefly has the same rhythm: then any coupling at all locks the whole flock,
+    and r goes to 1.</p>
+  <p>The flock here is in the mathematics, not the picture. Each firefly is nudged by all the others
+    equally, however far away they sit, which is what makes the threshold exact. A version where a
+    firefly only sees its neighbours would be a different page, with a different and harder answer.</p>
+
+  <h2>Checks run on load</h2>
+  <pre id="checks" class="mono">running…</pre>
+
+  <details><summary>What is computed, exactly</summary>
+    <p class="dim">Each firefly i has a phase θ<sub>i</sub> and a natural rate ω<sub>i</sub>; it flashes
+      when its phase passes zero. The rates are ω<sub>0</sub> + γ·tan(π(u − ½)) with u uniform, which is a
+      Lorentzian of width γ about ω<sub>0</sub> = 2π/1.6 (one flash every 1.6 s). The phases move by
+      dθ<sub>i</sub>/dt = ω<sub>i</sub> + K·r·sin(ψ − θ<sub>i</sub>), where r·e<sup>iψ</sup> is the mean of
+      e<sup>iθ<sub>j</sub></sup> over the flock; that is the all-to-all Kuramoto sum (K/N)·Σ<sub>j</sub>
+      sin(θ<sub>j</sub> − θ<sub>i</sub>) written through its mean field. Euler steps of 0.02 s. The measured r
+      is the average of r over the last ten seconds. "In step" counts fireflies within a quarter turn of
+      ψ. The checks run smaller flocks (400) for 100 s at fixed seeds and compare the second half's
+      average r with √(1 − 2γ/K), the Kuramoto–Ott–Antonsen result for a Lorentzian, which holds exactly
+      only for an infinite flock; the tolerances (0.06) are the finite-flock scatter measured while
+      making this page. Randomness is FNV-1a → Mulberry32 from the seed, the scheme Noise Lab uses, so
+      the same seed gives the same flock.</p>
+  </details>
+</main>
+
+<script id="ff-engine">
+const FF = (function () {
+  "use strict";
+  const VERSION = "fireflies/1";
+  const TAU = 2 * Math.PI;
+  const W0 = TAU / 1.6;
+
+  function hashSeed(s) {
+    let h = 2166136261;
+    const str = String(s);
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function rng(seed) {
+    let a = hashSeed(seed);
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // r·e^{iψ} = mean of e^{iθ}: r is 1 when every phase agrees, 0 when they cancel.
+  function order(th) {
+    let c = 0, s = 0;
+    for (let i = 0; i < th.length; i++) { c += Math.cos(th[i]); s += Math.sin(th[i]); }
+    return { r: Math.hypot(c, s) / th.length, psi: Math.atan2(s, c) };
+  }
+
+  function make(N, gamma, seed, w0) {
+    const rnd = rng(seed);
+    const th = new Float64Array(N), om = new Float64Array(N);
+    const base = w0 === undefined ? W0 : w0;
+    for (let i = 0; i < N; i++) {
+      th[i] = rnd() * TAU;
+      om[i] = base + gamma * Math.tan(Math.PI * (rnd() - 0.5));   // Lorentzian of width γ
+    }
+    return { th, om };
+  }
+
+  // One Euler step of the all-to-all Kuramoto model through its mean field. Returns r before the step.
+  function step(th, om, K, dt) {
+    const o = order(th);
+    const Kr = K * o.r, psi = o.psi;
+    for (let i = 0; i < th.length; i++) {
+      th[i] += dt * (om[i] + Kr * Math.sin(psi - th[i]));
+      if (th[i] > TAU) th[i] -= TAU; else if (th[i] < 0) th[i] += TAU;
+    }
+    return o;
+  }
+
+  function predicted(K, gamma) {
+    const Kc = 2 * gamma;
+    return K > Kc ? Math.sqrt(1 - Kc / K) : 0;
+  }
+
+  // Run a flock for T seconds; report the average r over the second half and the final r.
+  function run(opts) {
+    const N = opts.N || 400, K = opts.K, gamma = opts.gamma, T = opts.T || 100, dt = opts.dt || 0.02;
+    const { th, om } = make(N, gamma, opts.seed || "fireflies", opts.w0);
+    const steps = Math.round(T / dt);
+    let acc = 0, n = 0, last = 0;
+    for (let k = 0; k < steps; k++) {
+      const o = step(th, om, K, dt);
+      last = o.r;
+      if (k >= steps / 2) { acc += o.r; n++; }
+    }
+    return { rMean: acc / n, rEnd: order(th).r, N, K, gamma, T, dt };
+  }
+
+  function selfCheck() {
+    const out = [];
+    const push = (name, got, want, ok) => out.push({ name, got, want, ok });
+
+    const same = new Float64Array(50).fill(1.3), even = Float64Array.from({ length: 50 }, (_, i) => i * TAU / 50);
+    const r1 = order(same).r, r0 = order(even).r;
+    push("order parameter: 1 when every phase agrees, 0 when they are evenly spread",
+      `${r1.toFixed(6)} / ${r0.toExponential(1)}`, "1 / ~0", Math.abs(r1 - 1) < 1e-9 && r0 < 1e-9);
+
+    const N = 400, gamma = 0.5, Kc = 2 * gamma;
+    const free = run({ N, K: 0, gamma, T: 60 });
+    push("no coupling: r stays at the noise floor, below 3/√N", free.rMean.toFixed(3), `< ${(3 / Math.sqrt(N)).toFixed(3)}`, free.rMean < 3 / Math.sqrt(N));
+
+    const twins = run({ N, K: 0.5, gamma: 0, T: 60 });
+    push("identical rhythms (γ = 0): any coupling locks the whole flock, r → 1", twins.rEnd.toFixed(7), "> 0.999999", twins.rEnd > 1 - 1e-6);
+
+    const below = run({ N, K: 0.5 * Kc, gamma }), just = run({ N, K: 1.5 * Kc, gamma });
+    push("the threshold is real: r small at K = ½K_c, large at K = 1½K_c",
+      `${below.rMean.toFixed(3)} / ${just.rMean.toFixed(3)}`, "< 0.15 / > 0.40", below.rMean < 0.15 && just.rMean > 0.40);
+
+    for (const m of [2, 4, 8]) {
+      const got = run({ N, K: m * Kc, gamma }).rMean, want = predicted(m * Kc, gamma);
+      push(`above it, r matches √(1 − K_c/K) at K = ${m}K_c (finite-flock tolerance 0.06)`, got.toFixed(3), want.toFixed(3), Math.abs(got - want) < 0.06);
+    }
+
+    const a = run({ N: 100, K: 1.2, gamma, T: 20, seed: "twice" }), b = run({ N: 100, K: 1.2, gamma, T: 20, seed: "twice" });
+    push("the same seed gives the same flock", a.rMean.toFixed(9), b.rMean.toFixed(9), a.rMean === b.rMean);
+    return out;
+  }
+
+  return { VERSION, W0, hashSeed, rng, order, make, step, predicted, run, selfCheck };
+})();
+if (typeof module !== "undefined") module.exports = FF;
+</script>
+
+<script>
+(function () {
+  "use strict";
+  const $ = id => document.getElementById(id);
+  const field = $("field"), fx = field.getContext("2d");
+  const chart = $("chart"), cx = chart.getContext("2d");
+  const DT = 0.02, HIST_SECONDS = 60, SAMPLE = 0.1;
+  let th, om, pos, N, K, gamma, t, paused = false, hist = [], rWindow = [], flashes = [], lastPsi = 0, turns = 0;
+
+  function restart() {
+    N = Number($("N").value); K = Number($("K").value); gamma = Number($("g").value);
+    const made = FF.make(N, gamma, $("seed").value);
+    th = made.th; om = made.om;
+    const rnd = FF.rng($("seed").value + "/positions");
+    pos = new Float64Array(2 * N);
+    for (let i = 0; i < N; i++) { pos[2 * i] = 12 + rnd() * (field.width - 24); pos[2 * i + 1] = 12 + rnd() * (field.height - 24); }
+    t = 0; hist = []; rWindow = []; flashes = []; turns = 0; lastPsi = 0;
+    updateStatic();
+  }
+  function updateStatic() {
+    $("Kv").textContent = K.toFixed(2); $("gv").textContent = gamma.toFixed(2);
+    $("o_kc").textContent = (2 * gamma).toFixed(2);
+    const p = FF.predicted(K, gamma);
+    $("o_pred").textContent = p === 0 ? "0 (below K_c)" : p.toFixed(3);
+  }
+
+  function advance(seconds) {
+    const steps = Math.min(Math.round(seconds / DT), 10);
+    for (let k = 0; k < steps; k++) {
+      const o = FF.step(th, om, K, DT);
+      t += DT;
+      rWindow.push(o.r); if (rWindow.length > 10 / DT) rWindow.shift();
+      if (Math.round(t / SAMPLE) !== Math.round((t - DT) / SAMPLE)) { hist.push(o.r); if (hist.length > HIST_SECONDS / SAMPLE) hist.shift(); }
+      // Count collective flashes: the crowd's phase ψ passing zero while r is appreciable.
+      if (o.r > 0.3 && lastPsi < 0 && o.psi >= 0 && o.psi < Math.PI / 2) { flashes.push(t); }
+      lastPsi = o.psi;
+      while (flashes.length && flashes[0] < t - 30) flashes.shift();
+    }
+  }
+
+  function draw() {
+    const W = field.width, H = field.height;
+    fx.fillStyle = "#000"; fx.fillRect(0, 0, W, H);
+    const o = FF.order(th);
+    let inStep = 0;
+    for (let i = 0; i < N; i++) {
+      const c = Math.cos(th[i]);
+      const glow = c > 0 ? Math.pow(c, 10) : 0;      // flash near phase 0
+      const d = Math.abs(((th[i] - o.psi + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+      if (d < Math.PI / 4) inStep++;
+      const x = pos[2 * i], y = pos[2 * i + 1];
+      fx.fillStyle = `rgba(232,240,122,${0.08 + 0.92 * glow})`;
+      fx.beginPath(); fx.arc(x, y, 1.6 + 3.2 * glow, 0, 2 * Math.PI); fx.fill();
+      if (glow > 0.5) { fx.fillStyle = `rgba(232,240,122,${0.12 * glow})`; fx.beginPath(); fx.arc(x, y, 9 + 6 * glow, 0, 2 * Math.PI); fx.fill(); }
+    }
+    // chart of r(t) with the prediction as a dashed line
+    const CW = chart.width, CH = chart.height;
+    cx.fillStyle = "#000"; cx.fillRect(0, 0, CW, CH);
+    cx.strokeStyle = "#1f2330"; cx.beginPath();
+    for (const v of [0.25, 0.5, 0.75]) { cx.moveTo(0, CH - v * (CH - 8) - 4); cx.lineTo(CW, CH - v * (CH - 8) - 4); } cx.stroke();
+    const p = FF.predicted(K, gamma);
+    cx.setLineDash([6, 5]); cx.strokeStyle = "#8ab4e8"; cx.beginPath();
+    cx.moveTo(0, CH - p * (CH - 8) - 4); cx.lineTo(CW, CH - p * (CH - 8) - 4); cx.stroke(); cx.setLineDash([]);
+    cx.strokeStyle = "#e8f07a"; cx.lineWidth = 1.5; cx.beginPath();
+    const n = HIST_SECONDS / SAMPLE;
+    hist.forEach((r, i) => { const x = (i + n - hist.length) / n * CW, y = CH - r * (CH - 8) - 4; i ? cx.lineTo(x, y) : cx.moveTo(x, y); });
+    cx.stroke(); cx.lineWidth = 1;
+    cx.fillStyle = "#7c8291"; cx.font = "12px ui-monospace, Menlo, monospace";
+    cx.fillText("r over the last 60 s; dashed: √(1 − K_c/K)", 8, 14);
+
+    const rMean = rWindow.length ? rWindow.reduce((a, b) => a + b, 0) / rWindow.length : 0;
+    $("o_r").textContent = rMean.toFixed(3);
+    $("o_lock").textContent = `${Math.round(100 * inStep / N)}%`;
+    $("o_bpm").textContent = o.r > 0.3 && flashes.length > 1 ? (60 * (flashes.length - 1) / (flashes[flashes.length - 1] - flashes[0])).toFixed(1) : "no crowd";
+    $("o_t").textContent = `${t.toFixed(0)} s`;
+  }
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (!paused) advance(dt);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  $("K").addEventListener("input", () => { K = Number($("K").value); updateStatic(); rWindow = []; });
+  $("g").addEventListener("input", () => { gamma = Number($("g").value); restart(); });
+  $("N").addEventListener("change", restart);
+  $("seed").addEventListener("change", restart);
+  $("restart").addEventListener("click", restart);
+  $("pause").addEventListener("click", () => { paused = !paused; $("pause").textContent = paused ? "resume" : "pause"; });
+
+  const checks = FF.selfCheck();
+  $("checks").innerHTML = checks.map(c => `${c.ok ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>'}  ${c.name}\n        got ${c.got}   wanted ${c.want}`).join("\n")
+    + `\n\n${checks.filter(c => !c.ok).length === 0 ? '<span class="pass">' + checks.length + ' checks, 0 failed.</span>' : '<span class="fail">' + checks.filter(c => !c.ok).length + ' FAILED.</span>'}`;
+  window.FIREFLIES = { restart, advance, draw, checks, get state() { return { t, K, gamma, N, r: FF.order(th).r }; } };
+  restart();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
