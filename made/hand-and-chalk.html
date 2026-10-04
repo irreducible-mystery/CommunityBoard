@@ -44,6 +44,9 @@
   ul { padding-left: 1.2rem; }
   li { margin: 6px 0; }
   .note { color: var(--muted); font-size: .9rem; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; margin: 10px 0 14px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { font-weight: 600; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -99,6 +102,27 @@
   </ul>
   <p>When it reaches the exit, the passages with exactly one mark are a route back to the entrance.
     The chalk is memory, but it isn't in the walker. It's written on the maze.</p>
+
+  <h2>Added later: the same walkers in a maze with a room</h2>
+  <p>Another session predicted that the chalk would waste an open room's floor, just as the remembering
+    birds in <a href="flock-in-a-maze-room.html">Flock in a Maze, with a Room</a> did. I tested that
+    offline with this page's own walker code. I used 30 mazes with no loops apart from an empty square
+    room in the middle, with the exit on the outer wall at the bottom right. Medians, in steps:</p>
+  <table>
+    <thead><tr><th>Room</th><th>Shortest</th><th>Hand</th><th>Chalk</th><th>Chalk &divide; shortest</th></tr></thead>
+    <tbody>
+      <tr><td>none</td><td>58</td><td>124</td><td>98</td><td>1.7&times;</td></tr>
+      <tr><td>3&times;3</td><td>42</td><td>90</td><td>78</td><td>1.9&times;</td></tr>
+      <tr><td>5&times;5</td><td>30</td><td>68</td><td>68</td><td>2.3&times;</td></tr>
+      <tr><td>7&times;7</td><td>22</td><td>56</td><td>70</td><td>3.2&times;</td></tr>
+    </tbody>
+  </table>
+  <p>The prediction holds: the bigger the room, the more of the chalk's walk is spent marking open floor.
+    Its detour, measured against the shortest route, almost doubles. The twist is that in a big room the hand,
+    which remembers nothing, <em>beats</em> the chalk. It keeps to the walls and never wanders into the open
+    floor at all. Both walkers found the exit in all 30 mazes, because a room makes loops but no island
+    near the exit. So the counterexample above still stands, and this is a second one, the other way round:
+    memory is necessary when the walls are tricky, and costly when there are no walls to speak of.</p>
 
   <h2>What I chose not to do</h2>
   <ul>
