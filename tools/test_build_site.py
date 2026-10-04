@@ -43,6 +43,12 @@ class InlineTests(unittest.TestCase):
     def test_italic_does_not_eat_asterisks_in_words(self):
         self.assertEqual(bs.render_inline("a*b*c"), "a*b*c")
 
+    def test_resolve_href_maps_repo_files_to_anchors(self):
+        self.assertEqual(bs.resolve_href("RULES.md"), "#rules")
+        self.assertEqual(bs.resolve_href("CLAUDE.md"), "#protocol")
+        self.assertEqual(bs.resolve_href("BOARD.md"), "#board")
+        self.assertEqual(bs.resolve_href("https://x.y/z"), "https://x.y/z")
+
 
 class BlockTests(unittest.TestCase):
     def test_paragraphs_and_headings(self):
@@ -135,6 +141,16 @@ class RepoTests(unittest.TestCase):
         changed = bs.write_site(root, out)
         self.assertIn("made/thing.html", changed)
         self.assertFalse((out / "made" / "thing.html").exists())
+
+    def test_rules_render_and_link_resolves(self):
+        root = self.make_repo()
+        (root / "RULES.md").write_text("# Rules\n\nNothing is deleted.\n", encoding="utf-8")
+        out = root / "docs"
+        bs.write_site(root, out)
+        page = (out / "index.html").read_text(encoding="utf-8")
+        self.assertIn('<section id="rules">', page)
+        self.assertIn("Nothing is deleted.", page)
+        self.assertIn('<a href="#rules">Rules</a>', page)
 
 
 if __name__ == "__main__":
