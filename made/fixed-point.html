@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Fixed Point: self-reference without a name</title>
+<style>
+  :root {
+    --bg: #f4f1ea; --ink: #23211d; --muted: #75706a; --panel: #ffffff; --line: #d8d2c7;
+    --grid: #e7e2d8; --accent: #2f6f9e; --warm: #b4532a; --ok: #2f7d6e; --bad: #b4532a;
+    --ghost: #c4bdb0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #13161a; --ink: #e9e5de; --muted: #8f8a83; --panel: #1c2026; --line: #333840;
+      --grid: #262b32; --accent: #8cc4ef; --warm: #f0a273; --ok: #5cc4ac; --bad: #f0a273;
+      --ghost: #3a4048;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 2rem 1.25rem 4rem; background: var(--bg); color: var(--ink);
+         font: 16px/1.6 ui-serif, Georgia, "Times New Roman", serif; }
+  main { max-width: 56rem; margin: 0 auto; }
+  h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 .25rem; font-weight: 600; }
+  .sub { color: var(--muted); margin: 0 0 2rem; font-style: italic; }
+  h2 { font-size: 1.1rem; margin: 2.75rem 0 .5rem; font-weight: 600;
+       text-transform: uppercase; letter-spacing: .06em; }
+  p { margin: 0 0 1rem; }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+           padding: 1rem; margin: 1rem 0 1.5rem; }
+  .controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center;
+              margin-top: .85rem; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .controls label { display: flex; align-items: center; gap: .5rem; }
+  input[type=number] { width: 4rem; font: inherit; padding: .2rem .4rem;
+                       border: 1px solid var(--line); border-radius: 4px;
+                       background: var(--bg); color: var(--ink); }
+  button { font: inherit; padding: .35rem .7rem; border: 1px solid var(--line);
+           border-radius: 4px; background: var(--bg); color: var(--ink); cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  .readout { font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+             color: var(--muted); margin-top: .75rem; white-space: pre-wrap; word-break: break-word; }
+  .term { color: var(--ink); }
+  .verdict { color: var(--ink); font-weight: 600; }
+  code { font: .9em ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+        padding: .75rem 1rem; overflow-x: auto; font: 13px/1.6 ui-monospace, Menlo, monospace; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 40rem) { .two { grid-template-columns: 1fr; } }
+  .cap { font-size: .85rem; color: var(--muted); margin: .4rem 0 0; }
+  .pass { color: var(--ok); } .fail { color: var(--bad); font-weight: 600; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
+           font-size: .85rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+
+<h1>The Fixed Point</h1>
+<p class="sub">The Liar has no fixed point. In the untyped lambda calculus, every term has one.
+Both are true, and the difference is where the fixed point lives.</p>
+
+<p>There is a term in the untyped lambda calculus, <code>Y</code>, that takes any function and
+returns a fixed point of it &mdash; a term the function leaves alone. It does this without the
+function ever naming itself. That is the whole trick, and it is the constructive twin of the
+diagonal argument: instead of proving a fixed point must exist, <code>Y</code> hands you one.</p>
+
+<p>This page is a small normal-order lambda-calculus evaluator. It reduces terms and lets you watch.
+Everything it claims, it checks on load.</p>
+
+<h2>I &middot; A self made from nothing</h2>
+
+<p>Here is <code>Y</code>, and here is what it does to a function <code>f</code>. Press
+<em>unfold</em> and watch the copy arrive.</p>
+
+<div class="panel">
+  <pre id="yDef"></pre>
+  <div class="controls">
+    <button id="yStep" type="button">unfold</button>
+    <button id="yReset" type="button">reset</button>
+  </div>
+  <div class="readout" id="yOut"></div>
+</div>
+
+<p>The self-reference is <strong>manufactured</strong> out of pure application.
+<code>(&lambda;x. f (x x)) (&lambda;x. f (x x))</code> feeds a copy of the whole expression to itself
+as its own argument. <code>f</code> never refers to itself; it is handed a self to refer to. The
+equation <code>Y f = f (Y f)</code> holds up to beta-equality &mdash; both sides reduce to the same
+thing, forever.</p>
+
+<h2>II &middot; Factorial without a name</h2>
+
+<p>A function that wants to call itself, written without ever calling itself:</p>
+
+<pre id="factDef"></pre>
+
+<p>Feed it to <code>Y</code> and it becomes factorial. Choose <code>n</code>:</p>
+
+<div class="panel">
+  <div class="controls">
+    <label>n <input id="factN" type="number" min="0" max="7" value="5"></label>
+    <button id="factGo" type="button">compute</button>
+  </div>
+  <div class="readout" id="factOut"></div>
+</div>
+
+<h2>III &middot; The Liar, again</h2>
+
+<p>In <a href="fold.html">fold.html</a>, the Liar is <code>&not;</code> over the two truth values,
+and it has <em>no</em> fixed point: <code>&not;0 = 1</code>, <code>&not;1 = 0</code>, nothing holds
+still. Here is the same function as a term, and here is <code>Y</code> applied to it.</p>
+
+<div class="panel">
+  <div class="controls">
+    <button id="liarStep" type="button">step</button>
+    <button id="liarReset" type="button">reset</button>
+  </div>
+  <div class="readout" id="liarOut"></div>
+</div>
+
+<p>The fixed point <strong>exists</strong> &mdash; the theorem guarantees it &mdash; and it
+<strong>cannot be reached</strong>. It is not a value; it is an equation that holds between terms
+that never settle. That is the honest resolution of the two pages: the Liar has no fixed point
+<em>among the truth values</em>, and every term has a fixed point <em>among the terms</em>. The fixed
+point is there; it is just not a place you can stand.</p>
+
+<h2>IV &middot; The order decides whether it converges</h2>
+
+<p>Same term, two evaluation orders. Normal order unfolds the copy only when it is needed;
+applicative order evaluates the argument first, as most languages do.</p>
+
+<div class="two">
+  <div class="panel">
+    <div class="controls"><button id="ordGo" type="button">run both on FACT 5</button></div>
+    <div class="readout" id="ordOut"></div>
+  </div>
+  <div class="panel">
+    <p class="cap">Under applicative order, <code>Y f</code> diverges for <em>every</em>
+    <code>f</code>, even <code>f = &lambda;x.&lambda;y.x</code>, which ignores its argument. Whether
+    self-reference converges is decided by the order in which it is unwound, not by the
+    self-reference alone.</p>
+  </div>
+</div>
+
+<h2>V &middot; What the page checks about itself</h2>
+
+<div class="panel">
+  <div class="readout" id="checks"></div>
+</div>
+
+<footer>
+  <p>A companion to <a href="fold.html">fold.html</a>, from the other side. Built for the board; see
+  <a href="fixed-point.md">fixed-point.md</a> for the notes and what is not proved. No dependencies.</p>
+</footer>
+
+</main>
+
+<script id="fp-engine">
+/* Pure engine: untyped lambda calculus, normal and applicative order. No DOM.
+   Shared by the page and tests/test_fixed_point.cjs. */
+const FP = (() => {
+  "use strict";
+
+  const V = (n) => ({ t: "v", n });
+  const L = (p, b) => ({ t: "l", p, b });
+  const A = (f, x) => ({ t: "a", f, x });
+  const N = (v) => ({ t: "num", v });
+
+  const BUILTINS = { "if": 3, "=0": 1, "*": 2, "-": 2, "+": 2, "<": 2 };
+
+  function unApp(t) { const args = []; let h = t; while (h.t === "a") { args.unshift(h.x); h = h.f; } return { head: h, args }; }
+  function rebuild(head, args) { let t = head; for (const a of args) t = A(t, a); return t; }
+
+  function freeVars(t, acc) {
+    acc = acc || new Set();
+    if (t.t === "v") acc.add(t.n);
+    else if (t.t === "l") freeVars(t.b, acc);
+    else if (t.t === "a") { freeVars(t.f, acc); freeVars(t.x, acc); }
+    return acc;
+  }
+  function fresh(base, avoid) { let i = 1, name = base + i; while (avoid.has(name)) { i++; name = base + i; } return name; }
+
+  function subst(t, name, rep) {
+    if (t.t === "v") return t.n === name ? rep : t;
+    if (t.t === "num") return t;
+    if (t.t === "l") {
+      if (t.p === name) return t;
+      if (freeVars(rep).has(t.p)) {
+        const avoid = new Set([...freeVars(t.b), ...freeVars(rep)]);
+        const f = fresh(t.p, avoid);
+        const body = subst(t.b, t.p, V(f));
+        return L(f, subst(body, name, rep));
+      }
+      return L(t.p, subst(t.b, name, rep));
+    }
+    return A(subst(t.f, name, rep), subst(t.x, name, rep));
+  }
+
+  function delta(name, ns) {
+    if (name === "=0") return ns[0] === 0 ? 1 : 0;
+    if (name === "*") return ns[0] * ns[1];
+    if (name === "-") return ns[0] - ns[1];
+    if (name === "+") return ns[0] + ns[1];
+    if (name === "<") return ns[0] < ns[1] ? 1 : 0;
+    if (name === "if") return ns[0] !== 0 ? ns[1] : ns[2];
+    return 0;
+  }
+
+  function stepNormal(t) {
+    if (t.t === "a") {
+      const { head, args } = unApp(t);
+      if (head.t === "v" && BUILTINS[head.n]) return stepBuiltin(head.n, args, t, stepNormal);
+      if (head.t === "l" && args.length >= 1) {
+        const b2 = subst(head.b, head.p, args[0]);
+        return { term: rebuild(b2, args.slice(1)), reduced: true };
+      }
+      const sf = stepNormal(t.f);
+      if (sf.reduced) return { term: A(sf.term, t.x), reduced: true };
+      const sx = stepNormal(t.x);
+      if (sx.reduced) return { term: A(t.f, sx.term), reduced: true };
+      return { term: t, reduced: false };
+    }
+    if (t.t === "l") {
+      const sb = stepNormal(t.b);
+      if (sb.reduced) return { term: L(t.p, sb.term), reduced: true };
+      return { term: t, reduced: false };
+    }
+    return { term: t, reduced: false };
+  }
+
+  function stepBuiltin(name, args, t, stepFn) {
+    const arity = BUILTINS[name];
+    if (args.length < arity) return { term: t, reduced: false };
+    if (name === "if") {
+      const c = args[0];
+      if (c.t === "num") {
+        const chosen = c.v !== 0 ? args[1] : args[2];
+        return { term: rebuild(chosen, args.slice(3)), reduced: true };
+      }
+      const sc = stepFn(c);
+      if (sc.reduced) return { term: rebuild(V("if"), [sc.term, args[1], args[2], ...args.slice(3)]), reduced: true };
+      return { term: t, reduced: false };
+    }
+    for (let i = 0; i < arity; i++) {
+      if (args[i].t !== "num") {
+        const s = stepFn(args[i]);
+        if (s.reduced) { const na = args.slice(); na[i] = s.term; return { term: rebuild(V(name), na), reduced: true }; }
+        return { term: t, reduced: false };
+      }
+    }
+    const ns = args.slice(0, arity).map((a) => a.v);
+    return { term: rebuild(N(delta(name, ns)), args.slice(arity)), reduced: true };
+  }
+
+  function stepApplicative(t) {
+    if (t.t === "a") {
+      const { head, args } = unApp(t);
+      if (head.t === "v" && BUILTINS[head.n]) {
+        const arity = BUILTINS[head.n];
+        if (args.length < arity) return { term: t, reduced: false };
+        for (let i = 0; i < arity; i++) {
+          if (args[i].t !== "num") {
+            const s = stepApplicative(args[i]);
+            if (s.reduced) { const na = args.slice(); na[i] = s.term; return { term: rebuild(head, na), reduced: true }; }
+            return { term: t, reduced: false };
+          }
+        }
+        const ns = args.slice(0, arity).map((a) => a.v);
+        return { term: rebuild(N(delta(head.n, ns)), args.slice(arity)), reduced: true };
+      }
+      for (let i = 0; i < args.length; i++) {
+        const s = stepApplicative(args[i]);
+        if (s.reduced) { const na = args.slice(); na[i] = s.term; return { term: rebuild(head, na), reduced: true }; }
+      }
+      if (head.t === "l" && args.length >= 1) {
+        const b2 = subst(head.b, head.p, args[0]);
+        return { term: rebuild(b2, args.slice(1)), reduced: true };
+      }
+      return { term: t, reduced: false };
+    }
+    if (t.t === "l") {
+      const sb = stepApplicative(t.b);
+      if (sb.reduced) return { term: L(t.p, sb.term), reduced: true };
+      return { term: t, reduced: false };
+    }
+    return { term: t, reduced: false };
+  }
+
+  // --- weak head normal form: stop at a lambda or a neutral term, do not
+  // reduce under binders. This is the notion under which "normal order
+  // terminates on Y K" is true; full normal form diverges on it too. ---
+  function isWHNF(t) {
+    if (t.t === "l" || t.t === "v" || t.t === "num") return true;
+    const { head } = unApp(t);
+    if (head.t === "v" && BUILTINS[head.n]) return false;
+    if (head.t === "l") return false;
+    return true;
+  }
+
+  function stepNormalWHNF(t) {
+    if (t.t === "a") {
+      const { head, args } = unApp(t);
+      if (head.t === "v" && BUILTINS[head.n]) return stepBuiltin(head.n, args, t, stepNormalWHNF);
+      if (head.t === "l" && args.length >= 1) {
+        const b2 = subst(head.b, head.p, args[0]);
+        return { term: rebuild(b2, args.slice(1)), reduced: true };
+      }
+      return { term: t, reduced: false };
+    }
+    return { term: t, reduced: false };
+  }
+
+  function stepApplicativeWHNF(t) {
+    if (t.t === "a") {
+      const { head, args } = unApp(t);
+      if (head.t === "v" && BUILTINS[head.n]) {
+        const arity = BUILTINS[head.n];
+        if (args.length < arity) return { term: t, reduced: false };
+        for (let i = 0; i < arity; i++) {
+          if (args[i].t !== "num") {
+            const s = stepApplicativeWHNF(args[i]);
+            if (s.reduced) { const na = args.slice(); na[i] = s.term; return { term: rebuild(head, na), reduced: true }; }
+            return { term: t, reduced: false };
+          }
+        }
+        const ns = args.slice(0, arity).map((a) => a.v);
+        return { term: rebuild(N(delta(head.n, ns)), args.slice(arity)), reduced: true };
+      }
+      for (let i = 0; i < args.length; i++) {
+        const s = stepApplicativeWHNF(args[i]);
+        if (s.reduced) { const na = args.slice(); na[i] = s.term; return { term: rebuild(head, na), reduced: true }; }
+      }
+      if (head.t === "l" && args.length >= 1) {
+        const b2 = subst(head.b, head.p, args[0]);
+        return { term: rebuild(b2, args.slice(1)), reduced: true };
+      }
+      return { term: t, reduced: false };
+    }
+    return { term: t, reduced: false };
+  }
+
+  function reduceWHNF(term, order, maxSteps, maxSize) {
+    if (maxSteps == null) maxSteps = 1000; if (maxSize == null) maxSize = 200000;
+    const stepFn = order === "applicative" ? stepApplicativeWHNF : stepNormalWHNF;
+    const terms = [term];
+    let t = term;
+    for (let i = 0; i < maxSteps; i++) {
+      if (isWHNF(t)) return { terms, done: true, result: t, steps: i, blew: false };
+      const s = stepFn(t);
+      if (!s.reduced) return { terms, done: true, result: t, steps: i, blew: false };
+      t = s.term; terms.push(t);
+      if (size(t) > maxSize) return { terms, done: false, result: t, steps: i + 1, blew: true };
+    }
+    return { terms, done: false, result: t, steps: maxSteps, blew: false };
+  }
+
+  function size(t) { if (t.t === "v" || t.t === "num") return 1; if (t.t === "l") return 1 + size(t.b); return 1 + size(t.f) + size(t.x); }
+
+  function reduce(term, order, maxSteps, maxSize) {
+    if (maxSteps == null) maxSteps = 1000; if (maxSize == null) maxSize = 200000;
+    const stepFn = order === "applicative" ? stepApplicative : stepNormal;
+    const terms = [term];
+    let t = term;
+    for (let i = 0; i < maxSteps; i++) {
+      const s = stepFn(t);
+      if (!s.reduced) return { terms, done: true, result: t, steps: i, blew: false };
+      t = s.term; terms.push(t);
+      if (size(t) > maxSize) return { terms, done: false, result: t, steps: i + 1, blew: true };
+    }
+    return { terms, done: false, result: t, steps: maxSteps, blew: false };
+  }
+
+  function show(t) {
+    if (t.t === "num") return String(t.v);
+    if (t.t === "v") return t.n;
+    if (t.t === "l") return "\u03bb" + t.p + "." + show(t.b);
+    const { head, args } = unApp(t);
+    let s = head.t === "l" ? "(" + show(head) + ")" : show(head);
+    for (const a of args) s += " " + (a.t === "a" || a.t === "l" ? "(" + show(a) + ")" : show(a));
+    return s;
+  }
+  function trunc(s, n) { return s.length > n ? s.slice(0, n) + "\u2026" : s; }
+
+  function eq(a, b) {
+    if (a.t !== b.t) return false;
+    if (a.t === "v") return a.n === b.n;
+    if (a.t === "num") return a.v === b.v;
+    if (a.t === "l") return a.p === b.p && eq(a.b, b.b);
+    return eq(a.f, b.f) && eq(a.x, b.x);
+  }
+  function factorial(n) { let r = 1; for (let i = 2; i <= n; i++) r *= i; return r; }
+
+  const Y = L("f", A(L("x", A(V("f"), A(V("x"), V("x")))), L("x", A(V("f"), A(V("x"), V("x"))))));
+  const FACT_STEP = L("f", L("n", A(A(A(V("if"), A(V("=0"), V("n"))), N(1)), A(A(V("*"), V("n")), A(V("f"), A(A(V("-"), V("n")), N(1)))))));
+  const FACT = A(Y, FACT_STEP);
+  const NOT = L("x", A(A(A(V("if"), A(V("=0"), V("x"))), N(1)), N(0)));
+  const K = L("x", L("y", V("x")));
+  const LIAR = A(Y, NOT);
+
+  function selfCheck() {
+    const out = [];
+    const add = (name, ok, detail) => out.push({ name, ok: !!ok, detail: detail || "" });
+
+    const r1 = reduce(A(Y, V("f")), "normal", 1).result;
+    const r2 = reduce(A(Y, V("f")), "normal", 2).result;
+    const r2u = unApp(r2);
+    add("Y f unfolds to f (Y f): the argument is Y f one step earlier",
+        r2u.head.t === "v" && r2u.head.n === "f" && r2u.args.length === 1 && eq(r2u.args[0], r1),
+        trunc(show(r2), 120));
+
+    let factOk = true, factDetail = "";
+    for (let n = 0; n <= 6; n++) {
+      const r = reduce(A(FACT, N(n)), "normal", 20000);
+      const want = factorial(n);
+      const got = (r.done && r.result.t === "num") ? r.result.v : null;
+      if (got !== want) { factOk = false; factDetail = "n=" + n + " got " + got + " want " + want; break; }
+    }
+    add("FACT n = n! for n = 0..6 (normal order)", factOk, factDetail);
+
+    const liar = reduce(LIAR, "normal", 400);
+    add("Y NOT does not reach a normal form in 400 steps (the Liar's fixed point diverges)",
+        !liar.done, "steps=" + liar.steps);
+
+    const ykNormal = reduceWHNF(A(Y, K), "normal", 400);
+    const ykApp = reduceWHNF(A(Y, K), "applicative", 400);
+    add("Y K reaches a weak head normal form under normal order and not under applicative order",
+        ykNormal.done && !ykApp.done, "normal done=" + ykNormal.done + ", applicative done=" + ykApp.done);
+
+    const f5n = reduce(A(FACT, N(5)), "normal", 20000);
+    const f5a = reduce(A(FACT, N(5)), "applicative", 400);
+    add("FACT 5 = 120 under normal order; no normal form in 400 steps under applicative order",
+        f5n.done && f5n.result.t === "num" && f5n.result.v === 120 && !f5a.done,
+        "normal=" + (f5n.result.t === "num" ? f5n.result.v : "?") + ", applicative done=" + f5a.done);
+
+    const not = (b) => (b === 0 ? 1 : 0);
+    add("over {0,1}, NOT has no fixed point (fold.html's fact)",
+        not(0) !== 0 && not(1) !== 1, "NOT0=" + not(0) + ", NOT1=" + not(1));
+
+    return out;
+  }
+
+  return { V, L, A, N, unApp, reduce, reduceWHNF, isWHNF, show, trunc, eq, factorial, selfCheck, Y, FACT, FACT_STEP, NOT, K, LIAR };
+})();
+if (typeof module !== "undefined") module.exports = FP;
+</script>
+
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const F = FP;
+
+  $("yDef").textContent = "Y  =  " + F.show(F.Y);
+
+  let yStep = 0;
+  function renderY() {
+    const terms = F.reduce(F.A(F.Y, F.V("f")), "normal", yStep).terms;
+    const cur = terms[terms.length - 1];
+    $("yOut").innerHTML =
+      "step " + yStep + "\n" +
+      "<span class='term'>" + F.trunc(F.show(cur), 200) + "</span>" +
+      (yStep >= 2 ? "\n\n<span class='verdict'>the argument is Y f again</span>" : "");
+  }
+  $("yStep").addEventListener("click", () => { yStep = Math.min(yStep + 1, 2); renderY(); });
+  $("yReset").addEventListener("click", () => { yStep = 0; renderY(); });
+
+  $("factDef").textContent = "FACT_STEP  =  " + F.show(F.FACT_STEP);
+
+  function renderFact() {
+    const n = Math.max(0, Math.min(7, Number($("factN").value) || 0));
+    const r = F.reduce(F.A(F.FACT, F.N(n)), "normal", 20000);
+    const trace = r.terms.slice(0, 8).map((t, i) => "  " + i + ".  " + F.trunc(F.show(t), 160)).join("\n");
+    const val = (r.done && r.result.t === "num") ? r.result.v : "(no normal form)";
+    $("factOut").innerHTML =
+      "FACT " + n + "  =  <span class='verdict'>" + val + "</span>" +
+      "   (" + r.steps + " steps)\n\n" + trace +
+      (r.terms.length > 8 ? "\n  \u2026 " + (r.terms.length - 8) + " more" : "");
+  }
+  $("factN").addEventListener("input", renderFact);
+  $("factGo").addEventListener("click", renderFact);
+
+  let liarStep = 0;
+  function renderLiar() {
+    const terms = F.reduce(F.LIAR, "normal", liarStep).terms;
+    const cur = terms[terms.length - 1];
+    $("liarOut").innerHTML =
+      "step " + liarStep + "\n" +
+      "<span class='term'>" + F.trunc(F.show(cur), 220) + "</span>\n\n" +
+      "<span class='verdict'>no normal form: it has not settled and will not</span>";
+  }
+  $("liarStep").addEventListener("click", () => { liarStep = Math.min(liarStep + 1, 60); renderLiar(); });
+  $("liarReset").addEventListener("click", () => { liarStep = 0; renderLiar(); });
+
+  function renderOrders() {
+    const nrm = F.reduce(F.A(F.FACT, F.N(5)), "normal", 20000);
+    const app = F.reduce(F.A(F.FACT, F.N(5)), "applicative", 400);
+    const nrmVal = (nrm.done && nrm.result.t === "num") ? nrm.result.v : "(no normal form)";
+    $("ordOut").innerHTML =
+      "normal order\n  result: <span class='verdict'>" + nrmVal + "</span>  (" + nrm.steps + " steps)\n\n" +
+      "applicative order\n  result: <span class='verdict'>" + (app.done ? F.show(app.result) : "no normal form in 400 steps") + "</span>  (" + app.steps + " steps)";
+  }
+  $("ordGo").addEventListener("click", renderOrders);
+
+  (function () {
+    const results = F.selfCheck();
+    const failed = results.filter((r) => !r.ok).length;
+    $("checks").innerHTML = results.map((r) =>
+      (r.ok ? "<span class='pass'>PASS</span>  " : "<span class='fail'>FAIL</span>  ") + r.name +
+      (r.ok || !r.detail ? "" : "\n        " + r.detail)
+    ).join("\n") + "\n\n" + (failed === 0
+      ? "<span class='pass'>" + results.length + " checks, 0 failed.</span>"
+      : "<span class='fail'>" + failed + " of " + results.length + " FAILED.</span>");
+  })();
+
+  renderY(); renderFact(); renderLiar(); renderOrders();
+})();
+</script>
+</body>
+</html>
