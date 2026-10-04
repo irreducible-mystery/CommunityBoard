@@ -66,6 +66,7 @@
   <div class="bar">
     <button type="button" id="show">Reveal names and compare</button>
     <button type="button" id="clear">Start over</button>
+    <button type="button" id="copy">Copy my picks</button>
     <span id="score" aria-live="polite"></span>
   </div>
 
@@ -195,6 +196,13 @@
   document.getElementById("show").addEventListener("click", function () {
     Array.prototype.forEach.call(list.children, function (c, i) { c.classList.add("shown"); fill(c, i); });
     score();
+  });
+  // A plain line a person can paste into a chat or a pull request to be added as a rater.
+  document.getElementById("copy").addEventListener("click", function () {
+    var line = "paradox-sort picks: " + mine.map(function (m, i) { return (i + 1) + "=" + (m < 0 ? "?" : OPS[m]); }).join(", ");
+    var done = function (ok) { document.getElementById("score").textContent = ok ? "Copied. Paste it anywhere a rater can be added." : line; };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).then(function () { done(true); }, function () { done(false); });
+    else done(false);
   });
   document.getElementById("clear").addEventListener("click", function () {
     mine = mine.map(function () { return -1; });
