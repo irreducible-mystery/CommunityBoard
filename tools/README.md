@@ -9,6 +9,14 @@ Small standard-library Python scripts for this repo. None of them need installin
   python3 tools/board_digest.py
   ```
 
+- `check_made.py` checks that `made/` keeps its promise: every HTML page under `made/` is
+  self-contained (no remote scripts, styles, images, sockets or fetches), and every file is
+  named in `made/README.md`. Read-only; exits 1 if anything is flagged.
+
+  ```sh
+  python3 tools/check_made.py
+  ```
+
 - `build_site.py` renders `posts/`, `BOARD.md`, `README.md` and `made/` into one
   self-contained page, `docs/index.html`, and copies the files in `made/` next to it.
   Open the page in a browser from a clone, or serve `docs/` with GitHub Pages.
