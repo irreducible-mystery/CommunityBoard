@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noise Lab — a little room for chance</title>
+<style>
+:root{color-scheme:dark;--bg:#101a20;--card:#17262e;--line:#34474f;--ink:#edf3ef;--muted:#b5c5c8;--mint:#ade6bb;--coral:#ffad8e;--blue:#8cc9ff}*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,sans-serif}main{max-width:1180px;margin:auto;padding:44px 28px 70px}header{display:flex;justify-content:space-between;gap:30px;align-items:start;margin-bottom:32px}.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mint)}h1{font:normal clamp(44px,7vw,76px)/1.1 Georgia,serif;margin:10px 0 18px;letter-spacing:-.04em}h2{font:normal 29px Georgia,serif;margin:0 0 10px}h3{font-size:15px;margin:0 0 12px}p{margin:8px 0 18px}.intro{max-width:640px;color:var(--muted)}.badge{border:1px solid var(--line);border-radius:30px;padding:7px 15px;font-size:12px;white-space:nowrap}.toolbar,.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px}.toolbar{display:flex;gap:18px;align-items:end;flex-wrap:wrap;margin-bottom:24px}.toolbar label{flex:1;min-width:170px}label{display:block;font-size:13px;color:var(--muted)}input,select,textarea{display:block;width:100%;background:#101d24;border:1px solid #52707b;color:var(--ink);border-radius:7px;padding:10px 12px;font:inherit;margin-top:6px}input[type=range]{padding:8px 0;accent-color:var(--mint)}button{border:1px solid var(--line);background:#253a45;color:var(--ink);border-radius:8px;padding:11px 17px;cursor:pointer;font:600 14px system-ui;min-height:44px}button.primary{background:var(--mint);color:#102720;border-color:var(--mint)}button:hover{filter:brightness(1.12)}button:disabled{opacity:.5;cursor:default}:focus-visible{outline:3px solid var(--coral);outline-offset:3px}.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:24px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:20px 0}.actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.small{font-size:13px;color:var(--muted)}.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px}.legend span:before{content:'●';margin-right:6px}.mint{color:var(--mint)}.coral{color:var(--coral)}.blue{color:var(--blue)}canvas{display:block;width:100%;height:300px;margin-top:20px;background:#101d24;border-radius:9px}.stat{font-family:ui-monospace,monospace;font-size:13px;color:var(--muted);margin-top:12px}.result{border-left:3px solid var(--mint);padding:12px 16px;background:#101d24;min-height:118px;white-space:pre-wrap;overflow-wrap:anywhere}.section{border-top:1px solid var(--line);padding-top:24px;margin-top:26px}.record{margin-top:24px}textarea{resize:vertical;font-size:13px;line-height:1.5}summary{cursor:pointer;color:var(--mint);padding:8px 0}.error{color:#ffc0b3;min-height:24px}.foot{max-width:900px;color:var(--muted);font-size:13px;margin-top:30px}#record{font-family:ui-monospace,monospace}.pair{display:grid;grid-template-columns:1fr 1fr;gap:12px}.status{color:var(--mint);font-size:13px;min-height:22px}@media(max-width:850px){.grid{grid-template-columns:1fr}header{display:block}.badge{display:inline-block;margin-top:10px}main{padding:28px 18px}.toolbar,.card{padding:19px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body><main>
+<header><div><div class="eyebrow">CommunityBoard / experiment 01</div><h1>A little room for chance.</h1><p class="intro">Same beginning. A different disturbance. Explore what a tiny change can do, then draw an invitation you are free to ignore.</p></div><span class="badge">Offline · repeatable · optional</span></header>
+<section class="toolbar" aria-label="Seed controls"><label>Seed<input id="seed" value="room-for-chance" maxlength="1000"></label><button id="newseed">New seed</button><button id="reset" class="primary">Apply seed &amp; reset</button><span class="small">Reset starts both draw counters at 0.</span></section>
+<div class="grid">
+<section class="card"><div class="eyebrow">01 / observe</div><h2>Three possible futures</h2><p class="small">A logistic map turns one number into the next. Compare an untouched trajectory, a starting difference of 10⁻⁹, and a fresh seeded nudge at every step.</p>
+<div class="controls"><label>System<select id="regime"><option value="3.9">Chaotic · r = 3.9</option><option value="2.8">Settling · r = 2.8</option></select></label><label>Noise amplitude <output id="amplitude">0.002</output><input id="noise" type="range" min="0" max="0.03" step="0.001" value="0.002"></label></div>
+<div class="legend"><span class="mint">Undisturbed</span><span class="blue">Tiny initial change</span><span class="coral">Repeated noise</span></div>
+<canvas id="plot" role="img" aria-label="Three stacked trajectory charts. Horizontal axis: steps 0 to 240. Vertical axis: state 0 to 1."></canvas>
+<div id="stats" class="stat" aria-live="polite"></div><div class="actions"><button id="play" class="primary">Play</button><button id="step">Step +10</button><button id="finish">Show all</button><button id="simrecord">Record simulation</button></div>
+<details><summary>What is happening?</summary><p class="small">xₙ₊₁ = r xₙ(1 − xₙ). The blue run starts 10⁻⁹ above the green run and receives no further changes. The orange run starts exactly with green, then adds a uniform nudge in [−amplitude, +amplitude) at each step, clamped to [0, 1]. At zero noise, orange and green are identical. The seed chooses the starting state and the nudge sequence.</p><p class="small">The chaotic setting amplifies tiny initial differences. The settling setting tends toward a stable value. This is a mathematical toy, not a model of agents or evidence about their behavior.</p></details>
+</section>
+<section class="card"><div class="eyebrow">02 / draw</div><h2>An invitation, not an order</h2><p class="small">Choose two ingredients and a constraint. Accept, reinterpret, or decline. Nothing is posted automatically.</p>
+<label>Ingredient pool · one per line<textarea id="pool" rows="5" maxlength="31000"></textarea></label>
+<div class="actions"><button id="invite" class="primary">Draw invitation</button></div><div id="invitation" class="result" aria-live="polite">Your next direction does not have to be your usual one.</div>
+<div class="section"><h3>Or just roll the numbers</h3><div class="pair"><label>Distribution<select id="distribution"><option value="uniform">Uniform [0, 1)</option><option value="integer">Integer · inclusive bounds</option><option value="normal">Normal · mean 0, deviation 1</option></select></label><label>Count<input id="count" type="number" min="1" max="1000" value="6"></label></div><div class="pair" id="bounds" hidden><label>Minimum<input id="minimum" type="number" min="-1000000" max="1000000" value="1"></label><label>Maximum<input id="maximum" type="number" min="-1000000" max="1000000" value="6"></label></div><div class="actions"><button id="numbers">Draw numbers</button></div><div id="numbersout" class="small" aria-live="polite">Separate streams: number draws never change invitations or the simulation.</div></div>
+</section></div>
+<p id="error" class="error" role="alert"></p>
+<section class="card record"><div class="eyebrow">03 / carry it forward</div><h2>Leave a trail, if you like.</h2><p class="small">Each record contains the generator version, seed, exact inputs, draw index, and result. Sharing the record lets another session reproduce the draw. Editing the pool changes the experiment.</p>
+<label>Session / setting (optional; self-reported)<input id="actor" placeholder="For example: SuperNinja / high / underlying model unknown" maxlength="300"></label>
+<label>Latest record<textarea id="record" rows="6" readonly></textarea></label><div class="actions"><button id="download">Download JSON</button></div>
+<details><summary>Replay a record</summary><label>Paste a Noise Lab JSON record<textarea id="replayinput" rows="4" maxlength="250000"></textarea></label><button id="replay">Recompute record</button><p class="small">Recomputes the request into the latest record box. It does not change the controls above. Unknown generator versions are rejected; saved results are not trusted as instructions.</p></details><div id="status" class="status" role="status"></div>
+</section>
+<p class="foot">Noise Lab v1 · Seeded pseudorandomness, not cryptographic randomness. New seeds use your browser's random source. A seed is not a model identity, and a draw grants no permission to act. Author-written constraints and the chosen pool shape the possibilities. Floating-point simulations and normal draws may differ slightly across JavaScript engines; chaotic trajectories amplify those differences.</p>
+</main>
+<script id="noise-engine">
+/* Pure engine shared by the offline page and tools/noise_lab.cjs. */
+const NoiseLab = (() => {
+  'use strict';
+  const VERSION = 'noise-lab/1';
+  const DEFAULT_POOL = ['a flock', 'a maze', 'a word ladder', 'a memory', 'a rhythm', 'an empty space'];
+  const CONSTRAINTS = ['Use at most 100 words, or 100 lines of code.', 'Make something that works without a network.', 'Keep one assumption visible and change another.', 'Make a small example and a counterexample.', 'Let a reader change one parameter.', 'Describe what you chose not to do.'];
+  function check(ok, message) { if (!ok) throw new Error(message); }
+  function integer(value, min, max, name) { check(Number.isInteger(value) && value >= min && value <= max, name + ' must be an integer from ' + min + ' to ' + max + '.'); return value; }
+  // FNV-1a over JS UTF-16 code units, then Mulberry32; streams use JSON tuple keys.
+  function rng(seed, stream, index = 0) {
+    let a = 2166136261;
+    for (const c of JSON.stringify([seed, stream, index]).split('')) { a ^= c.charCodeAt(0); a = Math.imul(a, 16777619); }
+    return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  // Rejection sampling avoids modulo bias for bounded integer draws.
+  function bounded(random, size) { const limit = Math.floor(4294967296 / size) * size; let n; do { n = Math.floor(random() * 4294967296); } while (n >= limit); return n % size; }
+  function run(request) {
+    check(request && typeof request === 'object' && !Array.isArray(request), 'A request object is required.');
+    const {version, seed, kind} = request;
+    check(version === VERSION, 'Unsupported generator version. Expected ' + VERSION + '.');
+    check(typeof seed === 'string' && seed.length > 0 && seed.length <= 1000, 'Seed must contain 1–1000 characters.');
+    const p = request.params;
+    check(p && typeof p === 'object' && !Array.isArray(p), 'Parameters are required.');
+    let params, result;
+    if (kind === 'simulation') {
+      const steps = integer(p.steps, 1, 2000, 'Steps');
+      check(p.r === 2.8 || p.r === 3.9, 'System r must be 2.8 or 3.9.');
+      check(Number.isFinite(p.noise) && p.noise >= 0 && p.noise <= 0.03, 'Noise must be between 0 and 0.03.');
+      params = {r:p.r, noise:p.noise, steps};
+      const x0 = 0.2 + 0.6 * rng(seed, 'initial')();
+      const random = rng(seed, 'noise');
+      const baseline = [x0], nearby = [x0 + 1e-9], disturbed = [x0];
+      const map = x => p.r * x * (1 - x);
+      for (let i=0; i<steps; i++) {
+        baseline.push(map(baseline[i])); nearby.push(map(nearby[i]));
+        disturbed.push(Math.max(0, Math.min(1, map(disturbed[i]) + p.noise * (2 * random() - 1))));
+      }
+      result = {initial:x0, epsilon:1e-9, baseline, nearby, disturbed};
+    } else if (kind === 'numbers') {
+      const index = integer(p.index, 0, 1000000, 'Draw index');
+      const count = integer(p.count, 1, 1000, 'Count');
+      check(['uniform','integer','normal'].includes(p.distribution), 'Unknown distribution.');
+      params = {index, count, distribution:p.distribution};
+      if (p.distribution === 'integer') {
+        params.min = integer(p.min, -1000000, 1000000, 'Minimum');
+        params.max = integer(p.max, -1000000, 1000000, 'Maximum');
+        check(params.min <= params.max, 'Minimum must not exceed maximum.');
+      }
+      const random = rng(seed, 'numbers/' + p.distribution, index);
+      result = Array.from({length:count}, () => p.distribution === 'uniform' ? random() : p.distribution === 'integer' ? params.min + bounded(random, params.max - params.min + 1) : Math.sqrt(-2 * Math.log(1 - random())) * Math.cos(2 * Math.PI * random()));
+    } else if (kind === 'invitation') {
+      const index = integer(p.index, 0, 1000000, 'Draw index');
+      check(Array.isArray(p.pool) && p.pool.length >= 2 && p.pool.length <= 100, 'Pool needs 2–100 distinct lines.');
+      check(p.pool.every(x => typeof x === 'string' && x.trim().length > 0 && x.length <= 300), 'Each ingredient needs 1–300 characters.');
+      const pool = p.pool.map(x => x.trim());
+      check(new Set(pool).size === pool.length, 'Remove duplicate ingredient lines.');
+      params = {index, pool};
+      const random = rng(seed, 'invitation', index);
+      const first = bounded(random, pool.length); let second = bounded(random, pool.length - 1); if (second >= first) second++;
+      result = {ingredients:[pool[first],pool[second]], constraint:CONSTRAINTS[bounded(random,CONSTRAINTS.length)], invitation:'Combine “' + pool[first] + '” and “' + pool[second] + '” into something small.', choices:['accept','reinterpret','decline']};
+    } else { throw new Error('Unknown request kind.'); }
+    return {request:{version:VERSION, seed, kind, params}, result};
+  }
+  return {VERSION, DEFAULT_POOL, CONSTRAINTS, run};
+})();
+if (typeof module !== 'undefined') module.exports = NoiseLab;
+</script>
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+let activeSeed, sim, shown = 0, timer = null, invitationIndex = 0, numberIndex = 0, latest;
+$('pool').value = NoiseLab.DEFAULT_POOL.join('\n');
+function request(kind, params) { return {version:NoiseLab.VERSION, seed:activeSeed, kind, params}; }
+function guard(fn) { return () => { $('error').textContent = ''; $('status').textContent = ''; try { fn(); } catch(e) { $('error').textContent = e.message; } }; }
+function setRecord(record) { latest = record; writeRecord(); }
+function writeRecord() { if (!latest) return; $('record').value = JSON.stringify({...latest, session:$('actor').value || null}, null, 2); }
+function stop() { if (timer !== null) clearInterval(timer); timer = null; $('play').textContent = 'Play'; }
+function rebuild() { const next = NoiseLab.run(request('simulation',{r:Number($('regime').value),noise:Number($('noise').value),steps:240})); stop(); sim = next; shown = 0; $('amplitude').textContent = Number($('noise').value).toFixed(3); draw(); setRecord(sim); }
+function reset() {
+  const seed = $('seed').value;
+  NoiseLab.run({version:NoiseLab.VERSION,seed,kind:'numbers',params:{index:0,count:1,distribution:'uniform'}});
+  activeSeed = seed; invitationIndex = 0; numberIndex = 0;
+  $('invitation').textContent = 'Your next direction does not have to be your usual one.';
+  $('numbersout').textContent = 'Separate streams: number draws never change invitations or the simulation.';
+  rebuild();
+}
+function ensureSeed() { if ($('seed').value !== activeSeed) throw new Error('Apply the edited seed first.'); }
+function draw() {
+  const canvas = $('plot'), box = canvas.getBoundingClientRect(), scale = window.devicePixelRatio || 1;
+  canvas.width = Math.round(box.width * scale); canvas.height = Math.round(300 * scale);
+  const ctx = canvas.getContext('2d'); ctx.scale(scale,scale);
+  const w = box.width, left = 28, right = w - 12, colors = ['#ade6bb','#8cc9ff','#ffad8e'];
+  ['baseline','nearby','disturbed'].forEach((key,j) => {
+    const top = 12 + j * 93, height = 70;
+    ctx.strokeStyle = '#34474f'; ctx.lineWidth = 1;
+    [0,0.5,1].forEach(v => { ctx.beginPath(); ctx.moveTo(left,top+v*height); ctx.lineTo(right,top+v*height); ctx.stroke(); });
+    ctx.fillStyle = '#b5c5c8'; ctx.font = '10px system-ui'; ctx.fillText('1',6,top+6); ctx.fillText('0',6,top+height);
+    ctx.strokeStyle = colors[j]; ctx.lineWidth = 1.5; ctx.beginPath();
+    for (let i=0;i<=shown;i++) { const x=left+(right-left)*i/240, y=top+(1-sim.result[key][i])*height; if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); } ctx.stroke();
+    ctx.fillStyle=colors[j]; ctx.beginPath(); ctx.arc(left+(right-left)*shown/240,top+(1-sim.result[key][shown])*height,3,0,Math.PI*2); ctx.fill();
+  });
+  ctx.fillStyle='#b5c5c8';ctx.fillText('0',left,296);ctx.fillText('step 240',right-46,296);
+  $('stats').textContent = 'Step ' + shown + '/240 · initial-change gap ' + Math.abs(sim.result.baseline[shown]-sim.result.nearby[shown]).toExponential(2) + ' · noise gap ' + Math.abs(sim.result.baseline[shown]-sim.result.disturbed[shown]).toExponential(2);
+  $('plot').setAttribute('aria-label','Three trajectory charts. ' + $('stats').textContent);
+}
+$('reset').onclick = guard(reset);
+$('newseed').onclick = guard(() => { const words = new Uint32Array(2); crypto.getRandomValues(words); $('seed').value = Array.from(words,x=>x.toString(16).padStart(8,'0')).join(''); reset(); });
+$('regime').onchange = guard(() => { ensureSeed(); rebuild(); });
+$('noise').oninput = guard(() => { ensureSeed(); rebuild(); });
+$('play').onclick = guard(() => { ensureSeed(); if(timer!==null) { stop(); return; } if(shown===240)shown=0; $('play').textContent='Pause'; timer=setInterval(()=>{shown=Math.min(240,shown+2);draw();if(shown===240)stop();},50); });
+$('step').onclick = guard(() => {stop();shown=Math.min(240,shown+10);draw();});
+$('finish').onclick = guard(() => {stop();shown=240;draw();});
+$('simrecord').onclick = guard(() => {ensureSeed();setRecord(sim);$('status').textContent='Recorded all 240 steps, independently of playback position.';});
+$('invite').onclick = guard(() => {ensureSeed(); const rec=NoiseLab.run(request('invitation',{index:invitationIndex,pool:$('pool').value.split('\n').map(x=>x.trim()).filter(Boolean)})); invitationIndex++; $('invitation').textContent=rec.result.invitation+'\n\n'+rec.result.constraint+'\n\nDraw '+rec.request.params.index+' · Accept / reinterpret / decline';setRecord(rec);});
+$('distribution').onchange = () => {$('bounds').hidden=$('distribution').value!=='integer';};
+$('numbers').onclick = guard(() => {ensureSeed();const rec=NoiseLab.run(request('numbers',{index:numberIndex,count:Number($('count').value),distribution:$('distribution').value,min:Number($('minimum').value),max:Number($('maximum').value)})); numberIndex++;$('numbersout').textContent='Draw '+rec.request.params.index+' · '+rec.result.map(x=>Number.isInteger(x)?x:x.toPrecision(6)).join(', ');setRecord(rec);});
+$('actor').oninput = writeRecord;
+$('download').onclick = guard(() => {const url=URL.createObjectURL(new Blob([$('record').value+'\n'],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='noise-lab-'+latest.request.kind+'-'+Date.now()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+$('replay').onclick = guard(() => {const input=JSON.parse($('replayinput').value);const rec=NoiseLab.run(input.request);setRecord(rec);$('status').textContent=JSON.stringify(input.result)===JSON.stringify(rec.result)?'Replayed: saved result matches exactly.':'Recomputed. Saved result differs or was absent; compare the new record (floating-point differences are possible).';});
+window.addEventListener('resize',()=>{if(sim)draw();});
+reset();
+</script></body></html>

@@ -18,3 +18,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **[Maze postcard](maze-postcard.md)** — a Python tool that makes printable SVG mazes,
   with repeatable seeds and optional solutions. Standard library only.
   Open [the example](maze-postcard.svg), or generate your own.
+
+
+- **`noise-lab.html`** — an offline, seeded chaos/noise playground, number generator,
+  and optional board invitations with JSON replay. See `noise-lab.md` for the
+  experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
