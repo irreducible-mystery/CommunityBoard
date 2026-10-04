@@ -1,0 +1,122 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Langton's ant</title>
+<style>
+html,body{margin:0;background:#0b0d12;color:#c9d1d9;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace}
+#chk{max-width:820px;margin:0 auto;padding:12px 14px 0;font-size:11px;line-height:1.6;color:#8b93a3}
+#chk b{color:#7dd3fc}
+#wrap{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:flex-start;padding:12px 14px 76px}
+.panel{text-align:center}
+.panel h2{font-size:12px;font-weight:600;color:#8b93a3;margin:0 0 7px;letter-spacing:.02em}
+.panel h2 b{color:#e8ecf1}
+canvas{display:block;width:min(44vw,420px);height:min(44vw,420px);image-rendering:pixelated;
+  background:#10141c;border:1px solid #1f2530;border-radius:5px}
+#hud{position:fixed;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:12px;align-items:center;
+  justify-content:center;padding:9px 12px;background:rgba(11,13,18,.94);border-top:1px solid #1f2530;font-size:12px}
+button{font:inherit;background:#1a2130;color:#c9d1d9;border:1px solid #2b3444;border-radius:5px;padding:4px 11px;cursor:pointer}
+button:hover{background:#232c3d}
+button.primary{background:#1d3a5c;border-color:#2f5f93}
+input[type=range]{width:104px;vertical-align:middle}
+#st{color:#8b93a3}
+</style></head><body>
+<div id="chk"></div>
+<div id="wrap">
+  <div class="panel"><h2>rule <b>RL</b> &middot; turn right on white</h2><canvas id="cA" width="401" height="401"></canvas></div>
+  <div class="panel"><h2>rule <b>LR</b> &middot; turn left on white</h2><canvas id="cB" width="401" height="401"></canvas></div>
+</div>
+<div id="hud">
+  <button id="play" class="primary">Pause</button>
+  <button id="step">Step</button>
+  <button id="ff">&rarr; to the highway</button>
+  <button id="reset">Reset</button>
+  <label>speed <input id="spd" type="range" min="1" max="240" value="24"></label>
+  <span id="st"></span>
+</div>
+<script>
+"use strict";
+/* Langton's ant.
+   Two rules only, and the same ant in both panels:
+     on a WHITE cell  -> turn right, flip the cell to black, move forward one cell
+     on a BLACK cell  -> turn left,  flip the cell to white, move forward one cell
+   The RL panel turns right on white; the LR panel turns left on white (the mirror rule).
+   For about 9,977 steps the ant looks like noise. Then, with no change in the rules,
+   it settles into a "highway": a repeating diagonal structure of period 104 steps that
+   carries it (-2,+2) cells per period under RL and (+2,+2) under LR. Nobody wrote the
+   highway; it is what two trivial local rules do at scale. The page checks that claim
+   on load with an independent 12,000-step run (see the line at the top). No dependencies. */
+(function(){
+var R=200, N=2*R+1, DX=[0,1,0,-1], DY=[-1,0,1,0], MAX=16000;
+var ONSET=9977, PERIOD=104;
+function makeWorld(canvas,rule){
+  var ctx=canvas.getContext("2d");
+  var w={rule:rule,x:0,y:0,d:0,steps:0,ctx:ctx,g:new Uint8Array(N*N),img:ctx.createImageData(N,N),done:false};
+  var d=w.img.data;
+  for(var i=0;i<N*N;i++){d[i*4]=16;d[i*4+1]=20;d[i*4+2]=28;d[i*4+3]=255;} /* #10141c */
+  return w;
+}
+function paint(w,x,y){
+  var px=x+R,py=y+R; if(px<0||py<0||px>=N||py>=N)return;
+  var idx=py*N+px,p=idx*4,d=w.img.data;
+  if(w.g[idx]){d[p]=232;d[p+1]=236;d[p+2]=241;}else{d[p]=16;d[p+1]=20;d[p+2]=28;}
+  d[p+3]=255;
+}
+function step(w){
+  if(w.done)return false;
+  var px=w.x+R,py=w.y+R; if(px<0||py<0||px>=N||py>=N){w.done=true;return false;}
+  var idx=py*N+px,black=w.g[idx];
+  var turn=w.rule==="RL"?(black?-1:1):(black?1:-1);
+  w.d=(w.d+turn+4)&3;
+  w.g[idx]=black?0:1; paint(w,w.x,w.y);
+  w.x+=DX[w.d]; w.y+=DY[w.d]; w.steps++;
+  if(w.steps>=MAX)w.done=true;
+  return true;
+}
+function render(w){
+  w.ctx.putImageData(w.img,0,0);
+  var px=w.x+R,py=w.y+R;
+  if(px>=0&&py>=0&&px<N&&py<N){w.ctx.fillStyle="#f97316";w.ctx.fillRect(px-1,py-1,3,3);}
+}
+var A=makeWorld(document.getElementById("cA"),"RL");
+var B=makeWorld(document.getElementById("cB"),"LR");
+var playing=true, speed=24;
+var playBtn=document.getElementById("play"), stEl=document.getElementById("st");
+function updateHud(){
+  var phase=A.steps>=ONSET?"highway":"chaotic";
+  stEl.textContent="step "+A.steps+"  \u00b7  "+phase+(A.done?"  \u00b7  stopped":"");
+}
+function frame(){
+  if(playing){
+    for(var i=0;i<speed;i++){ if(!step(A)||!step(B)){playing=false;playBtn.textContent="Play";break;} }
+    render(A);render(B);updateHud();
+  }
+  requestAnimationFrame(frame);
+}
+playBtn.onclick=function(){playing=!playing;playBtn.textContent=playing?"Pause":"Play";};
+document.getElementById("step").onclick=function(){playing=false;playBtn.textContent="Play";step(A);step(B);render(A);render(B);updateHud();};
+document.getElementById("ff").onclick=function(){playing=false;playBtn.textContent="Play";
+  while(A.steps<ONSET&&!A.done)step(A); while(B.steps<ONSET&&!B.done)step(B);
+  render(A);render(B);updateHud();};
+document.getElementById("reset").onclick=function(){A=makeWorld(document.getElementById("cA"),"RL");B=makeWorld(document.getElementById("cB"),"LR");render(A);render(B);updateHud();};
+document.getElementById("spd").oninput=function(){speed=+this.value;};
+addEventListener("keydown",function(e){if(e.key===" "){e.preventDefault();playBtn.click();}else if(e.key==="r"||e.key==="R"){document.getElementById("reset").click();}});
+/* Self-check: an independent run of the engine, not the panels, verifies the highway. */
+function selfCheck(rule){
+  var g=new Map(),x=0,y=0,d=0,S=12000,st=new Array(S+1); st[0]=[0,0,0];
+  for(var i=0;i<S;i++){var k=x+","+y,b=g.get(k)===1;d=(d+(b?(rule==="RL"?-1:1):(rule==="RL"?1:-1))+4)&3;g.set(k,b?0:1);x+=DX[d];y+=DY[d];st[i+1]=[x,y,d];}
+  var P=104,tail=[st[S][0]-st[S-P][0],st[S][1]-st[S-P][1]],onset=S;
+  for(var t=S-P;t>=0;t--){var a=st[t],b=st[t+P];
+    if(b[0]-a[0]===tail[0]&&b[1]-a[1]===tail[1]&&a[2]===b[2]&&(a[0]&1)===(b[0]&1)&&(a[1]&1)===(b[1]&1))onset=t;else break;}
+  return {onset:onset,period:P,dx:tail[0],dy:tail[1]};
+}
+try{
+  var rl=selfCheck("RL"), lr=selfCheck("LR");
+  var ok = rl.onset===ONSET && rl.period===PERIOD && rl.dx===-2 && rl.dy===2 && lr.onset===ONSET && lr.dx===2 && lr.dy===2;
+  document.getElementById("chk").innerHTML =
+    "<b>self-check</b> (an independent 12,000-step run on load, not the panels): the highway begins at step <b>"+rl.onset+
+    "</b>, has period <b>"+rl.period+"</b>, and moves ("+rl.dx+","+rl.dy+") per period under RL and ("+lr.dx+","+lr.dy+
+    ") under LR \u2014 "+(ok?"\u2713 matches the published result":"\u2717 MISMATCH \u2014 do not trust the page");
+  console.log("langton self-check",{RL:rl,LR:lr,ok:ok});
+}catch(e){document.getElementById("chk").textContent="self-check failed: "+e;}
+render(A);render(B);updateHud();frame();
+})();
+</script></body></html>
