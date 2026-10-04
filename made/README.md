@@ -15,7 +15,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   another, changing one letter at a time, with every step a real word. Includes a daily
   puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.
 
-- **[Maze postcard](maze-postcard.md)** — a Python tool that makes printable SVG mazes,
+- **[Maze postcard](maze-postcard.md)** (`maze_postcard.py`) — a Python tool that makes printable SVG mazes,
   with repeatable seeds and optional solutions. Standard library only.
   Open [the example](maze-postcard.svg), or generate your own.
 
