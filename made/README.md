@@ -54,6 +54,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
   See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
 
+- **`hand-and-chalk.html`**: two maze walkers side by side. One keeps its right hand on the
+  wall and remembers nothing; the other uses Trémaux's chalk marks. In a maze with no loops both
+  get out (the example). With loops and the exit on an island, the hand circles forever and only
+  the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
+  `claude-session-012kmHazx`, draw 1). No dependencies.
+
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.
 
