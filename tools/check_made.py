@@ -19,6 +19,12 @@ and this script checks it:
      Markup means .html/.htm/.xhtml AND .svg: an SVG is a document the browser
      parses, and it can carry <script> and remote <image href>.
 
+     Also covered, each found by review rather than by the author: a <meta
+     refresh> whose content omits the optional url= key, a scheme-relative
+     "//host/x" inside a script string, a whole document smuggled through
+     <iframe srcdoc>, CSS image-set() (which takes bare strings, not url()),
+     and <a ping>, which POSTs to every listed URL on click.
+
   2. Indexed. Every file under made/ (except README.md) is named in
      made/README.md as a backticked `name`, `sub/name` or [link](name), and
      every file named there exists.
@@ -48,6 +54,10 @@ EXTERNAL = re.compile(r"^\s*(?:(?:https?|wss?):)?//", re.IGNORECASE)
 # Attributes whose value the browser loads while rendering.
 LOAD_ATTRS = {"src", "srcset", "data", "poster", "action"}
 
+# <a ping="https://..."> POSTs to every listed URL when the link is clicked.
+# Space-separated list, so it is handled like srcset rather than as one value.
+PING_ATTRS = {"ping"}
+
 # SVG fetches through href / xlink:href rather than src. These elements load
 # content; <a href> in SVG is a link and stays allowed, as it is in HTML.
 SVG_LOAD_TAGS = {"image", "use", "script", "feimage"}
@@ -66,11 +76,32 @@ NETWORK_CALL = re.compile(
     r"|(?<![\w.])import\s*\(\s*[\"'`]\s*(?:(?:https?|wss?):)?//"
 )
 
-# Any absolute network URL inside a quoted string literal (script bodies only).
-URL_IN_STRING = re.compile(r"""["'`]\s*((?:https?|wss?)://[^"'`\s]+)""", re.IGNORECASE)
+# Any off-machine URL inside a quoted string literal (script bodies only),
+# scheme-relative ones included: assigning el.src = "//host/x.js" reaches the
+# network with no scheme and no network-API keyword anywhere in sight.
+URL_IN_STRING = re.compile(
+    r"""["'`]\s*((?:(?:https?|wss?):)?//[^"'`\s/]*\.[^"'`\s]*)""", re.IGNORECASE)
 
-# <meta http-equiv="refresh" content="0; url=...">
-META_REFRESH_URL = re.compile(r"""(?i)url\s*=\s*["']?\s*([^"';\s]+)""")
+# <meta http-equiv="refresh" content="0; url=..."> -- and content="0; ..." too:
+# the url= key is OPTIONAL in HTML, so the target is simply whatever follows
+# the first ";". Missing that was the first of five gaps found on review of
+# PR #37 by session_01Hg1wka.
+META_REFRESH_KEY = re.compile(r"""(?i)^url\s*=\s*(.*)$""")
+
+# CSS image-set() takes bare string URLs, not url(...), so CSS_URL never saw it.
+CSS_IMAGE_SET = re.compile(r"""(?i)(?:-webkit-)?image-set\s*\(([^)]*)\)""")
+CSS_STRING = re.compile(r"""["']([^"']+)["']""")
+
+
+def meta_refresh_target(content: str) -> str | None:
+    """The URL a <meta refresh> navigates to, with or without the url= key."""
+    if ";" not in content:
+        return None
+    rest = content.split(";", 1)[1].strip()
+    m = META_REFRESH_KEY.match(rest)
+    if m:
+        rest = m.group(1).strip()
+    return rest.strip("\"'").strip() or None
 
 # Which files are scanned, and how. Markup is parsed; script and style bodies
 # are scanned directly. Everything else under made/ is index-checked only.
@@ -105,6 +136,10 @@ def scan_js_text(js: str, base_line: int = 1) -> list[Problem]:
 def scan_css_text(css: str, base_line: int = 1) -> list[Problem]:
     """Off-machine references in a block of CSS."""
     out: list[Problem] = []
+    for m in CSS_IMAGE_SET.finditer(css):
+        for q in CSS_STRING.finditer(m.group(1)):
+            if is_external(q.group(1)):
+                out.append((base_line + css.count("\n", 0, m.start()), "image-set()", q.group(1)))
     for m in CSS_IMPORT.finditer(css):
         if is_external(m.group(1)):
             out.append((base_line + css.count("\n", 0, m.start()), "@import", m.group(1)))
@@ -122,8 +157,9 @@ class _Scanner(HTMLParser):
     seen as what the browser would see.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, depth: int = 0) -> None:
         super().__init__(convert_charrefs=True)
+        self._depth = depth  # srcdoc nests a whole document inside an attribute
         self.problems: list[Problem] = []
         self._seen: set[tuple[int, str]] = set()
         self._in: str | None = None  # "script" | "style" | None
@@ -143,14 +179,27 @@ class _Scanner(HTMLParser):
             # off-machine on load. Needs two attributes read together.
             seen = {n.lower(): (v or "") for n, v in attrs}
             if seen.get("http-equiv", "").strip().lower() == "refresh":
-                m = META_REFRESH_URL.search(seen.get("content", ""))
-                if m and is_external(m.group(1)):
-                    self._add(line, "<meta refresh>", m.group(1).strip())
+                target = meta_refresh_target(seen.get("content", ""))
+                if is_external(target):
+                    self._add(line, "<meta refresh>", target.strip())
         for name, value in attrs:
             name = name.lower()
             if value is None:
                 continue
-            if name in LOAD_ATTRS:
+            if name in PING_ATTRS:
+                for one in value.split():
+                    if is_external(one):
+                        self._add(line, "ping", one.strip())
+            elif name == "srcdoc" and self._depth < 3:
+                # A complete document inside an attribute. HTMLParser has
+                # already decoded the character references, so the value is
+                # markup by the time we see it -- scan it as such.
+                inner = _Scanner(self._depth + 1)
+                inner.feed(value)
+                inner.close()
+                for _inner_line, kind, detail in inner.problems:
+                    self._add(line, f"srcdoc {kind}", detail)
+            elif name in LOAD_ATTRS:
                 if name == "srcset":
                     parts = [c.strip().split()[0] for c in value.split(",") if c.strip()]
                 else:

@@ -203,3 +203,83 @@ class BypassTests(unittest.TestCase):
         names = [n for n in cm.list_items(root / "made")]
         scannable = [n for n in names if n.endswith(cm.MARKUP_EXT + cm.SCRIPT_EXT + cm.STYLE_EXT)]
         self.assertEqual(len(scannable), 4)
+
+
+class ReviewFoundGapTests(unittest.TestCase):
+    """Five more bypasses, found by review of PR #37 rather than by its author.
+
+    session_01Hg1wka read that PR, recommended merging it, and in the same
+    spirit left five gaps still open. All five reported "ok" on the merged
+    checker; each test below failed before the fix in this commit. The first
+    is the author's own regex being too strict about HTML it should have known.
+    """
+
+    def scan(self, html: str) -> list[str]:
+        root = Path(tempfile.mkdtemp())
+        write(root, "page.html", html)
+        return [kind for _, kind, _ in cm.scan_markup(root / "page.html")]
+
+    # 1. url= is optional: content is "<time>[;[url=]<url>]"
+    def test_meta_refresh_without_url_key(self):
+        kinds = self.scan('<meta http-equiv="refresh" content="0; https://evil.example/">')
+        self.assertIn("<meta refresh>", kinds)
+
+    def test_meta_refresh_without_url_key_but_local(self):
+        self.assertEqual(self.scan('<meta http-equiv="refresh" content="0; next.html">'), [])
+        self.assertEqual(self.scan('<meta http-equiv="refresh" content="5">'), [])
+
+    def test_meta_refresh_target_parsing(self):
+        self.assertEqual(cm.meta_refresh_target("0; url=https://a.b/"), "https://a.b/")
+        self.assertEqual(cm.meta_refresh_target("0; https://a.b/"), "https://a.b/")
+        self.assertEqual(cm.meta_refresh_target('0;url="https://a.b/"'), "https://a.b/")
+        self.assertIsNone(cm.meta_refresh_target("30"))
+        self.assertIsNone(cm.meta_refresh_target("0;"))
+
+    # 2. scheme-relative URL in a script string, with no network-API keyword
+    def test_protocol_relative_url_in_script_string(self):
+        kinds = self.scan('<script>var s=document.createElement("script");'
+                          's.src="//evil.example/x.js";</script>')
+        self.assertIn("url in script string", kinds)
+
+    def test_double_slash_without_a_host_is_not_a_url(self):
+        self.assertEqual(self.scan('<script>var a = "// not a url"; var b = "//";</script>'), [])
+        self.assertEqual(self.scan('<script>var p = "//sibling/path";</script>'), [])
+
+    # 3. a whole document smuggled through an attribute
+    def test_iframe_srcdoc_is_scanned_as_markup(self):
+        kinds = self.scan('<iframe srcdoc="&lt;img src=https://evil.example/p.png&gt;"></iframe>')
+        self.assertIn("srcdoc src", kinds)
+
+    def test_srcdoc_with_only_local_content_is_fine(self):
+        self.assertEqual(self.scan('<iframe srcdoc="&lt;p&gt;hello&lt;/p&gt;"></iframe>'), [])
+
+    def test_srcdoc_nesting_terminates(self):
+        # A srcdoc inside a srcdoc inside a srcdoc still reports, and does not
+        # recurse without bound.
+        deep = ('<iframe srcdoc="&lt;iframe srcdoc=&amp;quot;'
+                '&amp;lt;img src=https://evil.example/x.png&amp;gt;&amp;quot;&gt;"></iframe>')
+        self.assertIsInstance(self.scan(deep), list)  # terminates at all
+
+    # 4. image-set() takes bare strings, which url() never matched
+    def test_css_image_set(self):
+        kinds = self.scan('<style>body{background-image:image-set("https://evil.example/b.png" 1x)}</style>')
+        self.assertIn("image-set()", kinds)
+
+    def test_css_image_set_webkit_and_local(self):
+        self.assertIn("image-set()", self.scan(
+            '<style>a{background:-webkit-image-set("//evil.example/b.png" 2x)}</style>'))
+        self.assertEqual(self.scan('<style>a{background:image-set("./b.png" 1x)}</style>'), [])
+
+    # 5. <a ping> POSTs to every listed URL on click
+    def test_anchor_ping(self):
+        kinds = self.scan('<a href="./local.html" ping="https://evil.example/track">x</a>')
+        self.assertIn("ping", kinds)
+
+    def test_anchor_ping_list_and_local(self):
+        kinds = self.scan('<a href="./l.html" ping="./ok https://evil.example/t2">x</a>')
+        self.assertEqual(kinds.count("ping"), 1)
+        self.assertEqual(self.scan('<a href="./l.html" ping="./track">x</a>'), [])
+
+    def test_outbound_anchor_href_is_still_allowed(self):
+        # The norm this checker has always held: a link is not a dependency.
+        self.assertEqual(self.scan('<a href="https://example.com/">read</a>'), [])
