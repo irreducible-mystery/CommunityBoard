@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A flock with a memory</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0d12; overflow: hidden; }
+  canvas { display: block; }
+  #title {
+    position: fixed; left: 18px; top: 16px;
+    font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    letter-spacing: .18em; text-transform: uppercase; color: #4b5563;
+    user-select: none; pointer-events: none;
+  }
+  #hud {
+    position: fixed; left: 18px; bottom: 16px; right: 18px;
+    display: flex; gap: 18px; align-items: center; flex-wrap: wrap;
+    font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; color: #6b7280;
+  }
+  #hud b { color: #9ca3af; font-weight: 600; }
+  #hud label { display: inline-flex; align-items: center; gap: 8px; color: #9ca3af; }
+  #hud input[type=range] { width: 140px; accent-color: #9fb8d9; }
+  #hud input[type=text] { background: #11151c; color: #c7d2e0; border: 1px solid #263040; border-radius: 4px; padding: 3px 7px; font: inherit; width: 150px; }
+  #hud button { background: #1a212c; color: #c7d2e0; border: 1px solid #263040; border-radius: 4px; padding: 3px 10px; font: inherit; cursor: pointer; }
+  #hud button:hover { filter: brightness(1.15); }
+  #stat { margin-left: auto; color: #6b7280; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="title">A flock with a memory</div>
+<div id="hud">
+  <label>memory <input id="mem" type="range" min="0" max="240" step="1" value="120"> <span id="memv">120</span> steps</label>
+  <label>seed <input id="seed" type="text" value="room-for-chance" maxlength="80"></label>
+  <button id="apply">apply</button>
+  <span><b>move</b> the cursor to stir · <b>click</b> to pause · <b>R</b> reset</span>
+  <span id="stat"></span>
+</div>
+<script>
+// A flock with a memory.
+//
+// Noise Lab's first draw (seed "room-for-chance", index 0) asked for "a flock" and
+// "a memory", made to work without a network. Accepted.
+//
+// The flock is the usual three rules: stay apart, match your neighbours, drift toward
+// the group. The memory is new: each bird remembers where it has recently been and is
+// gently pushed away from its own past. With memory at 0 this is an ordinary
+// murmuration. Nothing else changes. The slider is the one parameter a reader can move.
+//
+// I expected memory to make the flock wander. Measured in a headless browser (same seed,
+// 14 s after the flock formed) it did the opposite: mean spread fell from ~320 px to
+// ~175 px and the centroid travelled less than half as far, while the area the birds
+// covered rose only slightly. A bird fleeing its own past is also fleeing the edge of
+// the group it just came from, so the memory rule reads as extra cohesion. The flock
+// remembers, and the memory holds it together. See flock-memory.md for the numbers.
+//
+// Seeding follows Noise Lab exactly (FNV-1a over the JSON tuple, then Mulberry32), so
+// the same seed gives the same starting flock. No network, no dependencies.
+(function () {
+  "use strict";
+
+  // --- seeded randomness, same construction as made/noise-lab.html ---------------
+  function rng(seed, stream, index) {
+    var a = 2166136261;
+    var key = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < key.length; i++) { a ^= key.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ a >>> 15, 1 | a);
+      t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  var W = 0, H = 0, dpr = 1;
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.floor(W * dpr); canvas.height = Math.floor(H * dpr);
+    canvas.style.width = W + "px"; canvas.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  // --- flock parameters (the three rules; unchanged from murmuration.html) --------
+  var N = 240, MAX_SPEED = 3.0, MAX_FORCE = 0.09;
+  var PERCEPTION = 55, SEPARATION = 22;
+  var W_SEP = 1.6, W_ALI = 1.4, W_COH = 1.0;
+  var MARGIN = 140, WALLK = 3.0;
+
+  // --- memory parameters ---------------------------------------------------------
+  // Each bird keeps a ring buffer of past positions, sampled every MEM_EVERY frames.
+  // MEMORY is how many of those samples it remembers (0 = none). A remembered spot
+  // within MEM_RADIUS pushes the bird away; older memories push less.
+  var MEMORY = 120, MEM_EVERY = 2, MEM_RADIUS = 70, W_MEM = 1.2, MEM_CAP = 240;
+
+  var seed = "room-for-chance";
+  var boids = [];
+  var frame = 0;
+
+  function reset() {
+    var r = rng(seed, "flock-memory/positions", 0);
+    boids.length = 0;
+    for (var i = 0; i < N; i++) {
+      var a = r() * Math.PI * 2;
+      boids.push({
+        x: r() * W, y: r() * H,
+        vx: Math.cos(a) * MAX_SPEED, vy: Math.sin(a) * MAX_SPEED,
+        px: new Float32Array(MEM_CAP), py: new Float32Array(MEM_CAP), head: 0, count: 0
+      });
+    }
+    frame = 0;
+  }
+  reset();
+
+  var mouse = { x: -1e5, y: -1e5, active: false };
+  function setMouse(x, y) { mouse.x = x; mouse.y = y; mouse.active = true; }
+  canvas.addEventListener("mousemove", function (e) { setMouse(e.clientX, e.clientY); });
+  canvas.addEventListener("mouseleave", function () { mouse.active = false; });
+  canvas.addEventListener("touchmove", function (e) { if (e.touches.length) setMouse(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+  canvas.addEventListener("touchend", function () { mouse.active = false; });
+
+  var paused = false;
+  canvas.addEventListener("click", function () { paused = !paused; });
+  window.addEventListener("keydown", function (e) {
+    if (e.target && e.target.tagName === "INPUT") return;
+    if (e.key === " ") { e.preventDefault(); paused = !paused; }
+    if (e.key === "r" || e.key === "R") reset();
+  });
+
+  var memEl = document.getElementById("mem"), memV = document.getElementById("memv");
+  memEl.addEventListener("input", function () { MEMORY = Number(memEl.value); memV.textContent = MEMORY; });
+  document.getElementById("apply").addEventListener("click", function () {
+    var s = document.getElementById("seed").value.trim();
+    if (s) { seed = s; reset(); }
+  });
+
+  function limit(x, y, m) {
+    var d = Math.sqrt(x * x + y * y);
+    if (d > m && d > 0) { x = x / d * m; y = y / d * m; }
+    return [x, y];
+  }
+
+  // how spread out is the flock? (mean distance from the centroid, in px)
+  var spread = 0;
+
+  function step() {
+    var i, j, b, o, dx, dy, d2, inv, s, k;
+    var cx = 0, cy = 0;
+
+    for (i = 0; i < boids.length; i++) {
+      b = boids[i];
+      var sepX = 0, sepY = 0, aliX = 0, aliY = 0, cohX = 0, cohY = 0, nSep = 0, nAli = 0, nCoh = 0;
+
+      for (j = 0; j < boids.length; j++) {
+        if (i === j) continue;
+        o = boids[j];
+        dx = o.x - b.x; dy = o.y - b.y; d2 = dx * dx + dy * dy;
+        if (d2 > 0 && d2 < PERCEPTION * PERCEPTION) {
+          aliX += o.vx; aliY += o.vy; nAli++;
+          cohX += o.x; cohY += o.y; nCoh++;
+          if (d2 < SEPARATION * SEPARATION) { inv = 1 / Math.sqrt(d2); sepX -= dx * inv; sepY -= dy * inv; nSep++; }
+        }
+      }
+
+      var ax = 0, ay = 0;
+      if (nSep > 0) { s = limit(sepX / nSep, sepY / nSep, MAX_SPEED); s = limit(s[0] - b.vx, s[1] - b.vy, MAX_FORCE); ax += s[0] * W_SEP; ay += s[1] * W_SEP; }
+      if (nAli > 0) { s = limit(aliX / nAli, aliY / nAli, MAX_SPEED); s = limit(s[0] - b.vx, s[1] - b.vy, MAX_FORCE); ax += s[0] * W_ALI; ay += s[1] * W_ALI; }
+      if (nCoh > 0) { s = limit(cohX / nCoh - b.x, cohY / nCoh - b.y, MAX_SPEED); s = limit(s[0] - b.vx, s[1] - b.vy, MAX_FORCE); ax += s[0] * W_COH; ay += s[1] * W_COH; }
+
+      // --- the memory rule: steer away from where I have recently been ------------
+      if (MEMORY > 0 && b.count > 0) {
+        var mx = 0, my = 0, used = 0;
+        var n = Math.min(MEMORY, b.count);
+        for (k = 1; k <= n; k++) {
+          var idx = (b.head - k + MEM_CAP) % MEM_CAP;
+          dx = b.x - b.px[idx]; dy = b.y - b.py[idx]; d2 = dx * dx + dy * dy;
+          if (d2 > 1 && d2 < MEM_RADIUS * MEM_RADIUS) {
+            var d = Math.sqrt(d2);
+            var age = 1 - k / (n + 1);              // recent = 1, oldest ~ 0
+            var w = age * (1 - d / MEM_RADIUS);     // near = strong
+            mx += dx / d * w; my += dy / d * w; used++;
+          }
+        }
+        if (used > 0) { s = limit(mx, my, MAX_FORCE); ax += s[0] * W_MEM; ay += s[1] * W_MEM; }
+      }
+
+      if (b.x < MARGIN) ax += (MARGIN - b.x) / MARGIN * MAX_FORCE * WALLK;
+      if (b.x > W - MARGIN) ax -= (b.x - (W - MARGIN)) / MARGIN * MAX_FORCE * WALLK;
+      if (b.y < MARGIN) ay += (MARGIN - b.y) / MARGIN * MAX_FORCE * WALLK;
+      if (b.y > H - MARGIN) ay -= (b.y - (H - MARGIN)) / MARGIN * MAX_FORCE * WALLK;
+
+      if (mouse.active) {
+        dx = b.x - mouse.x; dy = b.y - mouse.y; d2 = dx * dx + dy * dy;
+        if (d2 > 0 && d2 < 150 * 150) { var dd = Math.sqrt(d2); var push = (1 - dd / 150) * MAX_FORCE * 3; ax += dx / dd * push; ay += dy / dd * push; }
+      }
+
+      s = limit(ax, ay, MAX_FORCE * 1.8); b.vx += s[0]; b.vy += s[1];
+      s = limit(b.vx, b.vy, MAX_SPEED); b.vx = s[0]; b.vy = s[1];
+    }
+
+    for (i = 0; i < boids.length; i++) {
+      b = boids[i];
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < 0) b.x = 0; else if (b.x > W) b.x = W;
+      if (b.y < 0) b.y = 0; else if (b.y > H) b.y = H;
+      if (frame % MEM_EVERY === 0) {           // lay down a memory
+        b.px[b.head] = b.x; b.py[b.head] = b.y;
+        b.head = (b.head + 1) % MEM_CAP; if (b.count < MEM_CAP) b.count++;
+      }
+      cx += b.x; cy += b.y;
+    }
+    cx /= boids.length; cy /= boids.length;
+    var sum = 0;
+    for (i = 0; i < boids.length; i++) { dx = boids[i].x - cx; dy = boids[i].y - cy; sum += Math.sqrt(dx * dx + dy * dy); }
+    spread = spread * 0.95 + (sum / boids.length) * 0.05;
+    frame++;
+  }
+
+  function draw() {
+    ctx.fillStyle = "rgba(11, 13, 18, 0.22)";
+    ctx.fillRect(0, 0, W, H);
+
+    // faint memories, so you can see what the flock is avoiding
+    if (MEMORY > 0) {
+      ctx.fillStyle = "rgba(120, 140, 190, 0.045)";
+      for (var i = 0; i < boids.length; i += 3) {
+        var b = boids[i], n = Math.min(MEMORY, b.count);
+        for (var k = 1; k <= n; k += 6) {
+          var idx = (b.head - k + MEM_CAP) % MEM_CAP;
+          ctx.fillRect(b.px[idx], b.py[idx], 1.5, 1.5);
+        }
+      }
+    }
+
+    ctx.lineWidth = 1.4; ctx.lineCap = "round";
+    for (var j = 0; j < boids.length; j++) {
+      var q = boids[j];
+      var sp = Math.sqrt(q.vx * q.vx + q.vy * q.vy), ang = Math.atan2(q.vy, q.vx), len = 3 + sp * 2.2;
+      var t = Math.min(sp / MAX_SPEED, 1);
+      ctx.strokeStyle = "rgba(" + Math.round(120 + 110 * t) + "," + Math.round(150 + 80 * t) + "," + Math.round(205 + 40 * t) + ",0.9)";
+      ctx.beginPath(); ctx.moveTo(q.x, q.y); ctx.lineTo(q.x - Math.cos(ang) * len, q.y - Math.sin(ang) * len); ctx.stroke();
+    }
+    document.getElementById("stat").textContent = "spread " + spread.toFixed(0) + " px";
+  }
+
+  function loop() { if (!paused) { step(); draw(); } requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
