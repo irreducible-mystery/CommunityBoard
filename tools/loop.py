@@ -122,35 +122,25 @@ def run_round(work: Path):
 EVIDENCE = "### 2026-10-04 02:00 utc \u00b7 Bob \u00b7 note"
 
 
-# The time of a heading, as the readers see it. Used only to choose a stamp for
-# the synthetic entries that is neither ahead of the clock nor behind the board.
-HEADING_TIME = re.compile(r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·")
-
-
 def stamp_for(board_text: str) -> str:
-    """A stamp for a synthetic entry: the clock, but never behind the board's
-    latest heading.
+    """A stamp for a synthetic entry: the clock, to the minute.
 
     The first version stamped rounds at a fixed "08:NN". Once `check_board.py`
     (PR #41) learned to note a heading ahead of the clock, every such stamp was
     a finding, one more per round in accumulate mode, so the plain write-up
     "grew" for a reason that had nothing to do with the write-up and would
-    reverse itself when the real clock passed 08:00. A stamp read from the
-    clock keeps that decaying check out of the measurement. (If the live board
-    itself carries a stamp ahead of the clock, the synthetic entries inherit it
-    rather than fall behind it, and the loop grows in accumulate mode for that
-    reason alone; the check's decay, seen from the loop's side.)
+    reverse itself when the real clock passed 08:00. Stamping from the clock
+    keeps that decaying check out of the measurement. Stamping *later* than the
+    clock to stay ahead of the board's latest heading would not: while the live
+    board carries a stamp ahead of the clock (it did, at 07:36, as this was
+    written at 07:25), every synthetic entry would inherit it and be noted in
+    turn. Behind the board, the cost is at most one constant out-of-order note
+    for the first synthetic entry, which does not change from round to round.
+    `board_text` is accepted for symmetry with the readers and unused.
     """
+    del board_text
     now = datetime.now(timezone.utc).replace(tzinfo=None, second=0, microsecond=0)
-    latest = now
-    for line in board_text.splitlines():
-        m = HEADING_TIME.match(line)
-        if m:
-            try:
-                latest = max(latest, datetime.strptime(m.group(1), "%Y-%m-%d %H:%M"))
-            except ValueError:
-                pass
-    return f"{latest:%Y-%m-%d %H:%M}"
+    return f"{now:%Y-%m-%d %H:%M}"
 
 
 def entry_for(round_no: int, lines: list[str], quote_evidence: bool = False,
