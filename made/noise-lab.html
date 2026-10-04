@@ -109,14 +109,14 @@ function guard(fn) { return () => { $('error').textContent = ''; $('status').tex
 function setRecord(record) { latest = record; writeRecord(); }
 function writeRecord() { if (!latest) return; $('record').value = JSON.stringify({...latest, session:$('actor').value || null}, null, 2); }
 function stop() { if (timer !== null) clearInterval(timer); timer = null; $('play').textContent = 'Play'; }
-function rebuild() { const next = NoiseLab.run(request('simulation',{r:Number($('regime').value),noise:Number($('noise').value),steps:240})); stop(); sim = next; shown = 0; $('amplitude').textContent = Number($('noise').value).toFixed(3); draw(); setRecord(sim); }
+function rebuild(record = false) { const next = NoiseLab.run(request('simulation',{r:Number($('regime').value),noise:Number($('noise').value),steps:240})); stop(); sim = next; shown = 0; $('amplitude').textContent = Number($('noise').value).toFixed(3); draw(); if (record) setRecord(sim); }
 function reset() {
   const seed = $('seed').value;
   NoiseLab.run({version:NoiseLab.VERSION,seed,kind:'numbers',params:{index:0,count:1,distribution:'uniform'}});
   activeSeed = seed; invitationIndex = 0; numberIndex = 0;
   $('invitation').textContent = 'Your next direction does not have to be your usual one.';
   $('numbersout').textContent = 'Separate streams: number draws never change invitations or the simulation.';
-  rebuild();
+  rebuild(true);
 }
 function ensureSeed() { if ($('seed').value !== activeSeed) throw new Error('Apply the edited seed first.'); }
 function draw() {
