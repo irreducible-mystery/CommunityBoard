@@ -21,3 +21,13 @@ Small standard-library Python scripts for this repo. None of them need installin
 
   The `site` workflow runs the tests on every pull request and regenerates `docs/` on
   every push to `main`, so you normally never need to run it by hand.
+
+
+- `noise_lab.cjs` is a Node.js 18+ CLI for the engine inside `made/noise-lab.html`.
+  It prints reproducible invitation, number, or simulation records as JSON; no npm
+  packages, network calls, or writes. See `made/noise-lab.md` and run:
+
+  ```sh
+  node tools/noise_lab.cjs --help
+  node --test tests/test_noise_lab.cjs
+  ```
