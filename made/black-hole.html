@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A black hole</title>
+<!--
+  black-hole.html — Claude (session …HGgwHg2t), 2026-10-04, for the CommunityBoard.
+  The repository owner asked for a black hole. This is one: a Schwarzschild black hole
+  of mass M, seen by a camera at 60M, drawn by tracing a light ray backwards from every
+  pixel through the curved geometry (the Binet equation for null geodesics,
+  u'' + u = 3Mu², integrated with RK4 in the ray's own plane). A thin accretion disk
+  between the innermost stable orbit (6M) and 18M is shaded by the exact Schwarzschild
+  redshift factor for a circularly orbiting emitter, g = sqrt(1 - 3M/r) / (1 - Ω b_z),
+  so one side is blue-shifted and bright and the other red-shifted and dim. Behind it,
+  a seeded star field, lensed. The page checks its own physics on load: the shadow's
+  critical impact parameter against 3√3 M and the deflection of a distant ray against
+  Einstein's 4M/b. Self-contained: no network, no dependencies. G = c = 1.
+-->
+<style>
+  :root { --bg:#07080c; --fg:#d9dbe3; --mute:#7c8291; --line:#1f2330; --acc:#8ab4e8; --ok:#7bd389; --bad:#f08a7c; }
+  html, body { margin:0; background:var(--bg); color:var(--fg);
+    font: 15px/1.55 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  main { max-width: 960px; margin: 0 auto; padding: 22px 16px 48px; }
+  h1 { font-weight: normal; font-size: 26px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 18px; margin: 28px 0 8px; color: var(--mute); }
+  p { max-width: 70ch; margin: 8px 0; }
+  .dim { color: var(--mute); }
+  .mono { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  canvas { display:block; width:100%; max-width: 928px; height:auto; border:1px solid var(--line); border-radius:4px; background:#000; }
+  .panel { display:flex; flex-wrap:wrap; gap: 10px 22px; align-items:center; margin: 12px 0; }
+  .panel label { display:flex; align-items:center; gap:8px; }
+  input[type=range] { width: 220px; accent-color: var(--acc); }
+  input[type=text] { font: inherit; font-size: 14px; padding: 4px 8px; border: 1px solid var(--line);
+    border-radius: 4px; background: transparent; color: var(--fg); width: 16ch; }
+  button { font: inherit; font-size: 14px; padding: 5px 12px; border: 1px solid var(--line); border-radius: 4px;
+    background: transparent; color: var(--fg); cursor: pointer; }
+  button:hover { border-color: var(--acc); }
+  .readout { display:grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin: 12px 0; max-width: 928px; }
+  .readout div { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  .readout small { display:block; color: var(--mute); font: 11px/1.4 ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: .08em; text-transform: uppercase; }
+  .readout b { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  pre { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; overflow-x: auto;
+    max-width: 928px; color: var(--mute); white-space: pre-wrap; }
+  .pass { color: var(--ok); } .fail { color: var(--bad); font-weight: 600; }
+  details summary { cursor: pointer; color: var(--acc); }
+</style>
+</head>
+<body>
+<main>
+  <h1>A black hole</h1>
+  <p class="dim">Mass M, seen from 60M. Every pixel is a light ray traced backwards through the curved
+    space until it falls in, hits the disk, or escapes to the stars. Nothing here is a picture of a
+    black hole; it is the geometry, drawn.</p>
+
+  <div class="panel">
+    <label>viewing angle above the disk <input id="incl" type="range" min="0" max="89" step="1" value="12">
+      <span id="inclv" class="mono">12°</span></label>
+    <label><input id="disk" type="checkbox" checked> disk</label>
+    <label><input id="shift" type="checkbox" checked> redshift &amp; Doppler</label>
+    <label><input id="ring" type="checkbox"> mark the shadow (3√3 M)</label>
+    <label>stars <input id="seed" type="text" value="room-for-chance"></label>
+    <button id="render">render</button>
+    <span id="status" class="mono dim"></span>
+  </div>
+
+  <canvas id="c" width="464" height="290"></canvas>
+
+  <div class="readout">
+    <div><small>horizon</small><b>2 M</b></div>
+    <div><small>photon sphere</small><b>3 M</b></div>
+    <div><small>shadow radius</small><b>3√3 M ≈ 5.196 M</b></div>
+    <div><small>disk</small><b>6 M to 18 M</b></div>
+    <div><small>rays traced</small><b id="o_rays">–</b></div>
+    <div><small>fell in</small><b id="o_in">–</b></div>
+  </div>
+
+  <p>Three things to look for. The dark disc in the middle is not the horizon (2M) but the
+    <em>shadow</em>: every ray aimed closer than 3√3 M ≈ 5.2M falls in, so the hole looks two and a half
+    times bigger than it is. The disk appears both in front of the hole and <em>above and below</em> it:
+    those are the far side of the disk, whose light bends over and under the hole to reach you. And one
+    side is brighter and bluer, the side rotating toward you; at 0° that asymmetry is at its strongest.
+    Tilt the view toward 89° and the disk becomes a ring with a faint inner echo, the light that went
+    once around the photon sphere.</p>
+
+  <h2>The page checks its own claims</h2>
+  <p class="dim">Computed on load with the same integrator that drew the picture. If a line says FAIL,
+    believe the line and not the prose.</p>
+  <pre id="checks" class="mono">running…</pre>
+
+  <h2>Record</h2>
+  <pre id="rec" class="mono">Press "render" for a JSON record of this view (black-hole/1).</pre>
+
+  <details><summary>What is computed, exactly</summary>
+    <p class="dim">Units with G = c = 1 and mass M = 1. A light ray in Schwarzschild spacetime stays in a
+      plane through the centre, and in that plane u = 1/r obeys u'' + u = 3Mu² with respect to the
+      angle φ. For each pixel the camera direction gives the plane, the impact parameter
+      b = |position × direction|, and the starting slope; RK4 integrates until u exceeds 1/2M (fell in),
+      the ray crosses the disk's plane between 6M and 18M (hit the disk), or r passes 60M moving
+      outward (escaped, and the final tangent picks a star). A ray that winds more than two full turns
+      is counted as fallen in. Disk emission goes as r<sup>−3</sup> with temperature r<sup>−3/4</sup>,
+      shifted and dimmed by g = √(1 − 3M/r) / (1 − Ω b<sub>z</sub>), where Ω = √(M/r³) is the orbital
+      angular velocity and b<sub>z</sub> the ray's impact parameter about the disk's axis; observed
+      intensity scales as g³. The stars are a seeded hash of direction, the same FNV-1a → Mulberry32
+      scheme as noise-lab.html, so the same seed gives the same sky.</p>
+  </details>
+  <p class="dim mono" style="margin-top:20px">Claude session …HGgwHg2t, 2026-10-04. Asked for by the person who keeps this board.</p>
+</main>
+
+<script id="bh-engine">
+/* Pure engine: Schwarzschild null geodesics, no DOM. Shared by the page and tests/test_black_hole.cjs. */
+const BH = (() => {
+  "use strict";
+  const M = 1;
+
+  // Seeded randomness: FNV-1a over a JSON tuple, then Mulberry32 (the scheme noise-lab.html uses).
+  function rng(seed, stream, index) {
+    let a = 2166136261;
+    const s = JSON.stringify([seed, stream, index || 0]);
+    for (let i = 0; i < s.length; i++) { a ^= s.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return () => {
+      a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  // u'' = 3 M u^2 - u, written as a first-order system in (u, w = du/dφ).
+  function f(u, w) { return [w, 3 * M * u * u - u]; }
+  function rk4(u, w, h) {
+    const k1 = f(u, w);
+    const k2 = f(u + 0.5 * h * k1[0], w + 0.5 * h * k1[1]);
+    const k3 = f(u + 0.5 * h * k2[0], w + 0.5 * h * k2[1]);
+    const k4 = f(u + h * k3[0], w + h * k3[1]);
+    return [u + h / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]),
+            w + h / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1])];
+  }
+
+  /**
+   * Trace one ray in its own plane.
+   *   r0: starting radius; dr, dt: radial and tangential components of the unit direction (dt > 0).
+   *   onStep(phi, u, uPrev, phiPrev): optional callback for the 3D caller (disk crossings).
+   * Returns {fate: 'horizon'|'escape'|'trapped'|'disk', phi, u, w, turns}.
+   */
+  function trace(r0, dr, dt, opts) {
+    const o = opts || {};
+    const rFar = o.rFar || 60 * M, maxTurns = o.maxTurns || 2, onStep = o.onStep;
+    let u = 1 / r0, w = -dr / (r0 * Math.max(dt, 1e-9)), phi = 0;
+    for (let i = 0; i < 20000; i++) {
+      // Step size: fine near the hole, coarse far away.
+      const h = Math.min(0.02, Math.max(0.0015, 0.08 * Math.min(1, 1 / (u * 6 * M + 1e-9))));
+      const prevU = u, prevPhi = phi;
+      const next = rk4(u, w, h);
+      u = next[0]; w = next[1]; phi += h;
+      if (onStep) { const stop = onStep(phi, u, prevU, prevPhi); if (stop) return { fate: "disk", phi, u, w, turns: phi / (2 * Math.PI), hit: stop }; }
+      if (u >= 1 / (2 * M)) return { fate: "horizon", phi, u, w, turns: phi / (2 * Math.PI) };
+      if (u <= 1 / rFar && w < 0) return { fate: "escape", phi, u, w, turns: phi / (2 * Math.PI) };
+      if (phi > maxTurns * 2 * Math.PI) return { fate: "trapped", phi, u, w, turns: phi / (2 * Math.PI) };
+    }
+    return { fate: "trapped", phi, u, w, turns: phi / (2 * Math.PI) };
+  }
+
+  // A ray from far away with impact parameter b: start at r0 heading inward, b = r0 * dt.
+  function fromImpact(b, r0, opts) {
+    const dt = b / r0, dr = -Math.sqrt(Math.max(0, 1 - dt * dt));
+    return trace(r0, dr, dt, opts);
+  }
+
+  // Total deflection of an escaping ray: the swept angle minus the straight-line π.
+  // Both ends are at finite radius r0, so the straight-line reference is 2·asin(b/r0) short of π.
+  function deflection(b, r0) {
+    r0 = r0 || 2000 * M;
+    const res = fromImpact(b, r0, { rFar: r0, maxTurns: 3 });
+    if (res.fate !== "escape") return NaN;
+    // Final tangent angle: the ray's direction in the plane at exit.
+    const r = 1 / res.u, rp = -res.w / (res.u * res.u);
+    const tx = rp * Math.cos(res.phi) - r * Math.sin(res.phi), ty = rp * Math.sin(res.phi) + r * Math.cos(res.phi);
+    const outAngle = Math.atan2(ty, tx);          // direction of travel at exit
+    const inAngle = Math.atan2(dtOf(b, r0), -Math.sqrt(1 - (b / r0) ** 2)); // direction at entry (phi = 0)
+    let d = outAngle - inAngle;
+    while (d < 0) d += 2 * Math.PI;
+    while (d > 2 * Math.PI) d -= 2 * Math.PI;
+    return d;
+  }
+  function dtOf(b, r0) { return b / r0; }
+
+  // Critical impact parameter by bisection: the largest b that still falls in.
+  function criticalB(r0) {
+    r0 = r0 || 200 * M;
+    let lo = 4 * M, hi = 7 * M;
+    for (let i = 0; i < 40; i++) {
+      const mid = 0.5 * (lo + hi);
+      const fate = fromImpact(mid, r0, { rFar: r0 * 2, maxTurns: 6 }).fate;
+      if (fate === "escape") hi = mid; else lo = mid;
+    }
+    return 0.5 * (lo + hi);
+  }
+
+  // Redshift factor for light leaving a circular orbit at radius r with the ray's
+  // impact parameter about the disk axis b_z. g = sqrt(1 - 3M/r) / (1 - Ω b_z), Ω = sqrt(M/r^3).
+  function redshift(r, bz) { return Math.sqrt(Math.max(0, 1 - 3 * M / r)) / (1 - Math.sqrt(M / (r * r * r)) * bz); }
+
+  function selfCheck() {
+    const out = [];
+    const bc = criticalB();
+    const want = 3 * Math.sqrt(3) * M;
+    out.push({ name: "shadow edge: critical impact parameter = 3√3 M", got: bc.toFixed(4), want: want.toFixed(4), ok: Math.abs(bc - want) / want < 0.005 });
+    const b = 40 * M, d = deflection(b), e1 = 4 * M / b, e2 = e1 + 15 * Math.PI * M * M / (4 * b * b);
+    out.push({ name: "deflection at b = 40M: Einstein's 4M/b (+ second order)", got: d.toFixed(5), want: e2.toFixed(5) + " (first order " + e1.toFixed(5) + ")", ok: Math.abs(d - e2) / e2 < 0.02 });
+    const b2 = 200 * M, d2 = deflection(b2), e3 = 4 * M / b2 + 15 * Math.PI * M * M / (4 * b2 * b2);
+    out.push({ name: "deflection at b = 200M: 4M/b + 15πM²/4b², within 0.2%", got: d2.toFixed(6), want: e3.toFixed(6), ok: Math.abs(d2 - e3) / e3 < 0.002 });
+    const below = [4, 4.5, 5, 5.15].every(x => fromImpact(x, 200, { maxTurns: 6 }).fate !== "escape");
+    const above = [5.25, 5.5, 6, 8, 12].every(x => fromImpact(x, 200, { maxTurns: 6 }).fate === "escape");
+    out.push({ name: "every ray inside the critical b falls in; every ray outside escapes", got: (below && above) ? "yes" : "no", want: "yes", ok: below && above });
+    const g0 = redshift(6, 0), gIn = redshift(6, 5), gOut = redshift(6, -5);
+    out.push({ name: "redshift at the inner edge: g < 1 face-on, approaching side brighter than receding", got: `${g0.toFixed(3)} / ${gIn.toFixed(3)} / ${gOut.toFixed(3)}`, want: "< 1, and middle > last", ok: g0 < 1 && gIn > gOut });
+    return out;
+  }
+
+  return { M, rng, trace, fromImpact, deflection, criticalB, redshift, selfCheck };
+})();
+if (typeof module !== "undefined") module.exports = BH;
+</script>
+
+<script>
+(function () {
+  "use strict";
+  const M = BH.M, D = 60 * M, R_IN = 6 * M, R_OUT = 18 * M, FOV = 0.78;
+  const canvas = document.getElementById("c"), ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  const $ = id => document.getElementById(id);
+  let rendering = false, stats = null;
+
+  // ---- star field: a hash of direction, so the same seed gives the same sky ----
+  let starSeed = "room-for-chance";
+  function starAt(dir) {
+    const theta = Math.acos(Math.max(-1, Math.min(1, dir[2]))), phi = Math.atan2(dir[1], dir[0]);
+    const cell = 0.012; // radians per cell
+    const nj = Math.ceil(2 * Math.PI / cell);          // cells around, so neighbours wrap at ±π
+    const ci = Math.floor(theta / cell), cj = Math.floor((phi + Math.PI) / cell);
+    let best = 0;
+    for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+      const wj = ((cj + dj) % nj + nj) % nj;           // wrapped column index
+      const r = BH.rng(starSeed, "sky", (ci + di) * 100003 + wj);
+      if (r() > 0.11) continue;                       // most cells are empty
+      const st = (ci + di + r()) * cell, sp = (cj + dj + r()) * cell - Math.PI, mag = r();
+      const sd = [Math.sin(st) * Math.cos(sp), Math.sin(st) * Math.sin(sp), Math.cos(st)];
+      const dot = dir[0] * sd[0] + dir[1] * sd[1] + dir[2] * sd[2];
+      const ang = Math.acos(Math.max(-1, Math.min(1, dot)));
+      const sigma = 0.0025 + 0.004 * mag * mag;
+      const v = Math.exp(-(ang * ang) / (2 * sigma * sigma)) * (0.35 + 0.65 * mag * mag);
+      if (v > best) best = v;
+    }
+    return best;
+  }
+
+  // ---- disk colour: temperature from radius and redshift, intensity from r^-3 and g^3 ----
+  function diskColor(r, g, shifted) {
+    const T = Math.pow(R_IN / r, 0.75) * (shifted ? g : 1);          // relative temperature
+    const I = Math.pow(R_IN / r, 3) * (shifted ? g * g * g : 1);      // relative intensity
+    // crude blackbody ramp: cool red → orange → yellow-white → blue-white
+    const t = Math.max(0, Math.min(1.6, T));
+    const red = Math.min(1, 0.55 + 0.45 * t), grn = Math.max(0, Math.min(1, -0.25 + 0.95 * t)), blu = Math.max(0, Math.min(1, -0.65 + 1.1 * t));
+    const k = Math.min(1, 0.25 + 0.75 * Math.pow(I, 0.45));
+    return [red * k, grn * k, blu * k];
+  }
+
+  let pending = false;
+  function render() {
+    if (rendering) { pending = true; return; }   // re-render when the current one finishes
+    rendering = true;
+    const incl = Number($("incl").value) * Math.PI / 180, wantDisk = $("disk").checked, shifted = $("shift").checked;
+    starSeed = $("seed").value || "room-for-chance";
+    // camera above the disk plane by `incl`, looking at the origin; disk normal is +z
+    const C = [D * Math.cos(incl), 0, D * Math.sin(incl)];
+    const fwd = norm([-C[0], -C[1], -C[2]]);
+    const right = norm(cross(fwd, [0, 0, 1]));
+    const up = cross(right, fwd);
+    const img = ctx.createImageData(W, H), px = img.data;
+    const counts = { rays: 0, horizon: 0, disk: 0, escape: 0, trapped: 0 };
+    let y = 0;
+    const t0 = performance.now();
+    function rows() {
+      const until = performance.now() + 40;
+      while (y < H && performance.now() < until) {
+        for (let x = 0; x < W; x++) {
+          const sx = (x + 0.5) / W - 0.5, sy = 0.5 - (y + 0.5) / H;
+          const d = norm([fwd[0] + FOV * (sx * right[0] + sy * (H / W) * up[0]),
+                          fwd[1] + FOV * (sx * right[1] + sy * (H / W) * up[1]),
+                          fwd[2] + FOV * (sx * right[2] + sy * (H / W) * up[2])]);
+          const col = shade(C, d, wantDisk, shifted, counts);
+          const k = (y * W + x) * 4;
+          px[k] = Math.min(255, col[0] * 255); px[k + 1] = Math.min(255, col[1] * 255); px[k + 2] = Math.min(255, col[2] * 255); px[k + 3] = 255;
+          counts.rays++;
+        }
+        y++;
+      }
+      ctx.putImageData(img, 0, 0);
+      $("status").textContent = y < H ? `rendering… ${Math.round(100 * y / H)}%` : `rendered in ${((performance.now() - t0) / 1000).toFixed(1)} s`;
+      if (y < H) { requestAnimationFrame(rows); return; }
+      if ($("ring").checked) {
+        const alpha = Math.asin(3 * Math.sqrt(3) * M / D), rpx = Math.tan(alpha) / FOV * W;
+        ctx.strokeStyle = "rgba(138,180,232,.8)"; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(W / 2, H / 2, rpx, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+      }
+      stats = { incl: Number($("incl").value), disk: wantDisk, shifted, seed: starSeed, counts, seconds: +((performance.now() - t0) / 1000).toFixed(2) };
+      $("o_rays").textContent = counts.rays.toLocaleString("en-US");
+      $("o_in").textContent = `${(100 * (counts.horizon + counts.trapped) / counts.rays).toFixed(1)}%`;
+      rendering = false;
+      if (pending) { pending = false; render(); }
+    }
+    requestAnimationFrame(rows);
+  }
+
+  // One pixel: trace the ray in its plane, keep its 3D position for disk crossings.
+  function shade(C, d, wantDisk, shifted, counts) {
+    const e1 = norm(C);                               // radial basis vector at the camera
+    const dr = dot(d, e1);
+    let e2 = sub(d, scale(e1, dr));
+    let dt = Math.hypot(e2[0], e2[1], e2[2]);
+    if (dt < 1e-9) { e2 = norm(cross(e1, [0, 0, 1])); dt = 1e-9; } else e2 = scale(e2, 1 / dt);
+    const L = cross(C, d), bz = L[2];                 // angular momentum per unit energy; z-component
+    let hit = null;
+    const onStep = !wantDisk ? null : (phi, u, uPrev, phiPrev) => {
+      const r = 1 / u, rp = 1 / uPrev;
+      const z = r * (Math.cos(phi) * e1[2] + Math.sin(phi) * e2[2]);
+      const zp = rp * (Math.cos(phiPrev) * e1[2] + Math.sin(phiPrev) * e2[2]);
+      if ((z < 0) !== (zp < 0)) {
+        const t = zp / (zp - z), rc = rp + (r - rp) * t;
+        if (rc >= R_IN && rc <= R_OUT) { hit = rc; return true; }
+      }
+      return false;
+    };
+    const res = BH.trace(D, dr, dt, { onStep, rFar: 2 * D });
+    if (res.fate === "disk") { counts.disk++; return diskColor(hit, BH.redshift(hit, bz), shifted); }
+    if (res.fate === "horizon" || res.fate === "trapped") { counts[res.fate]++; return [0, 0, 0]; }
+    counts.escape++;
+    const r = 1 / res.u, rp = -res.w / (res.u * res.u);
+    const tx = rp * Math.cos(res.phi) - r * Math.sin(res.phi), ty = rp * Math.sin(res.phi) + r * Math.cos(res.phi);
+    const out = norm([tx * e1[0] + ty * e2[0], tx * e1[1] + ty * e2[1], tx * e1[2] + ty * e2[2]]);
+    const s = starAt(out);
+    return [s * 0.95, s * 0.95, s];
+  }
+
+  function norm(v) { const n = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / n, v[1] / n, v[2] / n]; }
+  function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function scale(a, s) { return [a[0] * s, a[1] * s, a[2] * s]; }
+
+  function record() {
+    const rec = { request: { version: "black-hole/1", kind: "view", params: { M, camera_distance: D, inclination_deg: stats ? stats.incl : Number($("incl").value), disk: [R_IN, R_OUT], seed: starSeed, fov: FOV, width: W, height: H } },
+                  result: stats ? { counts: stats.counts, seconds: stats.seconds, critical_b: +BH.criticalB().toFixed(4) } : null };
+    $("rec").textContent = JSON.stringify(rec, null, 1);
+  }
+
+  $("incl").addEventListener("input", () => { $("inclv").textContent = $("incl").value + "°"; });
+  $("incl").addEventListener("change", render);
+  ["disk", "shift", "ring"].forEach(id => $(id).addEventListener("change", render));
+  $("seed").addEventListener("change", render);
+  $("render").addEventListener("click", () => { render(); setTimeout(record, 50); });
+
+  // self-check first (fast), then the picture
+  const checks = BH.selfCheck();
+  $("checks").innerHTML = checks.map(c => `${c.ok ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>'}  ${c.name}\n        got ${c.got}   wanted ${c.want}`).join("\n")
+    + `\n\n${checks.filter(c => !c.ok).length === 0 ? '<span class="pass">' + checks.length + ' checks, 0 failed.</span>' : '<span class="fail">' + checks.filter(c => !c.ok).length + ' FAILED.</span>'}`;
+  window.BLACKHOLE = { render, record, checks };
+  render();
+})();
+</script>
+</body>
+</html>

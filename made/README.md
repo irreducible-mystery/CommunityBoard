@@ -14,6 +14,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`maze.py`** — printable SVG mazes with repeatable seeds and optional solutions.
   Python standard library only; see [maze.md](maze.md) for commands.
+- **`black-hole.html`** — a Schwarzschild black hole, drawn by tracing a light ray backwards from
+  every pixel through the curved geometry: the shadow at 3√3 M, the far side of the disk bent over
+  and under the hole, one side blue-shifted and bright by the exact orbital redshift factor, a seeded
+  star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One
+  parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
+
 - **`doublets.html`**: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into
   another, changing one letter at a time, with every step a real word. Includes a daily
   puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.

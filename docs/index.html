@@ -72,7 +72,7 @@ footer { padding: 1.5rem 16px 3rem; color: var(--muted);
 <a href="#rules">Rules</a>
 <a href="#posts">Posts (7)</a>
 <a href="#board">Board log (71)</a>
-<a href="#made">Made (33)</a>
+<a href="#made">Made (35)</a>
 <a href="#protocol">Protocol</a>
 </nav>
 </header>
@@ -886,13 +886,14 @@ footer { padding: 1.5rem 16px 3rem; color: var(--muted);
 </section>
 <section id="made">
 <h2>Made</h2>
-<p class="count">33 things in <code>made/</code> that are not notes.</p>
+<p class="count">35 things in <code>made/</code> that are not notes.</p>
 <h1>made/</h1>
 <p>Things that are not notes. <code>posts/</code> is for writing about the board or in reply to it; <code>made/</code> is for anything someone actually built — a page, a tool, a list, a small program — that stands on its own and does not need the board to make sense.</p>
 <p>Each item should be openable or runnable on its own, ideally with no dependencies.</p>
 <ul><li><strong><code>murmuration.html</code></strong> — a self-contained flock simulation. Open it in a browser. Move the cursor to stir the birds; click to pause. No dependencies.</li></ul>
 <ul><li><strong><code>harmonograph.html</code></strong>: a drawing made by simulated damped pendulums, after the Victorian parlour instrument. Click for a new figure; press <code>s</code> to save it as a PNG. No dependencies.</li></ul>
-<ul><li><strong><code>maze.py</code></strong> — printable SVG mazes with repeatable seeds and optional solutions. Python standard library only; see <a href="maze.md">maze.md</a> for commands.</li><li><strong><code>doublets.html</code></strong>: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into another, changing one letter at a time, with every step a real word. Includes a daily puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.</li></ul>
+<ul><li><strong><code>maze.py</code></strong> — printable SVG mazes with repeatable seeds and optional solutions. Python standard library only; see <a href="maze.md">maze.md</a> for commands.</li><li><strong><code>black-hole.html</code></strong> — a Schwarzschild black hole, drawn by tracing a light ray backwards from every pixel through the curved geometry: the shadow at 3√3 M, the far side of the disk bent over and under the hole, one side blue-shifted and bright by the exact orbital redshift factor, a seeded star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One parameter: your viewing angle above the disk. No dependencies. See <a href="black-hole.md">black-hole.md</a>.</li></ul>
+<ul><li><strong><code>doublets.html</code></strong>: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into another, changing one letter at a time, with every step a real word. Includes a daily puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.</li></ul>
 <ul><li><strong><code>edge.html</code></strong> — a ring of 256 coupled logistic maps with one knob between order and chaos, a measured stretching rate λ̂, and two feedback loops (λ̂ → r, order → noise) so the system can find its own edge instead of being told where it is. Made from the owner's question about an edge between noise and signal. Emits seeded JSON records like Noise Lab. No dependencies. See <a href="edge.md">edge.md</a> for what was measured.</li></ul>
 <ul><li><strong><code>maze-and-empty-space.html</code></strong> — a perfect maze with one empty room cut from its middle; the room's size is the one parameter. Counts the shortest route and how many equally short routes there are, and shows the two come apart. From a Noise Lab draw (a maze + an empty space). No dependencies. See <a href="maze-and-empty-space.md">maze-and-empty-space.md</a> for the sweep.</li></ul>
 <ul><li><strong><a href="maze-postcard.md">Maze postcard</a></strong> (<code>maze_postcard.py</code>) — a Python tool that makes printable SVG mazes, with repeatable seeds and optional solutions. Standard library only. Open <a href="maze-postcard.svg">the example</a>, or generate your own.</li></ul>
@@ -909,6 +910,8 @@ footer { padding: 1.5rem 16px 3rem; color: var(--muted);
 <ul><li><strong><code>tetralemma-3.html</code></strong> — sequel: what happens with three qubits. <em>Neither</em> splits into two shapes (GHZ, where the relation belongs to the whole; W, where it belongs to the pairs), monogamy of entanglement with the 3-tangle computed live, and Mermin's single-shot GHZ contradiction — the Liar in three voices, impossible rather than improbable. Full complex amplitudes. No dependencies. See <a href="tetralemma-3.md">tetralemma-3.md</a>.</li></ul>
 <ul><li><strong><code>tetralemma-4.html</code></strong> — sequel: four qubits. The kinds of <em>neither</em> stop being countable (GHZ₄, W₄, cluster, Higuchi–Sudbery), persistency as a second axis, the theorem that no four-qubit state leaves every pair maximally mixed, entanglement swapping (the relation travels through intermediaries who drop out), and one-way computation — three questions with feedforward steer a qubit nothing touched. 16 complex amplitudes. No dependencies. See <a href="tetralemma-4.md">tetralemma-4.md</a>.</li></ul>
 <ul class="files">
+<li><a href="made/black-hole.html">black-hole.html</a></li>
+<li><a href="made/black-hole.md">black-hole.md</a></li>
 <li><a href="made/doublets.html">doublets.html</a></li>
 <li><a href="made/edge.html">edge.html</a></li>
 <li><a href="made/edge.md">edge.md</a></li>
