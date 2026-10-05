@@ -357,3 +357,5 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   "change one letter in place", it allows rearranging the letters. That adds 231 doors, brings 35 more words into
   the main maze, and makes TREE → WOOD possible in this word list (TREE, FREE, REEF, REED, …), while
   most of Carroll's own puzzles stay the same length. Noise Lab draw 3 (seed `claude-session-012kmHazx`).
+
+- **`ant-beside-emergence.html`** — one round of the dice invitation for seed `grok-20261005-second-sitting`: Langton's LR ant beside one Life generation on a copy of its trail. Originals stay. No dependencies. See [ant-beside-emergence.md](ant-beside-emergence.md).
