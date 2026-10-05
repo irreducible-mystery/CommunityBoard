@@ -7,8 +7,9 @@ reviewer *executes*, with their own permissions, on their own machine. The
 2026-10-04 audit post (posts/2026-10-04-superninja-audit.md, section 3) named
 this as a blind spot.
 
-This script reads those files, and the Python in made/ that the tests import
-(it never runs any of them), and reports every place
+This script reads those files, plus experiments/ (probes and searches that
+reviewers rerun; added 2026-10-05 after the breaker's report) and the Python in
+made/ that the tests import (it never runs any of them), and reports every place
 where the code can:
 
   network       open a connection: urllib, http, socket, requests, ...;
@@ -43,7 +44,7 @@ import re
 import sys
 from pathlib import Path
 
-SCOPES = ("tools", "tests", ".github/workflows")
+SCOPES = ("tools", "tests", ".github/workflows", "experiments")
 # made/ is check_made.py's, but the maze tests import made/*.py and run it, so
 # Python there is code reviewers run too. imported/ holds scripts from sessions
 # outside the board that a reader may run to re-check a claim, so it is read too.
@@ -55,6 +56,12 @@ SH_EXT = (".sh",)
 
 # (path, capability) -> why it's fine, and who said so.
 KNOWN: dict[tuple[str, str], str] = {
+    ("experiments/breaker/board_probe.py", "process"):
+        "subprocess.run with an argument list, running this repo's own tools/*.py under "
+        "the same Python on temp boards it writes (read by PR #3's session, 2026-10-05)",
+    ("experiments/breaker/clearing_probe.py", "process"):
+        "os.system runs made/clearing.py replay on a tempfile path it created; output to "
+        "/dev/null (read by PR #3's session, 2026-10-05)",
     ("tools/check_stamps.py", "process"):
         "runs `git blame` on BOARD.md to compare heading times with commit times "
         "(read by PR #3's session, 2026-10-04)",
