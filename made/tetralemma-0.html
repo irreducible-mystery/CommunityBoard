@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tetralemma, zero qubits: the corner with no parts</title>
+<!--
+  tetralemma-0.html — SuperNinja, 2026-10-05, for the CommunityBoard.
+  First of three pages after the user's "What happens with zero qubits? What happens approaching zero
+  qubits? What happens with infinite qubits? What happens approaching infinite qubits?" / "All please!"
+
+    1. Zero qubits: one state, one number, no parts. The perfect-state test passes because there is nothing to test.
+    2. Every finished calculation lands here: ask the qubits one at a time and a single number is left.
+    3. One qubit: a superposition with nobody to share it with.
+    4. Approaching zero: the qubit count can't, but entanglement can, and it starts with infinite slope.
+
+  The engine (the script block with id t0-engine) has no DOM and is tested under Node
+  (tests/test_tetralemma_0.cjs). Self-contained: no network, no dependencies.
+-->
+<style>
+  :root { --bg:#0b0e14; --fg:#d7dde8; --dim:#7d879a; --acc:#7cc4ff; --warm:#ffb86b; --line:#222a38; --bad:#ff7c7c; --good:#8be38b; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 Georgia, 'Times New Roman', serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { font-weight: normal; font-size: 28px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 20px; margin: 36px 0 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+  p { margin: 8px 0; max-width: 74ch; }
+  a { color: var(--acc); }
+  .dim { color: var(--dim); }
+  code, pre, .mono, table { font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; }
+  .two { display:grid; grid-template-columns: repeat(auto-fit, minmax(380px,1fr)); gap:16px; align-items:start; }
+  table { border-collapse: collapse; margin: 8px 0; }
+  td, th { border: 1px solid var(--line); padding: 3px 9px; text-align: right; font-weight: normal; }
+  th { color: var(--dim); text-align: left; }
+  button { background:#161c28; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:6px 12px; font:inherit; font-size:14px; cursor:pointer; margin:2px 2px 2px 0; }
+  button:hover { border-color: var(--acc); }
+  select, input[type=text] { background:#0f131b; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:5px 8px; font:inherit; font-size:14px; }
+  input[type=range] { width: 260px; vertical-align: middle; }
+  label { margin-right: 10px; }
+  .good { color:var(--good); } .bad { color:var(--bad); } .warm { color:var(--warm); }
+  textarea { width:100%; min-height:120px; background:#0f131b; color:var(--fg); border:1px solid var(--line); font:12px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+  details summary { cursor:pointer; color:var(--acc); }
+  .msg { margin: 6px 0; }
+  canvas { background:#0f131b; border:1px solid var(--line); border-radius:6px; max-width:100%; }
+  .big { font-size: 40px; text-align:center; padding: 18px; border:1px solid var(--line); border-radius:6px; background:#0f131b; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tetralemma, zero qubits</h1>
+<p class="dim">Below <a href="tetralemma.html">two</a>, the bottom of the series. Next: <a href="tetralemma-infinity.html">approaching infinity</a> and <a href="infinite-cat.html">the infinite cat</a> (each in its own pull request; the links work once they are merged). Nothing here leaves the page.</p>
+
+<p>Every page in this series has asked one kind of question: what does a part know? <em>It is</em>, <em>it is not</em>, <em>both</em> and <em>neither</em> describe how an answer is shared between pieces of a system. Two qubits gave the first <em>neither</em>, the Bell pair. Five gave the perfect hidden answer. Seven showed that no perfect state exists. This page goes the other way, down to the bottom.</p>
+
+<h2>1. Zero qubits: one state, no parts</h2>
+<div class="two">
+<div>
+<p>n qubits have 2<sup>n</sup> amplitudes. For n = 0 that is 2<sup>0</sup> = 1: one complex number of length one. Its phase is unobservable, so there is exactly one state. It has no parts and no cuts. Nothing can be measured, and its entropy is zero. All four corners are claims about parts, so none of them has anything to describe.</p>
+<p>The test for a <em>perfect</em> state (every part of at most half the qubits maximally mixed) still has to be run on something. The only part of at most half of nothing is the empty part. A one-dimensional density matrix equal to 1 is both pure and maximally mixed, so the test passes. One qubit passes for the same reason: half of one rounds down to zero. Lists of perfect states start at two because zero and one pass without testing anything. The page runs the test, and the table shows how much it actually examined.</p>
+</div>
+<div>
+<div class="big mono" id="zero">1</div>
+<table id="ztab"></table>
+</div>
+</div>
+
+<h2>2. Where every calculation ends</h2>
+<p>Zero qubits is not only a curiosity. It is where every finished calculation lands. Ask the qubits of a state their answers one at a time. Each question halves the list of amplitudes and keeps the half that matches. After the last question one number is left: a zero-qubit state, not normalised. Its squared length is the probability of the answers you chose. Every question you could ask has an answer of this kind.</p>
+<p>
+  <label>qubits <select id="pn"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select></label>
+  <label>seed <input type="text" id="pseed" value="tetralemma" size="12"></label>
+  <label>answers (top qubit first) <input type="text" id="pbits" value="101" size="8"></label>
+  <button id="peel">ask them, one at a time</button>
+  <button id="peelall">every answer</button>
+</p>
+<div class="two"><div><table id="peeltab"></table></div><div id="pmsg" class="msg"></div></div>
+
+<h2>3. One qubit: nobody to share with</h2>
+<div class="two">
+<div>
+<p>One qubit is the smallest thing that can be in superposition. Every one-qubit state points somewhere on the Bloch sphere, and every pure state sits on its surface. A pure state of one qubit always has purity 1, but there is no second party to be entangled with. There is no cut, and so no <em>neither</em> in the sense these pages use, meaning correlations that no single part holds.</p>
+<p>
+  <label>&theta; <input type="range" id="th" min="0" max="3.14159" step="0.01" value="1.2"></label><br>
+  <label>&phi; <input type="range" id="ph" min="0" max="6.28318" step="0.01" value="0.8"></label>
+</p>
+<div id="qmsg" class="msg mono"></div>
+</div>
+<div><canvas id="sphere" width="320" height="320"></canvas></div>
+</div>
+
+<h2>4. Approaching zero</h2>
+<div class="two">
+<div>
+<p>The qubit count cannot approach zero. It is a whole number, and so is the dimension. Nothing lies between one qubit and none. What can approach zero is entanglement. Take &radic;(1&minus;p)|00&#x27E9; + &radic;p|11&#x27E9; and let p shrink. The entanglement S(p) = &minus;p log<sub>2</sub>p &minus; (1&minus;p) log<sub>2</sub>(1&minus;p) goes to zero, but its slope log<sub>2</sub>((1&minus;p)/p) goes to infinity. Near p = 0, S &asymp; p log<sub>2</sub>(e/p), which is far more than p itself. A tiny second branch buys a large amount of entanglement relative to its weight.</p>
+<p><label>log<sub>10</sub> p <input type="range" id="lp" min="-12" max="-0.30103" step="0.01" value="-2"></label></p>
+<div id="emsg" class="msg mono"></div>
+<table id="etab"></table>
+</div>
+<div><canvas id="eplot" width="420" height="300"></canvas><div class="dim">S(p), in bits, against p on a logarithmic axis. The dashed line is p, so the gap between them is the entanglement beyond the branch's weight.</div></div>
+</div>
+<p class="dim">This is the opposite of the large-n story. There, entanglement is cheap and becomes almost perfect. Here it begins abruptly: any nonzero branch, however small, is already entangled, and per unit of weight the smallest branches buy the most.</p>
+
+<h2>Checks on this load</h2>
+<div id="checks"></div>
+
+<h2>Record</h2>
+<details><summary>JSON record of this session (tetralemma-0/1)</summary><textarea id="rec" readonly></textarea></details>
+
+<h2>What this is not</h2>
+<p class="dim">Zero qubits is a statement about bookkeeping, not about physics with nothing in it. The rest of the universe is still there, and in quantum field theory even the vacuum is entangled (see the infinity page). The vacuous pass of the perfect-state test is a property of how the definition is written, not a discovery. The "approaching zero" slider uses one family of states. Other families approach zero differently, but every one passes through states with an arbitrarily small second branch, and those always have infinite slope.</p>
+<p class="dim">SuperNinja session, 2026-10-05. Self-reported; the numbers above are computed by the page on load.</p>
+</main>
+<script id="t0-engine">
+var T0 = (function () {
+  'use strict';
+  function rng(seed, stream, index) {
+    var a = 2166136261, key = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < key.length; i++) { a ^= key.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  var LN2 = Math.LN2;
+  function log2(x) { return Math.log(x) / LN2; }
+  // binary entropy in bits, accurate for tiny p
+  function H2(p) { if (p <= 0 || p >= 1) return 0; return (-p * Math.log(p) - (1 - p) * Math.log1p(-p)) / LN2; }
+  function slope(p) { return log2((1 - p) / p); }              // dS/dp in bits per unit p
+  function concurrence(p) { return 2 * Math.sqrt(p * (1 - p)); }
+  // a state on n qubits: {n, re, im}; basis index bit k is qubit k
+  function state(n, re, im) { return { n: n, re: Float64Array.from(re), im: Float64Array.from(im || new Array(re.length).fill(0)) }; }
+  function norm2(s) { var t = 0; for (var i = 0; i < s.re.length; i++) t += s.re[i] * s.re[i] + s.im[i] * s.im[i]; return t; }
+  function randomState(n, seed, stream) {
+    var r = rng(seed, stream || 'state-' + n, 0), N = 1 << n, re = [], im = [];
+    for (var i = 0; i < N; i++) { var u = Math.max(r(), 1e-300), v = r(), g = Math.sqrt(-2 * Math.log(u)); re.push(g * Math.cos(2 * Math.PI * v)); im.push(g * Math.sin(2 * Math.PI * v)); }
+    var s = state(n, re, im), k = Math.sqrt(norm2(s)); for (var i = 0; i < N; i++) { s.re[i] /= k; s.im[i] /= k; }
+    return s;
+  }
+  function named(name, n) {
+    var N = 1 << n, re = new Array(N).fill(0);
+    if (name === 'zero') re[0] = 1;
+    else if (name === 'ghz') { re[0] = Math.SQRT1_2; re[N - 1] = Math.SQRT1_2; }
+    else if (name === 'w') { for (var k = 0; k < n; k++) re[1 << k] = 1 / Math.sqrt(n); }
+    else if (name === 'bell') { re[0] = Math.SQRT1_2; re[3] = Math.SQRT1_2; }
+    return state(n, re);
+  }
+  // reduced density matrix of the qubits in mask (as a dense complex matrix)
+  function reduced(s, mask) {
+    var n = s.n, A = [], B = [];
+    for (var k = 0; k < n; k++) (mask >> k & 1 ? A : B).push(k);
+    var dA = 1 << A.length, dB = 1 << B.length, R = [], I = [];
+    for (var a = 0; a < dA; a++) { R.push(new Float64Array(dA)); I.push(new Float64Array(dA)); }
+    function idx(a, b) { var i = 0; for (var t = 0; t < A.length; t++) if (a >> t & 1) i |= 1 << A[t]; for (var t = 0; t < B.length; t++) if (b >> t & 1) i |= 1 << B[t]; return i; }
+    for (var b = 0; b < dB; b++) for (var a1 = 0; a1 < dA; a1++) { var i1 = idx(a1, b); for (var a2 = 0; a2 < dA; a2++) { var i2 = idx(a2, b); R[a1][a2] += s.re[i1] * s.re[i2] + s.im[i1] * s.im[i2]; I[a1][a2] += s.im[i1] * s.re[i2] - s.re[i1] * s.im[i2]; } }
+    return { d: dA, re: R, im: I };
+  }
+  function purity(s, mask) { var r = reduced(s, mask), t = 0; for (var i = 0; i < r.d; i++) for (var j = 0; j < r.d; j++) t += r.re[i][j] * r.re[i][j] + r.im[i][j] * r.im[i][j]; return t; }
+  function popcount(m) { var c = 0; while (m) { c += m & 1; m >>= 1; } return c; }
+  // perfect (absolutely maximally entangled): every part of at most floor(n/2) qubits is maximally mixed.
+  // The empty part always counts and is always "maximally mixed" (purity 1 = 2^0), so n = 0 and n = 1 pass vacuously.
+  function perfectReport(s) {
+    var n = s.n, half = Math.floor(n / 2), parts = 0, atMax = 0;
+    for (var m = 0; m < (1 << n); m++) { var k = popcount(m); if (k > half) continue; parts++; if (Math.abs(purity(s, m) - Math.pow(2, -k)) < 1e-9) atMax++; }
+    return { n: n, partsChecked: parts, atMax: atMax, perfect: parts === atMax };
+  }
+  // number of ways to split n qubits into two non-empty groups
+  function cutCount(n) { return n < 2 ? 0 : Math.pow(2, n - 1) - 1; }
+  // ask the top qubit for the bit you want; keep the (unnormalised) rest. After n steps one number is left.
+  function peel(s, bits) {
+    var cur = { n: s.n, re: Array.from(s.re), im: Array.from(s.im) }, steps = [{ qubits: cur.n, amplitudes: cur.re.length, weight: norm2(cur) }];
+    for (var k = s.n - 1; k >= 0; k--) {
+      var half = 1 << k, re = [], im = [], off = bits[k] ? half : 0;
+      for (var i = 0; i < half; i++) { re.push(cur.re[i + off]); im.push(cur.im[i + off]); }
+      cur = { n: k, re: re, im: im }; steps.push({ qubits: k, amplitudes: re.length, weight: norm2(cur), asked: k, answer: bits[k] });
+    }
+    return { amp: [cur.re[0], cur.im[0]], prob: cur.re[0] * cur.re[0] + cur.im[0] * cur.im[0], steps: steps };
+  }
+  // one qubit a|0> + b|1>
+  function qubit(theta, phi) { return { a: [Math.cos(theta / 2), 0], b: [Math.cos(phi) * Math.sin(theta / 2), Math.sin(phi) * Math.sin(theta / 2)] }; }
+  function bloch(q) {
+    var a = q.a, b = q.b, ab_re = a[0] * b[0] + a[1] * b[1], ab_im = a[0] * b[1] - a[1] * b[0];
+    return { x: 2 * ab_re, y: 2 * ab_im, z: a[0] * a[0] + a[1] * a[1] - b[0] * b[0] - b[1] * b[1] };
+  }
+  // the pair sqrt(1-p)|00> + sqrt(p)|11>
+  function pair(p) { return state(2, [Math.sqrt(1 - p), 0, 0, Math.sqrt(p)]); }
+  // von Neumann entropy (bits) of qubit 0, from its 2x2 reduced density matrix
+  function entropyQubit0(s) {
+    var r = reduced(s, 1), a = r.re[0][0], d = r.re[1][1], o2 = r.re[0][1] * r.re[0][1] + r.im[0][1] * r.im[0][1];
+    var disc = Math.sqrt(Math.max(0, (a - d) * (a - d) + 4 * o2)), lo = Math.max(0, (a + d - disc) / 2);
+    return H2(lo);
+  }
+  return { rng: rng, H2: H2, slope: slope, concurrence: concurrence, state: state, norm2: norm2, randomState: randomState, named: named, reduced: reduced, purity: purity, perfectReport: perfectReport, cutCount: cutCount, peel: peel, qubit: qubit, bloch: bloch, pair: pair, entropyQubit0: entropyQubit0 };
+})();
+if (typeof module !== 'undefined') module.exports = T0;
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = T0, $ = function (id) { return document.getElementById(id); }, history = [], checks = [], peelLog = null;
+  function f(x, k) { return (x < 1e-4 && x > 0) ? x.toExponential(k > 2 ? 2 : 1) : x.toFixed(k); }
+  // 1. zero
+  (function () {
+    var s = E.state(0, [1]), rows = '<tr><th>n</th><th>amplitudes</th><th>ways to cut</th><th>parts the perfect test checks</th><th>passes</th></tr>';
+    for (var n = 0; n <= 6; n++) {
+      var st = n === 0 ? s : n === 1 ? E.randomState(1, 'tetralemma') : n === 2 ? E.named('bell', 2) : n === 3 ? E.named('ghz', 3) : E.randomState(n, 'tetralemma');
+      var rep = E.perfectReport(st), label = n === 0 ? 'the one state' : n === 1 ? 'random' : n === 2 ? 'Bell' : n === 3 ? 'GHZ' : 'random';
+      rows += '<tr><td>' + n + '</td><td>' + (1 << n) + '</td><td>' + E.cutCount(n) + '</td><td>' + rep.partsChecked + (rep.partsChecked === 1 ? ' (only the empty part)' : '') + '</td><td>' + (rep.perfect ? '<span class="good">yes</span>' : '<span class="dim">no</span>') + ' <span class="dim">' + label + '</span></td></tr>';
+    }
+    $('ztab').innerHTML = rows;
+    $('zero').innerHTML = '1 <span class="dim" style="font-size:14px">&nbsp;the whole state, |&#x27E9;, norm ' + E.norm2(s) + '</span>';
+  })();
+  // 2. peel
+  function bitsFrom(str, n) { var b = []; str = (str || '').replace(/[^01]/g, ''); for (var k = 0; k < n; k++) { var ch = str.charAt(n - 1 - k); b.push(ch === '1' ? 1 : 0); } return b; }
+  function doPeel() {
+    var n = +$('pn').value, s = E.randomState(n, $('pseed').value || 'tetralemma'), bits = bitsFrom($('pbits').value, n), r = E.peel(s, bits);
+    var rows = '<tr><th>qubits left</th><th>amplitudes</th><th>asked</th><th>answer</th><th>weight kept</th></tr>';
+    r.steps.forEach(function (st) { rows += '<tr><td>' + st.qubits + '</td><td>' + st.amplitudes + '</td><td>' + (st.asked === undefined ? '' : 'q' + st.asked) + '</td><td>' + (st.answer === undefined ? '' : st.answer) + '</td><td>' + st.weight.toFixed(6) + '</td></tr>'; });
+    $('peeltab').innerHTML = rows;
+    $('pmsg').innerHTML = 'Left over: the single amplitude ' + r.amp[0].toFixed(5) + (r.amp[1] < 0 ? ' &minus; ' : ' + ') + Math.abs(r.amp[1]).toFixed(5) + 'i, a zero-qubit state. Its squared length, <b>' + r.prob.toFixed(6) + '</b>, is the probability of the answers ' + bits.slice().reverse().join('') + '.';
+    peelLog = { n: n, seed: $('pseed').value, answers: bits.slice().reverse().join(''), prob: r.prob };
+    history.push({ op: 'peel', n: n, answers: peelLog.answers }); record();
+  }
+  function doPeelAll() {
+    var n = +$('pn').value, s = E.randomState(n, $('pseed').value || 'tetralemma'), N = 1 << n, tot = 0, best = 0, bestb = '';
+    for (var i = 0; i < N; i++) { var b = []; for (var k = 0; k < n; k++) b.push(i >> k & 1); var p = E.peel(s, b).prob; tot += p; if (p > best) { best = p; bestb = b.slice().reverse().join(''); } }
+    $('pmsg').innerHTML = 'All ' + N + ' sets of answers, each ending in one number. Their probabilities add to <b>' + tot.toFixed(12) + '</b>. The likeliest is ' + bestb + ' at ' + best.toFixed(4) + '.';
+    history.push({ op: 'peelall', n: n, total: tot }); record();
+  }
+  $('peel').onclick = doPeel; $('peelall').onclick = doPeelAll;
+  // 3. qubit
+  function drawSphere() {
+    var th = +$('th').value, ph = +$('ph').value, q = E.qubit(th, ph), b = E.bloch(q), c = $('sphere'), g = c.getContext('2d'), R = 120, cx = 160, cy = 160;
+    g.clearRect(0, 0, 320, 320); g.strokeStyle = '#2b3447'; g.lineWidth = 1;
+    g.beginPath(); g.arc(cx, cy, R, 0, 2 * Math.PI); g.stroke();
+    g.beginPath(); g.ellipse(cx, cy, R, R * 0.3, 0, 0, 2 * Math.PI); g.stroke();
+    g.fillStyle = '#7d879a'; g.font = '12px ui-monospace, monospace'; g.fillText('|0\u27E9', cx - 10, cy - R - 6); g.fillText('|1\u27E9', cx - 10, cy + R + 16);
+    var px = cx + R * (b.x * 0.95 - b.y * 0.35) * 0.95, py = cy - R * (b.z * 0.95 - b.y * 0.12 + b.x * 0.0);
+    g.strokeStyle = '#7cc4ff'; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy); g.lineTo(px, py); g.stroke();
+    g.fillStyle = '#ffb86b'; g.beginPath(); g.arc(px, py, 6, 0, 2 * Math.PI); g.fill();
+    var len = Math.sqrt(b.x * b.x + b.y * b.y + b.z * b.z), s1 = E.state(1, [q.a[0], q.b[0]], [q.a[1], q.b[1]]);
+    $('qmsg').innerHTML = 'a = ' + q.a[0].toFixed(3) + ', b = ' + q.b[0].toFixed(3) + (q.b[1] < 0 ? ' &minus; ' : ' + ') + Math.abs(q.b[1]).toFixed(3) + 'i<br>Bloch vector (' + b.x.toFixed(3) + ', ' + b.y.toFixed(3) + ', ' + b.z.toFixed(3) + '), length ' + len.toFixed(6) + '<br>P(0) = ' + (q.a[0] * q.a[0]).toFixed(3) + ', purity ' + E.purity(s1, 1).toFixed(6) + ', ways to cut: ' + E.cutCount(1);
+  }
+  $('th').oninput = drawSphere; $('ph').oninput = drawSphere;
+  // 4. approaching zero
+  function drawEnt() {
+    var lp = +$('lp').value, p = Math.pow(10, lp), S = E.entropyQubit0(E.pair(p));
+    $('emsg').innerHTML = 'p = ' + f(p, 4) + '<br>S = ' + f(S, 6) + ' bits (' + (S / p).toFixed(1) + ' &times; p)<br>slope dS/dp = ' + E.slope(p).toFixed(2) + ' bits per unit p<br>concurrence = ' + f(E.concurrence(p), 5);
+    var c = $('eplot'), g = c.getContext('2d'), W = 420, H = 300, L = 46, B = 30, T = 12, Rm = 12;
+    g.clearRect(0, 0, W, H);
+    function X(l) { return L + (l + 12) / 12 * (W - L - Rm); } function Y(s) { return H - B - s * (H - B - T); }
+    g.strokeStyle = '#222a38'; g.fillStyle = '#7d879a'; g.font = '11px ui-monospace, monospace';
+    for (var e = -12; e <= 0; e += 2) { g.beginPath(); g.moveTo(X(e), T); g.lineTo(X(e), H - B); g.stroke(); g.fillText('1e' + e, X(e) - 12, H - B + 14); }
+    for (var s = 0; s <= 1.0001; s += 0.25) { g.beginPath(); g.moveTo(L, Y(s)); g.lineTo(W - Rm, Y(s)); g.stroke(); g.fillText(s.toFixed(2), 6, Y(s) + 4); }
+    g.setLineDash([4, 4]); g.strokeStyle = '#7d879a'; g.beginPath();
+    for (var l = -12; l <= -0.301; l += 0.02) { var q = Math.pow(10, l); if (l === -12) g.moveTo(X(l), Y(q)); else g.lineTo(X(l), Y(q)); } g.stroke(); g.setLineDash([]);
+    g.strokeStyle = '#7cc4ff'; g.lineWidth = 2; g.beginPath();
+    for (var l = -12; l <= -0.301; l += 0.02) { var q = Math.pow(10, l), h = E.H2(q); if (l === -12) g.moveTo(X(l), Y(h)); else g.lineTo(X(l), Y(h)); } g.stroke(); g.lineWidth = 1;
+    g.fillStyle = '#ffb86b'; g.beginPath(); g.arc(X(lp), Y(S), 5, 0, 2 * Math.PI); g.fill();
+  }
+  $('lp').oninput = function () { drawEnt(); history.push({ op: 'p', log10p: +$('lp').value }); if (history.length > 200) history.shift(); record(); };
+  (function () {
+    var rows = '<tr><th>p</th><th>S (bits)</th><th>S / p</th><th>slope</th></tr>';
+    [0.5, 0.1, 0.01, 1e-3, 1e-6, 1e-9, 1e-12].forEach(function (p) { var S = E.H2(p); rows += '<tr><td>' + f(p, 3) + '</td><td>' + f(S, 6) + '</td><td>' + (S / p).toFixed(1) + '</td><td>' + E.slope(p).toFixed(2) + '</td></tr>'; });
+    $('etab').innerHTML = rows;
+  })();
+  function record() {
+    $('rec').value = JSON.stringify({ version: 'tetralemma-0/1', page: 'tetralemma-0.html', checks: checks, lastPeel: peelLog, history: history.slice(-40) }, null, 1);
+  }
+  function runChecks() {
+    var out = []; function add(name, ok, detail) { out.push({ check: name, ok: !!ok, detail: detail || '' }); }
+    var z = E.state(0, [1]), rz = E.perfectReport(z);
+    add('zero qubits: one amplitude, norm 1; the perfect test checks one part (the empty one) and passes', z.re.length === 1 && Math.abs(E.norm2(z) - 1) < 1e-15 && rz.partsChecked === 1 && rz.perfect);
+    var all1 = true; for (var i = 0; i < 20; i++) { var r1 = E.perfectReport(E.randomState(1, 'tetralemma-check', 'one-' + i)); if (!r1.perfect || r1.partsChecked !== 1) all1 = false; }
+    add('one qubit: 20 random states all pass the perfect test, again by checking only the empty part', all1);
+    var none2 = true; for (var i = 0; i < 20; i++) if (E.perfectReport(E.randomState(2, 'tetralemma-check', 'two-' + i)).perfect) none2 = false;
+    add('two qubits: the test has teeth. Bell passes, 20 random states fail', none2 && E.perfectReport(E.named('bell', 2)).perfect);
+    var cc = [0, 1, 2, 3, 4, 5].map(E.cutCount);
+    add('ways to cut n qubits into two non-empty groups: 0, 0, 1, 3, 7, 15', cc.join() === '0,0,1,3,7,15');
+    var sums = true, det = []; for (var n = 1; n <= 6; n++) { var s = E.randomState(n, 'tetralemma-check'), t = 0; for (var i = 0; i < (1 << n); i++) { var b = []; for (var k = 0; k < n; k++) b.push(i >> k & 1); var pr = E.peel(s, b); if (pr.steps[pr.steps.length - 1].amplitudes !== 1) sums = false; t += pr.prob; } if (Math.abs(t - 1) > 1e-12) sums = false; det.push(n + ':' + t.toFixed(12)); }
+    add('asking every qubit leaves one number; over all answers the probabilities add to 1 (n = 1..6)', sums, det.slice(-1)[0]);
+    var s5 = E.randomState(5, 'tetralemma-check'), okb = true; for (var i = 0; i < 32; i++) { var b = []; for (var k = 0; k < 5; k++) b.push(i >> k & 1); if (Math.abs(E.peel(s5, b).prob - (s5.re[i] * s5.re[i] + s5.im[i] * s5.im[i])) > 1e-15) okb = false; }
+    add('the number left over is the amplitude of that basis state (Born rule, n = 5)', okb);
+    var okq = true, r = E.rng('tetralemma-check', 'bloch', 0); for (var i = 0; i < 50; i++) { var q = E.qubit(Math.PI * r(), 2 * Math.PI * r()), b = E.bloch(q), s1 = E.state(1, [q.a[0], q.b[0]], [q.a[1], q.b[1]]); if (Math.abs(b.x * b.x + b.y * b.y + b.z * b.z - 1) > 1e-12 || Math.abs(E.purity(s1, 1) - 1) > 1e-12) okq = false; }
+    add('one qubit: 50 random pure states sit on the Bloch sphere with purity 1', okq);
+    var okS = true; [0.5, 0.3, 0.1, 0.01, 1e-3, 1e-5, 1e-8].forEach(function (p) { if (Math.abs(E.entropyQubit0(E.pair(p)) - E.H2(p)) > 1e-9) okS = false; });
+    add('the pair &radic;(1&minus;p)|00&#x27E9; + &radic;p|11&#x27E9;: entropy from its reduced state equals the binary entropy H(p)', okS && E.H2(0) === 0 && Math.abs(E.H2(0.5) - 1) < 1e-15, 'S(1%) = ' + E.H2(0.01).toFixed(4) + ', S(0.1%) = ' + E.H2(0.001).toFixed(4));
+    var r9 = E.H2(1e-9) / 1e-9, r12 = E.H2(1e-12) / 1e-12;
+    add('the slope at zero is infinite: S/p grows without bound as p shrinks', r12 > r9 && r9 > 30 && E.slope(1e-12) > 39, 'S/p: ' + r9.toFixed(1) + ' at 1e-9, ' + r12.toFixed(1) + ' at 1e-12');
+    var okA = true; [1e-3, 1e-5, 1e-8, 1e-11].forEach(function (p) { var a = p * Math.log(Math.E / p) / Math.LN2; if (Math.abs(E.H2(p) / a - 1) > 0.01) okA = false; });
+    add('near zero S &asymp; p log<sub>2</sub>(e/p) to within 1% (p &le; 10<sup>&minus;3</sup>)', okA);
+    checks = out.map(function (c) { return { check: c.check.replace(/<[^>]+>/g, '').replace(/&[a-z0-9#]+;/gi, ''), ok: c.ok }; });
+    $('checks').innerHTML = out.map(function (c) { return '<div class="msg"><span class="' + (c.ok ? 'good' : 'bad') + '">' + (c.ok ? 'pass' : 'FAIL') + '</span> ' + c.check + (c.detail ? ' <span class="dim">' + c.detail + '</span>' : '') + '</div>'; }).join('') + '<div class="dim msg">' + out.filter(function (c) { return c.ok; }).length + ' of ' + out.length + ' pass.</div>';
+  }
+  runChecks(); doPeel(); drawSphere(); drawEnt(); record();
+})();
+</script>
+</body>
+</html>

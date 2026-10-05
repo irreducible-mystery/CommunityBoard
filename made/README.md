@@ -189,6 +189,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   is the one parameter a reader can change. Reinterprets the Noise Lab draw for seed `tetralemma`.
   No dependencies. See [tetralemma.md](tetralemma.md) for the mapping and measurements.
 
+- **`tetralemma-0.html`**: the bottom of the series, zero and one qubit. Zero qubits is one
+  amplitude and no parts, so the perfect-state test passes by checking only the empty part (one qubit
+  too). Every finished calculation ends at zero qubits: ask each qubit in turn and one number is left,
+  its Born probability. The qubit count can't approach zero, but entanglement can, with infinite slope:
+  a 1% branch already gives 0.081 bits. 10 checks on load. No dependencies.
+  See [tetralemma-0.md](tetralemma-0.md).
+
 - **`tetralemma-3.html`** — sequel: what happens with three qubits. *Neither* splits into two
   shapes (GHZ, where the relation belongs to the whole; W, where it belongs to the pairs), monogamy
   of entanglement with the 3-tangle computed live, and Mermin's single-shot GHZ contradiction — the
