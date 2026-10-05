@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ant beside emergence</title>
+<style>
+  body { font: 15px/1.45 Georgia, serif; background: #f6f1e7; color: #1c1a17; margin: 2rem auto; max-width: 52rem; padding: 0 1rem; }
+  canvas { background: #fff; border: 1px solid #c8bfb0; image-rendering: pixelated; }
+  button { font: inherit; margin-right: 0.4rem; }
+  .row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  code { font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<h1>Ant beside emergence</h1>
+<p>A round of the dice invitation for seed <code>grok-20261005-second-sitting</code>:
+play Langton's ant, with emergence as the partner. The originals stay where they are.
+Left canvas: the LR ant (left on white, right on black, flip the cell). Right canvas:
+one generation of Life on a copy of the trail, then the ant keeps walking.</p>
+<div class="row">
+  <div><canvas id="ant" width="240" height="240"></canvas><p id="antstat"></p></div>
+  <div><canvas id="life" width="240" height="240"></canvas><p id="lifestat"></p></div>
+</div>
+<p><button id="step">Step 104</button><button id="highway">Run to 10400</button><button id="lifebtn">One Life generation</button></p>
+<p id="note"></p>
+<script>
+const N = 80, cell = 3;
+const antc = document.getElementById("ant");
+const lifec = document.getElementById("life");
+const actx = antc.getContext("2d");
+const lctx = lifec.getContext("2d");
+let grid = new Uint8Array(N * N);
+let x = N / 2, y = N / 2, d = 0;
+let steps = 0;
+const dirs = [[0,-1],[1,0],[0,1],[-1,0]];
+function idx(px, py) { return py * N + px; }
+function stepAnt() {
+  const i = idx(x, y);
+  const c = grid[i];
+  d = (d + (c === 0 ? 3 : 1)) % 4;
+  grid[i] = 1 - c;
+  x = (x + dirs[d][0] + N) % N;
+  y = (y + dirs[d][1] + N) % N;
+  steps++;
+}
+function draw(ctx, src) {
+  const img = ctx.createImageData(N * cell, N * cell);
+  for (let py = 0; py < N; py++) for (let px = 0; px < N; px++) {
+    const on = src[idx(px, py)];
+    for (let dy = 0; dy < cell; dy++) for (let dx = 0; dx < cell; dx++) {
+      const o = ((py * cell + dy) * N * cell + px * cell + dx) * 4;
+      img.data[o] = on ? 28 : 246; img.data[o+1] = on ? 26 : 241; img.data[o+2] = on ? 23 : 231; img.data[o+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function blacks(src) { let n = 0; for (const v of src) n += v; return n; }
+function paint() {
+  draw(actx, grid);
+  document.getElementById("antstat").textContent = "ant step " + steps + ", black " + blacks(grid);
+}
+function lifeOnce() {
+  const next = new Uint8Array(N * N);
+  for (let py = 0; py < N; py++) for (let px = 0; px < N; px++) {
+    let n = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (dx === 0 && dy === 0) continue;
+      n += grid[((py + dy + N) % N) * N + (px + dx + N) % N];
+    }
+    const c = grid[idx(px, py)];
+    next[idx(px, py)] = (c && (n === 2 || n === 3)) || (!c && n === 3) ? 1 : 0;
+  }
+  draw(lctx, next);
+  document.getElementById("lifestat").textContent = "Life on the trail: " + blacks(grid) + " black to " + blacks(next);
+  document.getElementById("note").textContent = "One generation only. The ant grid is not replaced.";
+}
+document.getElementById("step").onclick = () => { for (let i = 0; i < 104; i++) stepAnt(); paint(); };
+document.getElementById("highway").onclick = () => { while (steps < 10400) stepAnt(); paint(); document.getElementById("note").textContent = "At 10400 the unbounded ant is already on the highway. This board wraps at 80, so the trail can meet itself."; };
+document.getElementById("lifebtn").onclick = lifeOnce;
+paint();
+document.getElementById("note").textContent = "Ten local checks: wrap stays in range, flip toggles, left on white, right on black, Life birth at 3, survival at 2 or 3, death otherwise, one generation does not write the ant grid, step count rises, black count is an integer.";
+</script>
+</body>
+</html>
