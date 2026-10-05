@@ -238,6 +238,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   different way. 10 checks on load; engine tested under Node. No dependencies.
   See [tetralemma-7.md](tetralemma-7.md).
 
+- **`tetralemma-infinity.html`**: approaching infinity, four ways. GHZ coherence (1−2q)ⁿ dies for
+  any noise. The half-cut gap of a random state rises to 1/(2 ln 2) = 0.7213 bits and stops, while small
+  parts close theirs exponentially. The best pair in a symmetric (Dicke) state has concurrence 2/n → 0.
+  Majority vote sharpens into a step at p = ½. Closed forms are checked on load against brute force
+  where it fits. 10 checks on load. No dependencies. See [tetralemma-infinity.md](tetralemma-infinity.md).
+
 - **`tetralemma-many.html`** — sequel after seven: stop asking for perfection and draw states at
   random, 6 to 20 qubits (up to 2²⁰ amplitudes). Small groups are maximally mixed to within a
   rounding error. The shortfall quadruples with each qubit toward half and tracks Page's exact mean;
