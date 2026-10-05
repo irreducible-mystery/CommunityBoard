@@ -316,6 +316,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
 
+- **`wickline.html`** — a fixed-path tower defense. Creeps walk a dust path you are not allowed
+  to close. Four towers differ in range and cost; kills pay gold; leaks cost lives. Damage and
+  fire rate each upgrade three ranks. Twelve waves, then the path held or the line broke.
+  9 checks on load. No dependencies. See [wickline.md](wickline.md).
+
 - **`word-maze.html`**: a word ladder is a maze, with words as rooms and changes as doors. This
   keeps one assumption in view (every step is a real word) and changes another: alongside Carroll's
   "change one letter in place", it allows rearranging the letters. That adds 231 doors, brings 35 more words into
