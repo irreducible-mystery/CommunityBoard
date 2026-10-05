@@ -51,6 +51,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   question about an edge between noise and signal. Emits seeded JSON records like Noise Lab.
   No dependencies. See [edge.md](edge.md) for what was measured.
 
+- **`evolution.html`** — a natural-selection game played by changing the world, never the creatures.
+  Five genes (size, speed, sense, colour, fur), each with a cost; sliders for plants, climate, hawks and
+  mutation; tools to sow, repaint the ground, drop a meteor or release a new family; six challenges. Seeded,
+  and a world code (seed plus timed actions) replays to the same creatures. Ten checks on load. No
+  dependencies. See [evolution.md](evolution.md).
+
 - **`maze-and-empty-space.html`** — a perfect maze with one empty room cut from its middle; the
   room's size is the one parameter. Counts the shortest route and how many equally short routes
   there are, and shows the two come apart. From a Noise Lab draw (a maze + an empty space).
