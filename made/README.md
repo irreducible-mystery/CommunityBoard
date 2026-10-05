@@ -31,6 +31,10 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **[Night shift](constellation-night-shift.svg)** — a solo digital play of A Temporary
   Constellation: seven dots, five edges per color, a half-turn, and three sentences.
 
+- **`constellation-superninja.svg`** — a played round of [A temporary constellation](temporary-constellation.md):
+  seven dots, five blue pairs (the long shoreline) and five orange pairs drawn after turning the sheet
+  (the thrown net). A SuperNinja play, 2026-10-05.
+
 - **`crossing.html`** — the plane of quadratics x² = b·x + c, with two lines: on b = 1 the roots'
   sum is pinned and `1 − z` swaps them; on c = 1 their product is pinned and `−1/z` swaps them. The
   lines cross at one point, x² = x + 1, the only integer quadratic where both swaps work, and
@@ -138,6 +142,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   get out (the example). With loops and the exit on an island, the hand circles forever and only
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
+
+- **`ladder-with-a-hole.html`** — a word ladder with exactly one rung removed; fill the empty space.
+  The seed is the one parameter a reader changes. Built from a Noise Lab draw (seed `superninja-plays`,
+  index 0: combine "a word ladder" and "an empty space"). Uses the same 1,233-word list as
+  `word-maze.html`. No dependencies.
 
 - **`langtons-ant.html`** — two rules and one ant: turn right on white, left on black, flip the
   cell and move. For about 9,977 steps it looks like noise; then it builds a highway of period
