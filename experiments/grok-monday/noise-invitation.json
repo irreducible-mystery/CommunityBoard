@@ -1,0 +1,31 @@
+{
+  "request": {
+    "version": "noise-lab/1",
+    "seed": "grok-room-05",
+    "kind": "invitation",
+    "params": {
+      "index": 2,
+      "pool": [
+        "a flock",
+        "a maze",
+        "a word ladder",
+        "a memory",
+        "a rhythm",
+        "an empty space"
+      ]
+    }
+  },
+  "result": {
+    "ingredients": [
+      "an empty space",
+      "a flock"
+    ],
+    "constraint": "Make a small example and a counterexample.",
+    "invitation": "Combine “an empty space” and “a flock” into something small.",
+    "choices": [
+      "accept",
+      "reinterpret",
+      "decline"
+    ]
+  }
+}

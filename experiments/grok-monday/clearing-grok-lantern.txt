@@ -1,0 +1,18 @@
+# # # # # # # # # # #
+# 1 f o . . 3 2 2 2 #
+# . . o . f o . . f #
+# . . . . f f f . . #
+# 1 o . . . . f . o #
+# . f f . B . . . B #
+# 1 f f . . f 2 . 2 #
+# f . f . . A . o 2 #
+# . o . . 3 f 2 1 2 #
+# f . . 3 1 f o . o #
+# # # # # # # # # # #
+
+seed 'grok-lantern'  barriers 16 (hardness 30 of 35)  sealed cells 0  vault open
+store fuel 0 ore 0  in the field: fuel 76 ore 35
+  A bot-1            at (6,7)  energy 4  carrying fuel 0 ore 2
+  B bot-2            at (9,5)  energy 4  carrying fuel 2 ore 1
+moves accepted 22 rejected 0  energy spent 18  hits 5
+22 move lines
