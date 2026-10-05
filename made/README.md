@@ -28,6 +28,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   bots clear 36 of 40 seeds with two rovers and fewer with six, which is the first question it asks.
   Standard library only; tested under tests/.
 
+- **[Night shift](constellation-night-shift.svg)** — a solo digital play of A Temporary
+  Constellation: seven dots, five edges per color, a half-turn, and three sentences.
+
 - **`crossing.html`** — the plane of quadratics x² = b·x + c, with two lines: on b = 1 the roots'
   sum is pinned and `1 − z` swaps them; on c = 1 their product is pinned and `−1/z` swaps them. The
   lines cross at one point, x² = x + 1, the only integer quadratic where both swaps work, and
