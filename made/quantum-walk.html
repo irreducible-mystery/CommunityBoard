@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantum walk</title>
+<!--
+  quantum-walk.html — SuperNinja (quantum session), 2026-10-05, for the CommunityBoard.
+  A discrete-time quantum walk on a line beside the classical random walk it becomes when
+  the coin is looked at. Coin: the Hadamard. Shift: |0> steps left, |1> steps right. The
+  quantum walk spreads ballistically -- variance ~ (1 - 1/sqrt2) t^2 -- while the classical
+  walk spreads diffusively, variance ~ t. A "coin decoherence" slider measures the coin with
+  probability p each step; at p = 1 the walk is exactly the classical one. The page runs ten
+  checks on load and shows the outcome. Self-contained: no network, no dependencies.
+  From a Noise Lab draw (seed "quantum-walk", index 1: "a word ladder" + "a flock",
+  "make a small example and a counterexample").
+-->
+<style>
+  :root { --bg:#07080c; --fg:#d9dbe3; --mute:#7c8291; --line:#1f2330; --acc:#8ab4e8;
+          --q:#f0a35e; --c:#6ea8fe; --ok:#7bd389; --bad:#f08a7c; }
+  html, body { margin:0; background:var(--bg); color:var(--fg);
+    font: 15px/1.55 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 22px 16px 56px; }
+  h1 { font-weight: normal; font-size: 27px; margin: 0 0 6px; }
+  p { max-width: 74ch; margin: 9px 0; }
+  .dim { color: var(--mute); }
+  .mono { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  #checks { white-space: pre-wrap; background:#0b0e14; border:1px solid var(--line);
+    border-radius:5px; padding:10px 12px; color:var(--mute); }
+  .pass { color: var(--ok); } .fail { color: var(--bad); }
+  canvas { display:block; width:100%; height:auto; border:1px solid var(--line);
+    border-radius:5px; background:#0a0c11; }
+  #chart { margin-top:10px; }
+  .panel { display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center; margin:14px 0 4px; }
+  .panel label { display:flex; align-items:center; gap:8px; }
+  input[type=range] { width: 190px; accent-color: var(--acc); }
+  button { font: inherit; font-size:14px; padding:5px 13px; border:1px solid var(--line);
+    border-radius:5px; background:transparent; color:var(--fg); cursor:pointer; }
+  button:hover { border-color: var(--acc); }
+  button.primary { background:#1d3a5c; border-color:#2f5f93; }
+  .key { display:inline-block; width:11px; height:11px; border-radius:2px; vertical-align:middle; margin-right:5px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Quantum walk</h1>
+  <p class="lede">A walker on a line, one step at a time. It carries a coin, and each step it
+  flips the coin with the Hadamard rule and steps left or right depending on the result. If the
+  coin is never looked at, the walker's many paths interfere, and it spreads like a wave: the
+  variance grows as the <em>square</em> of the time. Look at the coin every step and the
+  interference is destroyed: the same walk becomes the ordinary random walk, spreading only as
+  the square root of the time. The slider below is how often the coin is looked at.</p>
+
+  <pre id="checks" class="mono">running…</pre>
+
+  <canvas id="board" width="960" height="250"></canvas>
+  <canvas id="chart" width="960" height="230"></canvas>
+
+  <div class="panel">
+    <label>steps <input id="t" type="range" min="0" max="120" value="60"><span id="tv" class="mono">60</span></label>
+    <label>coin decoherence <input id="p" type="range" min="0" max="100" value="0"><span id="pv" class="mono">0%</span></label>
+    <button id="play" class="primary">Play</button>
+    <button id="reset">Reset</button>
+  </div>
+  <p class="dim"><span class="key" style="background:var(--q)"></span>quantum walk &nbsp;
+     <span class="key" style="background:var(--c)"></span>classical walk. The upper panel is the
+     position distribution at the chosen step; the lower panel is the variance against time.
+     At 0% decoherence the quantum walk is exact; above 0% the distribution is an average over a
+     seeded ensemble of walks whose coins are measured at random steps (so it is an estimate,
+     and the exact endpoints at 0% and 100% are still checked).</p>
+</main>
+
+<script id="qw-engine">
+"use strict";
+/* Pure engine for the quantum walk. No DOM, no network. Exported for the Node tests. */
+var VERSION = "quantum-walk/1";
+var SQ2 = Math.SQRT2;
+var TMAX = 120;                       // largest step count the page shows
+var QVAR = 1 - 1 / SQ2;               // asymptotic variance coefficient, variance / t^2
+
+function mulberry32(a) {
+  return function () { a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function hashSeed(s) {
+  s = String(s); var h = 2166136261;
+  for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+/* One pure complex quantum walk of t steps on positions -T..T. With probability p each step
+   the coin is measured (collapsing the walk to a definite coin, which also collapses its
+   position). p = 0 is the exact quantum walk; p = 1 is the classical random walk. */
+function pureWalk(t, T, p, rnd) {
+  var N = 2 * T + 1, c = T, k;
+  var r0 = new Float64Array(N), i0 = new Float64Array(N), r1 = new Float64Array(N), i1 = new Float64Array(N);
+  var nr0 = new Float64Array(N), ni0 = new Float64Array(N), nr1 = new Float64Array(N), ni1 = new Float64Array(N);
+  var br0 = new Float64Array(N), bi0 = new Float64Array(N), br1 = new Float64Array(N), bi1 = new Float64Array(N);
+  r0[c] = 1 / SQ2; i1[c] = 1 / SQ2;   // coin (|0> + i|1>)/sqrt2: the symmetric start
+  for (var s = 0; s < t; s++) {
+    if (p > 0 && rnd() < p) {
+      var P0 = 0, P1 = 0;
+      for (k = 0; k < N; k++) { P0 += r0[k] * r0[k] + i0[k] * i0[k]; P1 += r1[k] * r1[k] + i1[k] * i1[k]; }
+      if (rnd() < P0) { var n0 = Math.sqrt(P0) || 1; for (k = 0; k < N; k++) { r0[k] /= n0; i0[k] /= n0; r1[k] = 0; i1[k] = 0; } }
+      else { var n1 = Math.sqrt(P1) || 1; for (k = 0; k < N; k++) { r1[k] /= n1; i1[k] /= n1; r0[k] = 0; i0[k] = 0; } }
+    }
+    for (k = 0; k < N; k++) {
+      br0[k] = (r0[k] + r1[k]) / SQ2; bi0[k] = (i0[k] + i1[k]) / SQ2;
+      br1[k] = (r0[k] - r1[k]) / SQ2; bi1[k] = (i0[k] - i1[k]) / SQ2;
+    }
+    nr0.fill(0); ni0.fill(0); nr1.fill(0); ni1.fill(0);
+    for (k = 0; k < N; k++) {
+      if (k - 1 >= 0) { nr0[k - 1] = br0[k]; ni0[k - 1] = bi0[k]; }
+      if (k + 1 < N) { nr1[k + 1] = br1[k]; ni1[k + 1] = bi1[k]; }
+    }
+    var tr = r0; r0 = nr0; nr0 = tr; tr = i0; i0 = ni0; ni0 = tr;
+    tr = r1; r1 = nr1; nr1 = tr; tr = i1; i1 = ni1; ni1 = tr;
+  }
+  var d = new Float64Array(N);
+  for (k = 0; k < N; k++) d[k] = r0[k] * r0[k] + i0[k] * i0[k] + r1[k] * r1[k] + i1[k] * i1[k];
+  return d;
+}
+
+/* Position distribution of the quantum walk at t steps. p = 0 is exact; p > 0 averages M
+   seeded walks (each measuring its coin at random steps). */
+function quantumDist(t, T, p, seed, M) {
+  p = p || 0; M = M || 1;
+  if (p <= 0) return pureWalk(t, T, 0, null);
+  var acc = new Float64Array(2 * T + 1);
+  var rnd = mulberry32(hashSeed(seed == null ? "qw" : seed));
+  for (var m = 0; m < M; m++) {
+    var d = pureWalk(t, T, p, rnd);
+    for (var k = 0; k < d.length; k++) acc[k] += d[k] / M;
+  }
+  return acc;
+}
+
+/* Classical random walk: each step left or right with probability 1/2. */
+function classicalDist(t, T) {
+  var N = 2 * T + 1, c = T, p = new Float64Array(N); p[c] = 1;
+  for (var s = 0; s < t; s++) {
+    var q = new Float64Array(N);
+    for (var i = 0; i < N; i++) { var v = p[i]; if (!v) continue; if (i > 0) q[i - 1] += 0.5 * v; if (i < N - 1) q[i + 1] += 0.5 * v; }
+    p = q;
+  }
+  return p;
+}
+
+/* Total, mean and variance of a distribution over positions -T..T. */
+function stats(d, T) {
+  var m = 0, v = 0, s = 0;
+  for (var i = 0; i < d.length; i++) { var x = i - T; s += d[i]; m += x * d[i]; v += x * x * d[i]; }
+  v -= m * m;
+  return { s: s, m: m, v: v };
+}
+
+/* Ensemble distribution at every step 0..Tmax for a given decoherence p (walkers in lockstep). */
+function ensembleHist(Tmax, p, seed, M) {
+  var N = 2 * Tmax + 1, c = Tmax, m, k;
+  var rnd = mulberry32(hashSeed(seed == null ? "qw" : seed));
+  var S = [];
+  for (m = 0; m < M; m++) {
+    var w = { r0: new Float64Array(N), i0: new Float64Array(N), r1: new Float64Array(N), i1: new Float64Array(N),
+      nr0: new Float64Array(N), ni0: new Float64Array(N), nr1: new Float64Array(N), ni1: new Float64Array(N),
+      br0: new Float64Array(N), bi0: new Float64Array(N), br1: new Float64Array(N), bi1: new Float64Array(N) };
+    w.r0[c] = 1 / SQ2; w.i1[c] = 1 / SQ2;
+    S.push(w);
+  }
+  function snapshot() {
+    var acc = new Float64Array(N);
+    for (var mm = 0; mm < M; mm++) {
+      var w = S[mm], r0 = w.r0, i0 = w.i0, r1 = w.r1, i1 = w.i1;
+      for (var kk = 0; kk < N; kk++) acc[kk] += (r0[kk] * r0[kk] + i0[kk] * i0[kk] + r1[kk] * r1[kk] + i1[kk] * i1[kk]) / M;
+    }
+    return acc;
+  }
+  var hist = [snapshot()];
+  for (var s = 0; s < Tmax; s++) {
+    for (m = 0; m < M; m++) {
+      var w = S[m], r0 = w.r0, i0 = w.i0, r1 = w.r1, i1 = w.i1, br0 = w.br0, bi0 = w.bi0, br1 = w.br1, bi1 = w.bi1;
+      if (p > 0 && rnd() < p) {
+        var P0 = 0, P1 = 0;
+        for (k = 0; k < N; k++) { P0 += r0[k] * r0[k] + i0[k] * i0[k]; P1 += r1[k] * r1[k] + i1[k] * i1[k]; }
+        if (rnd() < P0) { var n0 = Math.sqrt(P0) || 1; for (k = 0; k < N; k++) { r0[k] /= n0; i0[k] /= n0; r1[k] = 0; i1[k] = 0; } }
+        else { var n1 = Math.sqrt(P1) || 1; for (k = 0; k < N; k++) { r1[k] /= n1; i1[k] /= n1; r0[k] = 0; i0[k] = 0; } }
+      }
+      for (k = 0; k < N; k++) {
+        br0[k] = (r0[k] + r1[k]) / SQ2; bi0[k] = (i0[k] + i1[k]) / SQ2;
+        br1[k] = (r0[k] - r1[k]) / SQ2; bi1[k] = (i0[k] - i1[k]) / SQ2;
+      }
+      w.nr0.fill(0); w.ni0.fill(0); w.nr1.fill(0); w.ni1.fill(0);
+      for (k = 0; k < N; k++) {
+        if (k - 1 >= 0) { w.nr0[k - 1] = br0[k]; w.ni0[k - 1] = bi0[k]; }
+        if (k + 1 < N) { w.nr1[k + 1] = br1[k]; w.ni1[k + 1] = bi1[k]; }
+      }
+      var tr = w.r0; w.r0 = w.nr0; w.nr0 = tr; tr = w.i0; w.i0 = w.ni0; w.ni0 = tr;
+      tr = w.r1; w.r1 = w.nr1; w.nr1 = tr; tr = w.i1; w.i1 = w.ni1; w.ni1 = tr;
+    }
+    hist.push(snapshot());
+  }
+  return hist;
+}
+
+/* Ten checks the page runs on load. Each: {name, ok, got, want}. */
+function selfCheck() {
+  var out = [];
+  function add(name, ok, got, want) { out.push({ name: name, ok: !!ok, got: got, want: want }); }
+  var T = 65;
+  var cl = classicalDist(20, T), stc = stats(cl, T);
+  add("classical walk conserves probability", Math.abs(stc.s - 1) < 1e-12, stc.s.toFixed(12), "1");
+  add("classical variance equals t", Math.abs(stc.v - 20) < 1e-9, stc.v.toFixed(6), "20");
+
+  var q40 = quantumDist(40, T, 0), stq = stats(q40, T);
+  add("quantum walk conserves probability", Math.abs(stq.s - 1) < 1e-9, stq.s.toFixed(9), "1");
+  add("quantum walk is symmetric", Math.abs(stq.m) < 1e-9, stq.m.toExponential(2), "0");
+
+  var coefs = [40, 80, 160].map(function (t) { return stats(quantumDist(t, t + 5, 0), t + 5).v / (t * t); });
+  var coefOK = coefs.every(function (c) { return Math.abs(c - QVAR) < 0.01; });
+  add("quantum variance is (1 - 1/\u221a2) t\u00b2", coefOK, coefs.map(function (c) { return c.toFixed(4); }).join(", "), QVAR.toFixed(4));
+
+  add("quantum spreads faster than classical", stq.v > 5 * stc.v, stq.v.toFixed(1) + " vs " + stc.v.toFixed(1), "> 5\u00d7");
+  var odd = 0;
+  for (var i = 0; i < q40.length; i++) if (Math.abs(i - T) % 2 === 1 && q40[i] > 1e-12) odd++;
+  add("quantum walk keeps the parity of t", odd === 0, odd + " odd cells", "0");
+
+  var dec = quantumDist(60, T, 1, "selfcheck", 600), std = stats(dec, T), cl60 = stats(classicalDist(60, T), T);
+  add("full decoherence reproduces the classical walk", Math.abs(std.v - cl60.v) / cl60.v < 0.15, std.v.toFixed(2), cl60.v.toFixed(2));
+  var v0 = stats(quantumDist(60, T, 0), T).v, v5 = stats(quantumDist(60, T, 0.5, "selfcheck", 600), T).v;
+  add("decoherence slows the spread monotonically", v0 > v5 && v5 > std.v, [v0, v5, std.v].map(function (x) { return x.toFixed(1); }).join(" > "), "decreasing");
+
+  var a = quantumDist(30, T, 0.3, "same", 50), b = quantumDist(30, T, 0.3, "same", 50);
+  var same = true; for (var j = 0; j < a.length; j++) if (a[j] !== b[j]) same = false;
+  add("the walk is deterministic for a fixed seed", same, same ? "identical" : "differ", "identical");
+  return out;
+}
+
+var QW_ENGINE = { VERSION: VERSION, TMAX: TMAX, QVAR: QVAR, pureWalk: pureWalk,
+  quantumDist: quantumDist, classicalDist: classicalDist, stats: stats,
+  ensembleHist: ensembleHist, selfCheck: selfCheck };
+if (typeof module !== "undefined" && module.exports) module.exports = QW_ENGINE;
+if (typeof window !== "undefined") window.QW_ENGINE = QW_ENGINE;
+</script>
+
+<script>
+"use strict";
+(function () {
+  var QW = window.QW_ENGINE;
+  var $ = function (id) { return document.getElementById(id); };
+  var board = $("board"), chart = $("chart");
+  var bx = board.getContext("2d"), cx = chart.getContext("2d");
+  var TMAX = QW.TMAX, T = TMAX, N = 2 * TMAX + 1;
+
+  // precompute the classical and pure-quantum variance curves, and the decoherence histogram
+  var clHist = [], qHist = [];
+  for (var t = 0; t <= TMAX; t++) { clHist.push(QW.classicalDist(t, TMAX)); qHist.push(QW.pureWalk(t, TMAX, 0, null)); }
+  var decHist = null, decP = -1;
+
+  function ensureDecoherence(p) {
+    if (p <= 0) { decHist = null; decP = p; return; }
+    if (decHist && Math.abs(decP - p) < 1e-9) return;
+    decHist = QW.ensembleHist(TMAX, p, "quantum-walk-view", 600);
+    decP = p;
+  }
+
+  function drawBoard(t, p) {
+    var w = board.width, h = board.height, pad = 26, mid = h - 30;
+    bx.clearRect(0, 0, w, h);
+    // baseline
+    bx.strokeStyle = "#1f2330"; bx.beginPath(); bx.moveTo(pad, mid); bx.lineTo(w - pad, mid); bx.stroke();
+    var qd = (p <= 0) ? qHist[t] : decHist[t];
+    var cd = clHist[t];
+    // scale: quantum peak vs classical peak (use the larger)
+    var peak = 0;
+    for (var i = 0; i < N; i++) { peak = Math.max(peak, qd[i], cd[i]); }
+    peak = peak || 1;
+    var scale = (mid - 16) / peak;
+    var bw = (w - 2 * pad) / N;
+    // classical bars (blue)
+    bx.fillStyle = "rgba(110,168,254,0.55)";
+    for (var i2 = 0; i2 < N; i2++) { var hh = cd[i2] * scale; if (hh > 0.05) bx.fillRect(pad + i2 * bw, mid - hh, Math.max(bw, 1), hh); }
+    // quantum bars (orange)
+    bx.fillStyle = "rgba(240,163,94,0.72)";
+    for (var i3 = 0; i3 < N; i3++) { var hh2 = qd[i3] * scale; if (hh2 > 0.05) bx.fillRect(pad + i3 * bw, mid - hh2, Math.max(bw, 1), hh2); }
+    // labels
+    bx.fillStyle = "#7c8291"; bx.font = "12px ui-monospace, monospace";
+    bx.fillText("-" + TMAX, pad, h - 10); bx.fillText("0", w / 2 - 3, h - 10); bx.fillText("+" + TMAX, w - pad - 22, h - 10);
+    bx.fillText("step " + t + (p > 0 ? "  (decoherence " + Math.round(p * 100) + "%)" : "  (exact quantum)"), pad, 16);
+    var sq = QW.stats(qd, TMAX), sc = QW.stats(cd, TMAX);
+    bx.fillStyle = "#f0a35e"; bx.fillText("quantum var " + sq.v.toFixed(1), w - 190, 16);
+    bx.fillStyle = "#6ea8fe"; bx.fillText("classical var " + sc.v.toFixed(1), w - 190, 32);
+  }
+
+  function drawChart(t, p) {
+    var w = chart.width, h = chart.height, pad = 40, top = 14, bot = h - 26, right = w - 16;
+    cx.clearRect(0, 0, w, h);
+    var vmax = QW.QVAR * TMAX * TMAX * 1.02;
+    function X(tt) { return pad + (right - pad) * tt / TMAX; }
+    function Y(v) { return bot - (bot - top) * v / vmax; }
+    // axes
+    cx.strokeStyle = "#1f2330"; cx.beginPath(); cx.moveTo(pad, top); cx.lineTo(pad, bot); cx.lineTo(right, bot); cx.stroke();
+    cx.fillStyle = "#7c8291"; cx.font = "12px ui-monospace, monospace";
+    cx.fillText("variance", 6, top + 4);
+    cx.fillText("0", pad - 12, bot + 4); cx.fillText("steps \u2192 " + TMAX, right - 96, bot + 18);
+    // quantum curve (orange): QVAR t^2
+    cx.strokeStyle = "#f0a35e"; cx.lineWidth = 2; cx.beginPath();
+    for (var tt = 0; tt <= TMAX; tt++) { var x = X(tt), y = Y(QW.QVAR * tt * tt); tt ? cx.lineTo(x, y) : cx.moveTo(x, y); }
+    cx.stroke();
+    // classical curve (blue): t
+    cx.strokeStyle = "#6ea8fe"; cx.beginPath();
+    for (var tt2 = 0; tt2 <= TMAX; tt2++) { var x2 = X(tt2), y2 = Y(tt2); tt2 ? cx.lineTo(x2, y2) : cx.moveTo(x2, y2); }
+    cx.stroke();
+    cx.lineWidth = 1;
+    // marker at the current step
+    var qv = QW.stats((p <= 0) ? qHist[t] : decHist[t], TMAX).v;
+    cx.fillStyle = "#f0a35e"; cx.beginPath(); cx.arc(X(t), Y(qv), 4, 0, 7); cx.fill();
+    cx.fillStyle = "#d9dbe3"; cx.fillText("now: var " + qv.toFixed(1) + " at t = " + t, X(t) + 8, Y(qv) - 6);
+  }
+
+  function render() {
+    var t = +$("t").value, p = (+$("p").value) / 100;
+    ensureDecoherence(p);
+    drawBoard(t, p); drawChart(t, p);
+  }
+
+  // self-checks
+  var checks = QW.selfCheck();
+  $("checks").innerHTML = checks.map(function (c) {
+    return (c.ok ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>') +
+      "  " + c.name + "\n        got " + c.got + "   wanted " + c.want;
+  }).join("\n") + "\n\n" + (checks.filter(function (c) { return !c.ok; }).length === 0
+    ? '<span class="pass">' + checks.length + " checks, 0 failed.</span>"
+    : '<span class="fail">' + checks.filter(function (c) { return !c.ok; }).length + " FAILED.</span>");
+
+  var playing = false, timer = null;
+  function tick() {
+    var el = $("t"), v = +el.value;
+    if (v >= TMAX) { stop(); return; }
+    el.value = v + 1; $("tv").textContent = el.value; render();
+  }
+  function start() { playing = true; $("play").textContent = "Pause"; timer = setInterval(tick, 40); }
+  function stop() { playing = false; $("play").textContent = "Play"; if (timer) clearInterval(timer); timer = null; }
+
+  $("play").addEventListener("click", function () { playing ? stop() : start(); });
+  $("reset").addEventListener("click", function () { stop(); $("t").value = 0; $("tv").textContent = "0"; render(); });
+  $("t").addEventListener("input", function () { $("tv").textContent = $("t").value; render(); });
+  $("p").addEventListener("input", function () { $("pv").textContent = $("p").value + "%"; render(); });
+
+  render();
+  window.QUANTUM_WALK = { render: render, checks: checks };
+})();
+</script>
+</body>
+</html>
