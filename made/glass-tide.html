@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Glass tide</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; margin: 2rem; background: #f4efe6; color: #1c1915; }
+  h1 { font-weight: normal; }
+  .board { display: grid; grid-template-columns: repeat(5, 52px); gap: 4px; margin: 1rem 0; }
+  button.cell { width: 52px; height: 52px; border: 1px solid #1c1915; background: #efe6d4; font: 14px Georgia, serif; }
+  button.cell.wet { background: #7ea0b8; color: #f4efe6; }
+  button.cell.glass { outline: 2px solid #c4552a; }
+  .note { max-width: 38rem; }
+</style>
+</head>
+<body>
+<h1>Glass tide</h1>
+<p class="note" id="status">loading</p>
+<div class="board" id="board"></div>
+<p class="note">Click a dry cell to set a glass for this turn. Eight turns. Seed <code>glass-tide-first</code>. Open round GT-20261005-first.</p>
+<script>
+const SEED = "glass-tide-first";
+function mulberry(seed) {
+  let h = 2166136261;
+  for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return function () {
+    h |= 0; h = h + 0x6D2B79F5 | 0;
+    let t = Math.imul(h ^ h >>> 15, 1 | h);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const rand = mulberry(SEED);
+const H = Array.from({length: 25}, () => Math.floor(rand() * 5));
+let tide = 0, turn = 0, stones = Array(25).fill(0), glasses = [];
+function dry(i, t) {
+  return (H[i] + stones[i]) >= t;
+}
+function lowestDry() {
+  let best = -1, bh = 99;
+  for (let i = 0; i < 25; i++) if (dry(i, tide) && H[i] + stones[i] < bh) { bh = H[i] + stones[i]; best = i; }
+  return best;
+}
+function place(i) {
+  if (turn >= 8) return;
+  if (!dry(i, tide)) { glasses.push("rej"); }
+  else { stones[i] += 1; glasses.push(i); }
+  tide += 1; turn += 1;
+  draw();
+}
+function score() {
+  let n = 0;
+  for (let i = 0; i < 25; i++) if (dry(i, tide)) n++;
+  return n;
+}
+function auto() {
+  stones = Array(25).fill(0); glasses = []; tide = 0; turn = 0;
+  for (let t = 0; t < 8; t++) {
+    const i = lowestDry();
+    if (i < 0) { glasses.push("rej"); tide++; turn++; continue; }
+    stones[i] += 1; glasses.push(i); tide++; turn++;
+  }
+  return score();
+}
+const expect = auto();
+stones = Array(25).fill(0); glasses = []; tide = 0; turn = 0;
+const board = document.getElementById("board");
+function draw() {
+  board.innerHTML = "";
+  for (let i = 0; i < 25; i++) {
+    const b = document.createElement("button");
+    b.className = "cell" + (dry(i, tide) ? "" : " wet");
+    b.textContent = H[i] + stones[i];
+    b.onclick = () => place(i);
+    board.appendChild(b);
+  }
+  const ok = expect === 9;
+  document.getElementById("status").textContent =
+    (ok ? "check ok" : "check failed") +
+    ": lowest-dry policy scores " + expect + " (expected 9). turn " + turn +
+    " tide " + tide + " dry now " + score() + ". heights " + H.join(",");
+}
+draw();
+</script>
+</body>
+</html>
