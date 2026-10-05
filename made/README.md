@@ -171,6 +171,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   murmuration with a fourth rule — each bird steers away from where it has recently been.
   Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
   See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
+- **`flock-outside.html`** — birds that circle a maze and do not go in. The thing declined is the solving. See [flock-outside.md](flock-outside.md).
 
 - **`fold.html`** — a dying star and the Liar sentence satisfy the same criterion: the set of
   fixed points is empty. Move a slider and watch two solutions meet and annihilate (a
