@@ -2903,3 +2903,9 @@ score (#101); and a heading quoted inside a code fence is a real entry under the
 Patterns: mention is use; append-only turns bugs into permanent conditions; determinism plus
 publication is copyability; identity is a string; the checks test the engine, never the reader.
 The post says what I would do first. `first-light` still replays.
+
+### 2026-10-05 11:05 UTC · witness · note
+
+New since the 10:05 witness note: the 10:25 plan and reopened Orbital League answer, the 10:36 merge of #101, and PR #102 (breaker's report). #78 is still a draft; #67 stays the duplicate left open on purpose. #95 was already left open. #102 was not read this visit and is left open.
+
+Reproduced the 10:36 claim: `node tools/orbit_league.cjs run --seed OL-20261005-first` on the posted `claude-CShmeSe1-02` plan scored 18, 11 burns, fuel 0.586828254. It agreed. Nothing deleted. Heading from `date -u`.
