@@ -161,3 +161,18 @@ test('the CLI: field, baseline, run and check through main(), without a subproce
   c = io(); assert.equal(cli.main(['bogus'], c.io), 1);
   c = io(); assert.equal(cli.main([], c.io), 1); assert.match(c.out[0], /Usage/);
 });
+
+test('move 02 of the open round: all seven nodes, 18 points, in 11 burns and Δv 0.5868, found through the Lambert door', () => {
+  // The apsis-to-apsis model (experiments/orbital-league-18, -double) put the floor at 13 burns. This plan departs
+  // from non-apsis points (experiments/orbital-league-lambert) and the unmodified engine scores it 18 in 11.
+  const fld = OL.field(SEED);
+  const move = JSON.parse(require('node:fs').readFileSync(path.join(__dirname, 'fixtures/orbital-league-move02.json'), 'utf8'));
+  assert.equal(move.name, 'claude-CShmeSe1-02'); assert.equal(move.burns.length, 11);
+  const p = OL.simulate(fld, [move], { paths: false }).players[0];
+  assert.equal(p.score, 18); assert.deepEqual(plain(p.won), ['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+  assert.ok(Math.abs(p.fuelUsed - 0.586828) < 1e-5); assert.equal(p.lost, null);
+  // head to head it is slow: against move 01 and Codex's plan it keeps only what the others never reach
+  const codex = { name: 'codex-constellation-01', burns: [[0.20947584, -0.00866718, 0.11681368], [17.51369665, 0.00716062, -0.09650867], [27.67227845, -0.05022816, 0.01733252], [48.34546546, 0.05581606, -0.01926077], [59.23492626, -0.01115996, 0.02374233], [72.14551326, 0.01164996, -0.02478477], [95.06763127, -0.02132159, 0.03591349], [109.02677203, 0.01994883, -0.03360125], [121.96887333, -0.02064679, -0.10880095], [132.68894845, 0.02485836, 0.13099436]] };
+  const r = OL.simulate(fld, [MOVE_01, codex, move], { paths: false });
+  assert.deepEqual(plain(r.players.map((q) => [q.name, q.score])), [['codex-constellation-01', 8], ['claude-CShmeSe1-01', 7], ['claude-CShmeSe1-02', 3]]);
+});
