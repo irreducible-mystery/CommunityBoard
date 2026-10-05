@@ -1,0 +1,3690 @@
+{
+  "options": [
+    {
+      "cutoff": 4,
+      "score": 59,
+      "trades": {
+        "executed": 2,
+        "broken": 0,
+        "unanswered": 0
+      }
+    },
+    {
+      "cutoff": 6,
+      "score": 58,
+      "trades": {
+        "executed": 3,
+        "broken": 0,
+        "unanswered": 0
+      }
+    },
+    {
+      "cutoff": 8,
+      "score": 78,
+      "trades": {
+        "executed": 6,
+        "broken": 0,
+        "unanswered": 0
+      }
+    },
+    {
+      "cutoff": 10,
+      "score": 113,
+      "trades": {
+        "executed": 6,
+        "broken": 0,
+        "unanswered": 0
+      }
+    },
+    {
+      "cutoff": 12,
+      "score": 111,
+      "trades": {
+        "executed": 8,
+        "broken": 0,
+        "unanswered": 0
+      }
+    }
+  ],
+  "chosenCutoff": 10,
+  "withTrades": {
+    "version": 1,
+    "seed": "XL-20261005-first",
+    "players": [
+      {
+        "name": "codex-seven-sw",
+        "home": "SW",
+        "score": 113,
+        "regions": 11,
+        "triples": 34,
+        "stock": {
+          "ore": 35,
+          "grain": 34,
+          "salt": 34
+        },
+        "trades": {
+          "executed": 6,
+          "broken": 0,
+          "unanswered": 0
+        },
+        "betrayals": 0,
+        "repelled": 0
+      },
+      {
+        "name": "trader",
+        "home": "SE",
+        "score": 56,
+        "regions": 5,
+        "triples": 17,
+        "stock": {
+          "ore": 21,
+          "grain": 26,
+          "salt": 17
+        },
+        "trades": {
+          "executed": 6,
+          "broken": 0,
+          "unanswered": 10
+        },
+        "betrayals": 0,
+        "repelled": 0
+      },
+      {
+        "name": "settler",
+        "home": "NW",
+        "score": 33,
+        "regions": 6,
+        "triples": 9,
+        "stock": {
+          "ore": 35,
+          "grain": 21,
+          "salt": 9
+        },
+        "trades": {
+          "executed": 0,
+          "broken": 0,
+          "unanswered": 0
+        },
+        "betrayals": 0,
+        "repelled": 0
+      }
+    ],
+    "pacts": [],
+    "owners": [
+      {
+        "x": 0,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 1,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 2,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 3,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 4,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "owner": "settler"
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "owner": null
+      },
+      {
+        "x": 3,
+        "y": 1,
+        "owner": null
+      },
+      {
+        "x": 4,
+        "y": 1,
+        "owner": "trader"
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "owner": "trader"
+      },
+      {
+        "x": 0,
+        "y": 3,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 1,
+        "y": 3,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 2,
+        "y": 3,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 3,
+        "y": 3,
+        "owner": null
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "owner": "trader"
+      },
+      {
+        "x": 0,
+        "y": 4,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 1,
+        "y": 4,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 3,
+        "y": 4,
+        "owner": "trader"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "owner": "trader"
+      }
+    ],
+    "log": [
+      {
+        "t": 1,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          }
+        }
+      },
+      {
+        "t": 1,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          0,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 1,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          4,
+          3
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 1,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          0,
+          3
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 2,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          }
+        }
+      },
+      {
+        "t": 2,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          1,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 2,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          4,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 2,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          0,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 3,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 3,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          2,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 3,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          3,
+          4
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 3,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          1,
+          4
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 4,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 4,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          3,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 4,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          4,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 4,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          1,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 5,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 5,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          3,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "tied"
+      },
+      {
+        "t": 5,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          3,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "tied"
+      },
+      {
+        "t": 5,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          1,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 6,
+        "kind": "trade",
+        "by": "trader",
+        "with": "codex-seven-sw",
+        "give": {
+          "ore": 0,
+          "grain": 1,
+          "salt": 0
+        },
+        "get": {
+          "ore": 0,
+          "grain": 0,
+          "salt": 1
+        },
+        "result": "executed"
+      },
+      {
+        "t": 6,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          3,
+          0
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 6,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          4,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 6,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          2,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 7,
+        "kind": "trade",
+        "by": "trader",
+        "with": "codex-seven-sw",
+        "give": {
+          "ore": 0,
+          "grain": 1,
+          "salt": 0
+        },
+        "get": {
+          "ore": 0,
+          "grain": 0,
+          "salt": 1
+        },
+        "result": "executed"
+      },
+      {
+        "t": 7,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          1,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "too little"
+      },
+      {
+        "t": 7,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          2,
+          0
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 7,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          2,
+          3
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 8,
+        "kind": "trade",
+        "by": "trader",
+        "with": "codex-seven-sw",
+        "give": {
+          "ore": 0,
+          "grain": 1,
+          "salt": 0
+        },
+        "get": {
+          "ore": 0,
+          "grain": 0,
+          "salt": 1
+        },
+        "result": "executed"
+      },
+      {
+        "t": 8,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          1,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 8,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          1,
+          0
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 8,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          3,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 9,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 9,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          3,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 9,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          0,
+          0
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 9,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          1,
+          3
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 10,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 10,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          1,
+          3
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 10,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          4,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "too little"
+      },
+      {
+        "t": 10,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          2,
+          4
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 11,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 11,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          2,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 11,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          0,
+          1
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 12,
+        "kind": "trade",
+        "by": "trader",
+        "with": "codex-seven-sw",
+        "give": {
+          "ore": 1,
+          "grain": 0,
+          "salt": 0
+        },
+        "get": {
+          "ore": 0,
+          "grain": 0,
+          "salt": 1
+        },
+        "result": "executed"
+      },
+      {
+        "t": 12,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          0,
+          3
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 12,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          1,
+          1
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 13,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 13,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          0,
+          4
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 13,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          1,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 14,
+        "kind": "trade",
+        "by": "trader",
+        "with": "codex-seven-sw",
+        "give": {
+          "ore": 1,
+          "grain": 0,
+          "salt": 0
+        },
+        "get": {
+          "ore": 0,
+          "grain": 0,
+          "salt": 1
+        },
+        "result": "executed"
+      },
+      {
+        "t": 14,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          4,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "too little"
+      },
+      {
+        "t": 14,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          2,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 15,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 15,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          0,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "too little"
+      },
+      {
+        "t": 15,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          2,
+          3
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 16,
+        "kind": "trade",
+        "by": "trader",
+        "with": "codex-seven-sw",
+        "give": {
+          "ore": 1,
+          "grain": 0,
+          "salt": 0
+        },
+        "get": {
+          "ore": 0,
+          "grain": 0,
+          "salt": 1
+        },
+        "result": "executed"
+      },
+      {
+        "t": 16,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          4,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 16,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          0,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      }
+    ],
+    "frames": [
+      {
+        "t": 1,
+        "owners": [
+          "settler",
+          null,
+          null,
+          null,
+          null,
+          "settler",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 3
+          },
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 3
+          },
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 3
+          }
+        ]
+      },
+      {
+        "t": 2,
+        "owners": [
+          "settler",
+          "settler",
+          null,
+          null,
+          null,
+          "settler",
+          null,
+          null,
+          null,
+          null,
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 2,
+            "grain": 5,
+            "salt": 2
+          },
+          {
+            "ore": 2,
+            "grain": 4,
+            "salt": 3
+          }
+        ]
+      },
+      {
+        "t": 3,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          null,
+          null,
+          "settler",
+          null,
+          null,
+          null,
+          null,
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 2,
+            "grain": 6,
+            "salt": 1
+          },
+          {
+            "ore": 2,
+            "grain": 4,
+            "salt": 3
+          }
+        ]
+      },
+      {
+        "t": 4,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          null,
+          "settler",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 4,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 2,
+            "grain": 7,
+            "salt": 1
+          },
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 3
+          }
+        ]
+      },
+      {
+        "t": 5,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          null,
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 6,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 3,
+            "grain": 8,
+            "salt": 1
+          },
+          {
+            "ore": 4,
+            "grain": 4,
+            "salt": 4
+          }
+        ]
+      },
+      {
+        "t": 6,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 8,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 5,
+            "grain": 9,
+            "salt": 3
+          },
+          {
+            "ore": 6,
+            "grain": 5,
+            "salt": 4
+          }
+        ]
+      },
+      {
+        "t": 7,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 10,
+            "grain": 5,
+            "salt": 2
+          },
+          {
+            "ore": 7,
+            "grain": 10,
+            "salt": 5
+          },
+          {
+            "ore": 8,
+            "grain": 6,
+            "salt": 5
+          }
+        ]
+      },
+      {
+        "t": 8,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          null,
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 13,
+            "grain": 7,
+            "salt": 3
+          },
+          {
+            "ore": 9,
+            "grain": 11,
+            "salt": 7
+          },
+          {
+            "ore": 10,
+            "grain": 7,
+            "salt": 7
+          }
+        ]
+      },
+      {
+        "t": 9,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 16,
+            "grain": 9,
+            "salt": 4
+          },
+          {
+            "ore": 11,
+            "grain": 13,
+            "salt": 8
+          },
+          {
+            "ore": 12,
+            "grain": 8,
+            "salt": 10
+          }
+        ]
+      },
+      {
+        "t": 10,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 19,
+            "grain": 11,
+            "salt": 5
+          },
+          {
+            "ore": 12,
+            "grain": 14,
+            "salt": 8
+          },
+          {
+            "ore": 14,
+            "grain": 10,
+            "salt": 13
+          }
+        ]
+      },
+      {
+        "t": 11,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 22,
+            "grain": 13,
+            "salt": 6
+          },
+          {
+            "ore": 14,
+            "grain": 16,
+            "salt": 9
+          },
+          {
+            "ore": 17,
+            "grain": 14,
+            "salt": 17
+          }
+        ]
+      },
+      {
+        "t": 12,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 25,
+            "grain": 15,
+            "salt": 7
+          },
+          {
+            "ore": 15,
+            "grain": 18,
+            "salt": 11
+          },
+          {
+            "ore": 21,
+            "grain": 18,
+            "salt": 20
+          }
+        ]
+      },
+      {
+        "t": 13,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 28,
+            "grain": 17,
+            "salt": 8
+          },
+          {
+            "ore": 17,
+            "grain": 20,
+            "salt": 12
+          },
+          {
+            "ore": 24,
+            "grain": 22,
+            "salt": 24
+          }
+        ]
+      },
+      {
+        "t": 14,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 30,
+            "grain": 18,
+            "salt": 8
+          },
+          {
+            "ore": 18,
+            "grain": 22,
+            "salt": 14
+          },
+          {
+            "ore": 28,
+            "grain": 26,
+            "salt": 27
+          }
+        ]
+      },
+      {
+        "t": 15,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 32,
+            "grain": 19,
+            "salt": 8
+          },
+          {
+            "ore": 20,
+            "grain": 24,
+            "salt": 15
+          },
+          {
+            "ore": 31,
+            "grain": 30,
+            "salt": 31
+          }
+        ]
+      },
+      {
+        "t": 16,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 35,
+            "grain": 21,
+            "salt": 9
+          },
+          {
+            "ore": 21,
+            "grain": 26,
+            "salt": 17
+          },
+          {
+            "ore": 35,
+            "grain": 34,
+            "salt": 34
+          }
+        ]
+      }
+    ]
+  },
+  "identicalClaimsNoOffers": {
+    "version": 1,
+    "seed": "XL-20261005-first",
+    "players": [
+      {
+        "name": "codex-seven-sw",
+        "home": "SW",
+        "score": 104,
+        "regions": 11,
+        "triples": 31,
+        "stock": {
+          "ore": 32,
+          "grain": 31,
+          "salt": 40
+        },
+        "trades": {
+          "executed": 0,
+          "broken": 0,
+          "unanswered": 0
+        },
+        "betrayals": 0,
+        "repelled": 0
+      },
+      {
+        "name": "trader",
+        "home": "SE",
+        "score": 38,
+        "regions": 5,
+        "triples": 11,
+        "stock": {
+          "ore": 24,
+          "grain": 29,
+          "salt": 11
+        },
+        "trades": {
+          "executed": 0,
+          "broken": 0,
+          "unanswered": 16
+        },
+        "betrayals": 0,
+        "repelled": 0
+      },
+      {
+        "name": "settler",
+        "home": "NW",
+        "score": 33,
+        "regions": 6,
+        "triples": 9,
+        "stock": {
+          "ore": 35,
+          "grain": 21,
+          "salt": 9
+        },
+        "trades": {
+          "executed": 0,
+          "broken": 0,
+          "unanswered": 0
+        },
+        "betrayals": 0,
+        "repelled": 0
+      }
+    ],
+    "pacts": [],
+    "owners": [
+      {
+        "x": 0,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 1,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 2,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 3,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 4,
+        "y": 0,
+        "owner": "settler"
+      },
+      {
+        "x": 0,
+        "y": 1,
+        "owner": "settler"
+      },
+      {
+        "x": 1,
+        "y": 1,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "owner": null
+      },
+      {
+        "x": 3,
+        "y": 1,
+        "owner": null
+      },
+      {
+        "x": 4,
+        "y": 1,
+        "owner": "trader"
+      },
+      {
+        "x": 0,
+        "y": 2,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 1,
+        "y": 2,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 2,
+        "y": 2,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 3,
+        "y": 2,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "owner": "trader"
+      },
+      {
+        "x": 0,
+        "y": 3,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 1,
+        "y": 3,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 2,
+        "y": 3,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 3,
+        "y": 3,
+        "owner": null
+      },
+      {
+        "x": 4,
+        "y": 3,
+        "owner": "trader"
+      },
+      {
+        "x": 0,
+        "y": 4,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 1,
+        "y": 4,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "owner": "codex-seven-sw"
+      },
+      {
+        "x": 3,
+        "y": 4,
+        "owner": "trader"
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "owner": "trader"
+      }
+    ],
+    "log": [
+      {
+        "t": 1,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          }
+        }
+      },
+      {
+        "t": 1,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          0,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 1,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          4,
+          3
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 1,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          0,
+          3
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 2,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          }
+        }
+      },
+      {
+        "t": 2,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          1,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 2,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          4,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 2,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          0,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 3,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 3,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          2,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 3,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          3,
+          4
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 3,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          1,
+          4
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 4,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 4,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          3,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 4,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          4,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 4,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          1,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 5,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 5,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          3,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "tied"
+      },
+      {
+        "t": 5,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          3,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "tied"
+      },
+      {
+        "t": 5,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          1,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 6,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 6,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          3,
+          0
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 6,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          4,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 6,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          2,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 7,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 7,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          1,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "too little"
+      },
+      {
+        "t": 7,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          2,
+          0
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 7,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          2,
+          3
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 8,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 0,
+            "grain": 1,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 8,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          1,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 8,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          1,
+          0
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 8,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          3,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 9,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 9,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          3,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 9,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          0,
+          0
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 9,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          1,
+          3
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 10,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 10,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          1,
+          3
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 10,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          4,
+          0
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "too little"
+      },
+      {
+        "t": 10,
+        "kind": "claim",
+        "by": "codex-seven-sw",
+        "cell": [
+          2,
+          4
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "settled"
+      },
+      {
+        "t": 11,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 11,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          2,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 11,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          0,
+          1
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 12,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 12,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          0,
+          3
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 12,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          1,
+          1
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 13,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 13,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          0,
+          4
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 13,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          1,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 14,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 14,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          4,
+          1
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "too little"
+      },
+      {
+        "t": 14,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          2,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 15,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 15,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          0,
+          2
+        ],
+        "spend": {
+          "ore": 1,
+          "grain": 1,
+          "salt": 1
+        },
+        "result": "too little"
+      },
+      {
+        "t": 15,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          2,
+          3
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 16,
+        "kind": "trade",
+        "by": "trader",
+        "result": "unanswered",
+        "offer": {
+          "kind": "trade",
+          "with": "*",
+          "give": {
+            "ore": 1,
+            "grain": 0,
+            "salt": 0
+          },
+          "get": {
+            "ore": 0,
+            "grain": 0,
+            "salt": 1
+          }
+        }
+      },
+      {
+        "t": 16,
+        "kind": "claim",
+        "by": "settler",
+        "cell": [
+          4,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      },
+      {
+        "t": 16,
+        "kind": "claim",
+        "by": "trader",
+        "cell": [
+          0,
+          2
+        ],
+        "result": "rejected",
+        "why": "not adjacent"
+      }
+    ],
+    "frames": [
+      {
+        "t": 1,
+        "owners": [
+          "settler",
+          null,
+          null,
+          null,
+          null,
+          "settler",
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 3
+          },
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 3
+          },
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 3
+          }
+        ]
+      },
+      {
+        "t": 2,
+        "owners": [
+          "settler",
+          "settler",
+          null,
+          null,
+          null,
+          "settler",
+          null,
+          null,
+          null,
+          null,
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 2,
+            "grain": 5,
+            "salt": 2
+          },
+          {
+            "ore": 2,
+            "grain": 4,
+            "salt": 3
+          }
+        ]
+      },
+      {
+        "t": 3,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          null,
+          null,
+          "settler",
+          null,
+          null,
+          null,
+          null,
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 2,
+            "grain": 6,
+            "salt": 1
+          },
+          {
+            "ore": 2,
+            "grain": 4,
+            "salt": 3
+          }
+        ]
+      },
+      {
+        "t": 4,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          null,
+          "settler",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 4,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 2,
+            "grain": 7,
+            "salt": 1
+          },
+          {
+            "ore": 3,
+            "grain": 4,
+            "salt": 3
+          }
+        ]
+      },
+      {
+        "t": 5,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          null,
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 6,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 3,
+            "grain": 8,
+            "salt": 1
+          },
+          {
+            "ore": 4,
+            "grain": 4,
+            "salt": 4
+          }
+        ]
+      },
+      {
+        "t": 6,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 8,
+            "grain": 4,
+            "salt": 2
+          },
+          {
+            "ore": 5,
+            "grain": 10,
+            "salt": 2
+          },
+          {
+            "ore": 6,
+            "grain": 4,
+            "salt": 5
+          }
+        ]
+      },
+      {
+        "t": 7,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          null,
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 10,
+            "grain": 5,
+            "salt": 2
+          },
+          {
+            "ore": 7,
+            "grain": 12,
+            "salt": 3
+          },
+          {
+            "ore": 8,
+            "grain": 4,
+            "salt": 7
+          }
+        ]
+      },
+      {
+        "t": 8,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          null,
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 13,
+            "grain": 7,
+            "salt": 3
+          },
+          {
+            "ore": 9,
+            "grain": 14,
+            "salt": 4
+          },
+          {
+            "ore": 10,
+            "grain": 4,
+            "salt": 10
+          }
+        ]
+      },
+      {
+        "t": 9,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 16,
+            "grain": 9,
+            "salt": 4
+          },
+          {
+            "ore": 11,
+            "grain": 16,
+            "salt": 5
+          },
+          {
+            "ore": 12,
+            "grain": 5,
+            "salt": 13
+          }
+        ]
+      },
+      {
+        "t": 10,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 19,
+            "grain": 11,
+            "salt": 5
+          },
+          {
+            "ore": 12,
+            "grain": 17,
+            "salt": 5
+          },
+          {
+            "ore": 14,
+            "grain": 7,
+            "salt": 16
+          }
+        ]
+      },
+      {
+        "t": 11,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 22,
+            "grain": 13,
+            "salt": 6
+          },
+          {
+            "ore": 14,
+            "grain": 19,
+            "salt": 6
+          },
+          {
+            "ore": 17,
+            "grain": 11,
+            "salt": 20
+          }
+        ]
+      },
+      {
+        "t": 12,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 25,
+            "grain": 15,
+            "salt": 7
+          },
+          {
+            "ore": 16,
+            "grain": 21,
+            "salt": 7
+          },
+          {
+            "ore": 20,
+            "grain": 15,
+            "salt": 24
+          }
+        ]
+      },
+      {
+        "t": 13,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 28,
+            "grain": 17,
+            "salt": 8
+          },
+          {
+            "ore": 18,
+            "grain": 23,
+            "salt": 8
+          },
+          {
+            "ore": 23,
+            "grain": 19,
+            "salt": 28
+          }
+        ]
+      },
+      {
+        "t": 14,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 30,
+            "grain": 18,
+            "salt": 8
+          },
+          {
+            "ore": 20,
+            "grain": 25,
+            "salt": 9
+          },
+          {
+            "ore": 26,
+            "grain": 23,
+            "salt": 32
+          }
+        ]
+      },
+      {
+        "t": 15,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 32,
+            "grain": 19,
+            "salt": 8
+          },
+          {
+            "ore": 22,
+            "grain": 27,
+            "salt": 10
+          },
+          {
+            "ore": 29,
+            "grain": 27,
+            "salt": 36
+          }
+        ]
+      },
+      {
+        "t": 16,
+        "owners": [
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "settler",
+          "codex-seven-sw",
+          null,
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          null,
+          "trader",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "codex-seven-sw",
+          "trader",
+          "trader"
+        ],
+        "stock": [
+          {
+            "ore": 35,
+            "grain": 21,
+            "salt": 9
+          },
+          {
+            "ore": 24,
+            "grain": 29,
+            "salt": 11
+          },
+          {
+            "ore": 32,
+            "grain": 31,
+            "salt": 40
+          }
+        ]
+      }
+    ]
+  }
+}

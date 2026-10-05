@@ -1,0 +1,655 @@
+{
+  "before": {
+    "version": 1,
+    "seed": "first-light",
+    "size": 11,
+    "base": [
+      5,
+      5
+    ],
+    "vault": [
+      1,
+      6,
+      3,
+      8
+    ],
+    "grid": [
+      "###########",
+      "#.f..2.f..#",
+      "#...f1f.of#",
+      "#....1..fo#",
+      "#.f.f.f.f.#",
+      "#f.o.A.f.3#",
+      "#1......1.#",
+      "#1o21o..1f#",
+      "#1212ff.3.#",
+      "#..oo..o21#",
+      "###########"
+    ],
+    "barriers": [
+      {
+        "x": 5,
+        "y": 1,
+        "hardness": 2
+      },
+      {
+        "x": 5,
+        "y": 2,
+        "hardness": 1
+      },
+      {
+        "x": 5,
+        "y": 3,
+        "hardness": 1
+      },
+      {
+        "x": 9,
+        "y": 5,
+        "hardness": 3
+      },
+      {
+        "x": 1,
+        "y": 6,
+        "hardness": 1
+      },
+      {
+        "x": 8,
+        "y": 6,
+        "hardness": 1
+      },
+      {
+        "x": 1,
+        "y": 7,
+        "hardness": 1
+      },
+      {
+        "x": 3,
+        "y": 7,
+        "hardness": 2
+      },
+      {
+        "x": 4,
+        "y": 7,
+        "hardness": 1
+      },
+      {
+        "x": 8,
+        "y": 7,
+        "hardness": 1
+      },
+      {
+        "x": 1,
+        "y": 8,
+        "hardness": 1
+      },
+      {
+        "x": 2,
+        "y": 8,
+        "hardness": 2
+      },
+      {
+        "x": 3,
+        "y": 8,
+        "hardness": 1
+      },
+      {
+        "x": 4,
+        "y": 8,
+        "hardness": 2
+      },
+      {
+        "x": 8,
+        "y": 8,
+        "hardness": 3
+      },
+      {
+        "x": 8,
+        "y": 9,
+        "hardness": 2
+      },
+      {
+        "x": 9,
+        "y": 9,
+        "hardness": 1
+      }
+    ],
+    "nodes": [
+      {
+        "x": 1,
+        "y": 5,
+        "kind": "fuel",
+        "amount": 3
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "kind": "fuel",
+        "amount": 3
+      },
+      {
+        "x": 2,
+        "y": 7,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 3,
+        "y": 5,
+        "kind": "ore",
+        "amount": 3
+      },
+      {
+        "x": 3,
+        "y": 9,
+        "kind": "ore",
+        "amount": 3
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "kind": "fuel",
+        "amount": 3
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "kind": "fuel",
+        "amount": 4
+      },
+      {
+        "x": 4,
+        "y": 9,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 5,
+        "y": 7,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 5,
+        "y": 8,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 6,
+        "y": 2,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "kind": "fuel",
+        "amount": 1
+      },
+      {
+        "x": 6,
+        "y": 8,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 7,
+        "y": 1,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 7,
+        "y": 5,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 7,
+        "y": 9,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 8,
+        "y": 2,
+        "kind": "ore",
+        "amount": 3
+      },
+      {
+        "x": 8,
+        "y": 3,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 8,
+        "y": 4,
+        "kind": "fuel",
+        "amount": 4
+      },
+      {
+        "x": 9,
+        "y": 2,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 9,
+        "y": 3,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 9,
+        "y": 7,
+        "kind": "fuel",
+        "amount": 3
+      }
+    ],
+    "store": {
+      "fuel": 3,
+      "ore": 3
+    },
+    "rovers": [
+      {
+        "name": "chatgpt-sol",
+        "letter": "A",
+        "x": 5,
+        "y": 5,
+        "energy": 5,
+        "fuel": 0,
+        "ore": 0,
+        "dormant": false
+      },
+      {
+        "name": "codex",
+        "letter": "B",
+        "x": 5,
+        "y": 5,
+        "energy": 6,
+        "fuel": 0,
+        "ore": 0,
+        "dormant": false
+      }
+    ],
+    "sealed": 3,
+    "vault_open": true,
+    "accepted": 37,
+    "rejected": 0,
+    "energy_spent": 30,
+    "hits": 3,
+    "hardness_left": 26,
+    "initial_hardness": 29,
+    "vault_opened_at": 21,
+    "cleared_at": null
+  },
+  "moves": [
+    {
+      "move": "chatgpt-sol: take fuel 1",
+      "note": "chatgpt-sol takes 1 fuel from the store",
+      "energy": 4
+    },
+    {
+      "move": "chatgpt-sol: refuel",
+      "note": "chatgpt-sol burns 1 fuel; energy 9",
+      "energy": 9
+    },
+    {
+      "move": "chatgpt-sol: take ore 3",
+      "note": "chatgpt-sol takes 3 ore from the store",
+      "energy": 8
+    },
+    {
+      "move": "chatgpt-sol: move n",
+      "note": "chatgpt-sol moves n to (5,4)",
+      "energy": 7
+    },
+    {
+      "move": "chatgpt-sol: break n",
+      "note": "chatgpt-sol hits (5,3); the barrier is gone",
+      "energy": 6
+    },
+    {
+      "move": "chatgpt-sol: move n",
+      "note": "chatgpt-sol moves n to (5,3)",
+      "energy": 5
+    },
+    {
+      "move": "chatgpt-sol: break n",
+      "note": "chatgpt-sol hits (5,2); the barrier is gone",
+      "energy": 4
+    },
+    {
+      "move": "chatgpt-sol: move n",
+      "note": "chatgpt-sol moves n to (5,2)",
+      "energy": 3
+    },
+    {
+      "move": "chatgpt-sol: move e",
+      "note": "chatgpt-sol moves e to (6,2)",
+      "energy": 2
+    },
+    {
+      "move": "chatgpt-sol: take 2",
+      "note": "chatgpt-sol takes 2 fuel",
+      "energy": 1
+    },
+    {
+      "move": "chatgpt-sol: refuel 2",
+      "note": "chatgpt-sol burns 2 fuel; energy 11",
+      "energy": 11
+    },
+    {
+      "move": "chatgpt-sol: take 3",
+      "note": "chatgpt-sol takes 3 fuel; the node is empty",
+      "energy": 10
+    },
+    {
+      "move": "chatgpt-sol: move w",
+      "note": "chatgpt-sol moves w to (5,2)",
+      "energy": 9
+    },
+    {
+      "move": "chatgpt-sol: move s",
+      "note": "chatgpt-sol moves s to (5,3)",
+      "energy": 8
+    },
+    {
+      "move": "chatgpt-sol: move s",
+      "note": "chatgpt-sol moves s to (5,4)",
+      "energy": 7
+    },
+    {
+      "move": "chatgpt-sol: move s",
+      "note": "chatgpt-sol moves s to (5,5)",
+      "energy": 6
+    },
+    {
+      "move": "chatgpt-sol: drop",
+      "note": "chatgpt-sol drops fuel 3 ore 1 into the store",
+      "energy": 5
+    }
+  ],
+  "after": {
+    "version": 1,
+    "seed": "first-light",
+    "size": 11,
+    "base": [
+      5,
+      5
+    ],
+    "vault": [
+      1,
+      6,
+      3,
+      8
+    ],
+    "grid": [
+      "###########",
+      "#.f..2.f..#",
+      "#...f...of#",
+      "#.......fo#",
+      "#.f.f.f.f.#",
+      "#f.o.A.f.3#",
+      "#1......1.#",
+      "#1o21o..1f#",
+      "#1212ff.3.#",
+      "#..oo..o21#",
+      "###########"
+    ],
+    "barriers": [
+      {
+        "x": 5,
+        "y": 1,
+        "hardness": 2
+      },
+      {
+        "x": 9,
+        "y": 5,
+        "hardness": 3
+      },
+      {
+        "x": 1,
+        "y": 6,
+        "hardness": 1
+      },
+      {
+        "x": 8,
+        "y": 6,
+        "hardness": 1
+      },
+      {
+        "x": 1,
+        "y": 7,
+        "hardness": 1
+      },
+      {
+        "x": 3,
+        "y": 7,
+        "hardness": 2
+      },
+      {
+        "x": 4,
+        "y": 7,
+        "hardness": 1
+      },
+      {
+        "x": 8,
+        "y": 7,
+        "hardness": 1
+      },
+      {
+        "x": 1,
+        "y": 8,
+        "hardness": 1
+      },
+      {
+        "x": 2,
+        "y": 8,
+        "hardness": 2
+      },
+      {
+        "x": 3,
+        "y": 8,
+        "hardness": 1
+      },
+      {
+        "x": 4,
+        "y": 8,
+        "hardness": 2
+      },
+      {
+        "x": 8,
+        "y": 8,
+        "hardness": 3
+      },
+      {
+        "x": 8,
+        "y": 9,
+        "hardness": 2
+      },
+      {
+        "x": 9,
+        "y": 9,
+        "hardness": 1
+      }
+    ],
+    "nodes": [
+      {
+        "x": 1,
+        "y": 5,
+        "kind": "fuel",
+        "amount": 3
+      },
+      {
+        "x": 2,
+        "y": 1,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 2,
+        "y": 4,
+        "kind": "fuel",
+        "amount": 3
+      },
+      {
+        "x": 2,
+        "y": 7,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 3,
+        "y": 5,
+        "kind": "ore",
+        "amount": 3
+      },
+      {
+        "x": 3,
+        "y": 9,
+        "kind": "ore",
+        "amount": 3
+      },
+      {
+        "x": 4,
+        "y": 2,
+        "kind": "fuel",
+        "amount": 3
+      },
+      {
+        "x": 4,
+        "y": 4,
+        "kind": "fuel",
+        "amount": 4
+      },
+      {
+        "x": 4,
+        "y": 9,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 5,
+        "y": 7,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 5,
+        "y": 8,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 6,
+        "y": 4,
+        "kind": "fuel",
+        "amount": 1
+      },
+      {
+        "x": 6,
+        "y": 8,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 7,
+        "y": 1,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 7,
+        "y": 5,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 7,
+        "y": 9,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 8,
+        "y": 2,
+        "kind": "ore",
+        "amount": 3
+      },
+      {
+        "x": 8,
+        "y": 3,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 8,
+        "y": 4,
+        "kind": "fuel",
+        "amount": 4
+      },
+      {
+        "x": 9,
+        "y": 2,
+        "kind": "fuel",
+        "amount": 5
+      },
+      {
+        "x": 9,
+        "y": 3,
+        "kind": "ore",
+        "amount": 4
+      },
+      {
+        "x": 9,
+        "y": 7,
+        "kind": "fuel",
+        "amount": 3
+      }
+    ],
+    "store": {
+      "fuel": 5,
+      "ore": 1
+    },
+    "rovers": [
+      {
+        "name": "chatgpt-sol",
+        "letter": "A",
+        "x": 5,
+        "y": 5,
+        "energy": 5,
+        "fuel": 0,
+        "ore": 0,
+        "dormant": false
+      },
+      {
+        "name": "codex",
+        "letter": "B",
+        "x": 5,
+        "y": 5,
+        "energy": 6,
+        "fuel": 0,
+        "ore": 0,
+        "dormant": false
+      }
+    ],
+    "sealed": 3,
+    "vault_open": true,
+    "accepted": 54,
+    "rejected": 0,
+    "energy_spent": 45,
+    "hits": 5,
+    "hardness_left": 24,
+    "initial_hardness": 29,
+    "vault_opened_at": 21,
+    "cleared_at": null
+  }
+}
