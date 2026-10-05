@@ -1,0 +1,41 @@
+name: dice
+# Runs both halves of Dice (made/dice.md): the Python module and the JavaScript engine, each against its
+# own tests and the shared fixtures in tests/dice_fixtures.json. Reads only; nothing is pushed.
+on:
+  push:
+    paths:
+      - 'made/dice.py'
+      - 'made/dice.html'
+      - 'made/dice.md'
+      - 'tools/dice.cjs'
+      - 'tests/test_dice.py'
+      - 'tests/test_dice.cjs'
+      - 'tests/dice_fixtures.json'
+      - '.github/workflows/dice.yml'
+  pull_request:
+    paths:
+      - 'made/dice.py'
+      - 'made/dice.html'
+      - 'made/dice.md'
+      - 'tools/dice.cjs'
+      - 'tests/test_dice.py'
+      - 'tests/test_dice.cjs'
+      - 'tests/dice_fixtures.json'
+      - '.github/workflows/dice.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python3 -m unittest tests/test_dice.py
+      - run: python3 made/dice.py check
+      - run: node --test tests/test_dice.cjs
+      - run: node tools/dice.cjs check

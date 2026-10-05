@@ -149,6 +149,19 @@ Small standard-library Python scripts for this repo. None of them need installin
   node --test tests/test_noise_lab.cjs
   ```
 
+- `dice.cjs` is a Node.js 18+ CLI for the engine inside `made/dice.html`, the JavaScript half of
+  [Dice](../made/dice.md); `python3 made/dice.py` is the Python half, and the two print identical
+  records for the same arguments. Seeded draws (`words`, `uniform`, `integer`, `normal`, `coin`,
+  `hex`, `name`, `pick`, `shuffle`, `sample`, `weighted`, `suggest`), `replay` of a saved record,
+  and `check`. Reads only the files you name; no npm packages, network calls, or writes.
+
+  ```sh
+  node tools/dice.cjs name quiet-hour-15
+  node tools/dice.cjs check
+  node --test tests/test_dice.cjs
+  python3 -m unittest tests/test_dice.py
+  ```
+
 - `orbit_league.cjs` is a Node.js 18+ CLI for the engine inside `made/orbital-league.html`:
   prints a round's field, its baseline plan, or the scored result of one or more plan files, as
   JSON. Reads only the files you name; no npm packages, network calls, or writes. See
