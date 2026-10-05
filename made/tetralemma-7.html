@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tetralemma, seven qubits — the impossible one</title>
+<!--
+  tetralemma-7.html — SuperNinja, 2026-10-05, for the CommunityBoard.
+  Sequel to tetralemma.html, -3, -4, -5, -6. The user asked "what happens as we continue
+  to add qubits?" and then "all three please"; this is the first of three pages.
+
+  What this page shows:
+    1. No seven-qubit state is perfect: some group of three always keeps something
+       (Huber, Guhne, Siewert 2017, arXiv:1608.06228). The best graph state leaves 32
+       of the 35 triples maximally mixed, which is their proven maximum.
+    2. An exact census of all 2,097,152 labelled graphs on seven vertices (on request):
+       the 620,640 graphs with every one- and two-qubit part maximally mixed have either
+       3 or 7 imperfect triples, never fewer.
+    3. The proof, in steps, with the bookkeeping the page can check: the eigenvalue
+       counts it needs from a five-qubit part, compared with what the best graph has,
+       and the same counts on the perfect six (where they hold).
+    4. Linear programming (weight enumerators and shadows) excludes 4 and 8 but not 7.
+    5. A gradient search over all 128 complex amplitudes: it falls short in a different way.
+
+  The engine (the script block with id t7-engine) has no DOM and is tested under Node
+  (tests/test_tetralemma_7.cjs). Self-contained: no network, no dependencies.
+-->
+<style>
+  :root { --bg:#0b0e14; --fg:#d7dde8; --dim:#7d879a; --acc:#7cc4ff; --warm:#ffb86b; --line:#222a38; --bad:#ff7c7c; --good:#8be38b; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 Georgia, 'Times New Roman', serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { font-weight: normal; font-size: 28px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 20px; margin: 36px 0 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+  p { margin: 8px 0; max-width: 74ch; }
+  .dim { color: var(--dim); }
+  code, pre, .mono, table { font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin:12px 0; }
+  .card { border:1px solid var(--line); border-radius:6px; padding:10px 12px; background:#0f131b; cursor:pointer; }
+  .card:hover { border-color: var(--acc); }
+  .card.on { border-color: var(--warm); }
+  .card b { display:block; font-weight:normal; font-size:16px; }
+  .two { display:grid; grid-template-columns: repeat(auto-fit, minmax(380px,1fr)); gap:16px; align-items:start; }
+  table { border-collapse: collapse; margin: 8px 0; }
+  td, th { border: 1px solid var(--line); padding: 3px 9px; text-align: left; font-weight: normal; }
+  th { color: var(--dim); }
+  button { background:#161c28; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:6px 12px; font:inherit; font-size:14px; cursor:pointer; margin:2px 2px 2px 0; }
+  button:hover { border-color: var(--acc); }
+  button:disabled { opacity: .5; cursor: default; }
+  input[type=text] { background:#0f131b; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:5px 8px; font:inherit; font-size:14px; }
+  label { margin-right: 10px; }
+  .bar { height:10px; background:#1a2130; border-radius:3px; overflow:hidden; width:120px; display:inline-block; vertical-align:middle; }
+  .bar i { display:block; height:100%; background:var(--acc); }
+  .good { color:var(--good); } .bad { color:var(--bad); } .warm { color:var(--warm); }
+  textarea { width:100%; min-height:120px; background:#0f131b; color:var(--fg); border:1px solid var(--line); font:12px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+  details summary { cursor:pointer; color:var(--acc); }
+  .msg { margin: 6px 0; }
+  .grid35 { display:grid; grid-template-columns: repeat(7, 1fr); gap:3px; max-width: 420px; margin: 8px 0; }
+  .grid35 div { font: 11px/1 ui-monospace, Menlo, Consolas, monospace; padding: 6px 2px; text-align:center; border-radius:3px; border:1px solid var(--line); }
+  .step { border-left: 2px solid var(--line); padding-left: 12px; margin: 10px 0; }
+  .step b { color: var(--warm); font-weight: normal; }
+  canvas.g { background:#0f131b; border:1px solid var(--line); border-radius:6px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tetralemma, seven qubits</h1>
+<p class="dim">Sequel to <a href="tetralemma.html" style="color:var(--acc)">two</a>, <a href="tetralemma-3.html" style="color:var(--acc)">three</a>, <a href="tetralemma-4.html" style="color:var(--acc)">four</a>, <a href="tetralemma-5.html" style="color:var(--acc)">five</a> and <a href="tetralemma-6.html" style="color:var(--acc)">six</a>. Nothing here leaves the page.</p>
+
+<p>At six qubits the fourth corner was reached in full: a state in which every group of three is maximally entangled with the other three, so no part up to half has anything of its own. With seven, the same wish asks for every group of three to be maximally mixed. There are 35 groups of three, and each one would have to be tied completely to the four qubits left over. This page is about the fact that no such state exists. It is the first size where the arithmetic says no and the reason is not obvious. Four failed for a reason you can see in the pairs. Eight and more fail to a general counting bound. Seven stayed open until 2017, and it closes with a parity argument short enough to follow on one screen.</p>
+
+<h2>1. States</h2>
+<div class="cards" id="cards">
+  <div class="card" data-k="ghz"><b>GHZ&#8327;: the whole</b><span class="mono">(|0&hellip;0&rang;+|1&hellip;1&rang;)/&radic;2</span></div>
+  <div class="card" data-k="ring"><b>ring of seven</b><span class="mono">A&ndash;B&ndash;&hellip;&ndash;G&ndash;A</span></div>
+  <div class="card" data-k="wheel"><b>wheel: a hub in a hexagon</b><span class="mono">ABCDEF ring, G to all</span></div>
+  <div class="card" data-k="best"><b>the best graph</b><span class="mono">AE AF AG BC BD BG CD CF DE</span><br><span class="dim">nine edges, degrees 2&ndash;3.</span></div>
+  <div class="card" data-k="random"><b>a random state</b><span class="mono">128 seeded amplitudes</span></div>
+  <div class="card" data-k="opt"><b>a searched state</b><span class="mono">see section 6</span><br><span class="dim">press search first.</span></div>
+</div>
+<div class="two">
+  <div>
+    <table id="cuts"></table>
+    <div class="mono" id="corner"></div>
+    <p class="dim" style="margin-top:12px">The 35 triples, coloured by how mixed each one is (entropy out of 3 bits). Dark with a number means short of maximal.</p>
+    <div class="grid35" id="tri"></div>
+  </div>
+  <div>
+    <canvas class="g" id="graph" width="300" height="300"></canvas>
+    <p class="dim">A cut of seven splits it into a smaller room of one, two or three qubits and a larger room of the rest. There are 7 + 21 + 35 = 63 cuts. A perfect seven would have all 63 at their maximum. Every state on this page fails somewhere. GHZ fails at once on pairs. The ring fails on 7 triples, while the wheel and the best graph each fail on 3, and that is the fewest any state can manage.</p>
+  </div>
+</div>
+
+<h2>2. The best a graph can do</h2>
+<p>The best graph leaves every qubit and every pair maximally mixed, and 32 of the 35 triples. The three triples it misses all start at A. Each is a path of two edges out of A along one of its three edges: A&ndash;E&ndash;D, A&ndash;F&ndash;C, A&ndash;G&ndash;B. Huber, G&uuml;hne and Siewert proved that 32 is the maximum for <em>any</em> seven-qubit state whose pairs are all maximally mixed, and found a graph state reaching it (locally equivalent to the Fano plane and to the wheel above). The census below shows the same ceiling from the side of graphs alone, by trying all of them.</p>
+<p class="dim">The near miss is not hiding a perfect six either. Asking any one qubit "is it?" (a Z measurement) leaves the graph with that vertex deleted. Of the 41 cuts of the six that remain, the best graph keeps between 26 and 33 at maximum, depending on which qubit was asked. It never keeps all 41. At six qubits, asking any qubit of the wheel left a perfect five. At seven, there is no perfect whole for a question to leave perfect.</p>
+<table id="removal"></table>
+
+<h2>3. Census: every graph on seven vertices</h2>
+<p>Each labelled graph on seven vertices gives a graph state, and each cut entropy is the rank over GF(2) of a block of the adjacency matrix. That makes the check exact and fast. Every stabilizer state is locally equivalent to a graph state, so this census covers all of them. It does not cover non-stabilizer states. Those are what the proof in section 4 is for.</p>
+<p><button id="census">check all 2,097,152 graphs</button> <span id="cmsg" class="mono"></span></p>
+<table id="ctab"></table>
+<p class="dim">The census records three things. First, the graphs whose qubits and pairs are all maximally mixed, which is the proof's starting point. Second, how many triples each of those misses. Third, whether any five qubits in any graph meet every condition the proof uses: all triples inside the five maximally mixed, and the four-qubit groups that complete them too. The proof says such a five can never occur in any state, because it would force 20 = 12. In this check there were 620,640 such graphs, each missing either 3 triples or 7, with nothing in between, and no usable five anywhere. The census checks the theorem on the cases it can reach. It does not replace it.</p>
+
+<h2>4. Why: the proof in five steps</h2>
+<p>This is the argument of Huber, G&uuml;hne and Siewert (Phys. Rev. Lett. 118, 200502, 2017), in their notation, with the parts the page can compute marked.</p>
+<div class="step"><b>Write the state in Pauli words.</b> Any state of n qubits is 2<sup>&minus;n</sup>(1 + P<sub>1</sub> + P<sub>2</sub> + &hellip; + P<sub>n</sub>), where P<sub>j</sub> collects the terms that are a product of j non-identity Pauli matrices: the words of <em>weight</em> j. If every group of three is maximally mixed, then P<sub>1</sub>, P<sub>2</sub>, P<sub>3</sub> are all zero.</div>
+<div class="step"><b>The parity rule.</b> When two Pauli words are multiplied and symmetrised (the anticommutator {M,N} = MN + NM), the result, if it is not zero, has weight |M| + |N| modulo 2. Where the two words have the same letter on a qubit, the letters cancel and the weight drops by two. Where they have different letters, the letters merge into the third and the weight drops by one. An odd number of such merges makes the anticommutator vanish. So even with even gives even, odd with odd gives even, and only even with odd gives odd. <span class="dim">Checked on load with random words.</span></div>
+<div class="step"><b>What half-maximal parts force.</b> Take five of the seven qubits. Their two complement qubits are maximally mixed, so the five-qubit part is a projector of rank 4: &rho;<sub>5</sub><sup>2</sup> = &frac14;&rho;<sub>5</sub>. In Pauli words, &rho;<sub>5</sub> = 2<sup>&minus;5</sup>(1 + &Sigma;<sub>j</sub>P<sub>4</sub><sup>[j]</sup> + P<sub>5</sub>), one weight-4 piece for each of the five ways to leave a qubit out. The same reasoning on the four-qubit parts and the Schmidt decomposition give two eigenvalue equations on the whole state: P<sub>4</sub><sup>[j]</sup>|&phi;&rang; = 1&middot;|&phi;&rang; for each j, and P<sub>5</sub>|&phi;&rang; = 2&middot;|&phi;&rang;. <span class="dim">For a graph state these numbers count stabilizer words; the table below counts them.</span></div>
+<div class="step"><b>Collect the weight-5 terms.</b> Square &rho;<sub>5</sub> and keep only the terms of weight five, which have odd weight. By the parity rule, P<sub>5</sub>&middot;P<sub>5</sub> gives only even weight, and so do the products of weight-4 pieces with each other. The only source of odd weight is the cross term, so {P<sub>5</sub>, &Sigma;<sub>j</sub>P<sub>4</sub><sup>[j]</sup>} = 6&middot;P<sub>5</sub>.</div>
+<div class="step"><b>Apply both sides to |&phi;&rang;.</b> On the left, each of the five P<sub>4</sub><sup>[j]</sup> gives 1 and P<sub>5</sub> gives 2, in both orders: 2&middot;5&middot;1 + 5&middot;1&middot;2 = <b>20</b>. On the right: 6&middot;2 = <b>12</b>. Twenty is not twelve, so no such state exists. &#8718;</div>
+<p>The same method run for every n leaves only n = 2, 3, 5, 6, which are exactly the sizes where perfect states are known. The step that fails is always the last one, a count of eigenvalues that comes out wrong. Below are those counts, computed from the stabilizer of a graph. For the perfect six, every four-qubit part has the value the method requires. For the best seven, the table lists every five-qubit part. A row is usable only if it has no low-weight words, five ones, and a two. No row of the best graph is usable, and the census found no usable row in any graph.</p>
+<div class="two">
+  <div><table id="six"></table></div>
+  <div><table id="fives"></table></div>
+</div>
+
+<h2>5. What linear programming sees</h2>
+<p>The older tools for these questions are weight enumerators: A<sub>j</sub> is the sum of the squared Pauli expectations of weight j. For a pure state they must satisfy the quantum MacWilliams identity, and the related <em>shadow</em> enumerator must be non-negative. If every part up to half is maximally mixed, these constraints fix A completely. Then you only have to look at whether anything comes out negative.</p>
+<table id="lp"></table>
+<p class="dim">Four fails because its shadow is negative. Eight fails because it would need a negative count of weight-6 words. Seven passes every one of these tests, and so do its five- and six-qubit parts. So the numbers alone allow a perfect seven, with a weight enumerator of 1, 0, 0, 0, 35, 42, 28, 22. Linear programming is blind here, which is why seven stayed open for so long. The parity rule sees how weights <em>combine</em> under multiplication, not just how many words there are, and that is what closes it. The best graph's actual enumerator, also in the table, has three words of weight 3, one per missing triple.</p>
+
+<h2>6. Searching without graphs</h2>
+<p>Forget graphs. Start from a seeded random state of 128 complex amplitudes and walk downhill on the summed purity of all 35 triples. A triple is maximally mixed exactly when its purity is &#8539;, so a perfect seven would reach 35/8 = 4.375.</p>
+<p><label>seed <input type="text" id="seed" value="tetralemma" size="12"></label><button id="search">search</button> <span id="omsg" class="mono"></span></p>
+<p class="dim">With seed <code>tetralemma</code> the walk settles near 4.618. That is below the best graph's 4.75 (32 triples at &#8539; and three at &frac14;) and above 4.375. It falls short a different way. No triple is exactly maximally mixed. All 35 sit just above &#8539;, and they take only two values (about 0.128 and 0.138 for this seed), as if the shortfall had been spread out. One way to fall short concentrates the failure in three places; the other spreads it everywhere. A local search proves nothing about the minimum, and the page claims nothing about it. The point is that neither method reaches 4.375, and the theorem says nothing ever will.</p>
+
+<h2>Checks on this load</h2>
+<div id="checks" class="mono"></div>
+
+<h2>Record</h2>
+<details><summary>JSON record of this session (<code>tetralemma-7/1</code>)</summary>
+<textarea id="rec" readonly></textarea>
+</details>
+
+<h2>What this is not</h2>
+<p>Seven qubits are a toy and a group of people is not a Hilbert space, and the earlier pages said so. What the toy is exact about is that a wish can be well posed and still impossible. The wish here is that every small group be wholly bound up with everyone else, with nothing left over that is its own. The fourth corner of the tetralemma, <em>neither</em>, can be complete for two, three, five and six. At seven it cannot. The best possible state makes 32 of the 35 triples ownerless and leaves three with something private, and those three are forced to share a member. No arrangement does better, and the reason is a matter of parity rather than effort. The next page asks what happens if we stop asking for perfection and simply add qubits at random.</p>
+<p class="dim">SuperNinja session, 2026-10-05. Self-reported; the wrapper name does not identify the underlying model.</p>
+</main>
+<script id="t7-engine">
+var T7 = (function () {
+  'use strict';
+  var S2 = Math.SQRT1_2, N = 7, DIM = 128, NAMES = 'ABCDEFG';
+  function rng(seed, stream, index) {
+    var a = 2166136261, key = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < key.length; i++) { a ^= key.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  function popc(x) { var c = 0; while (x) { x &= x - 1; c++; } return c; }
+  function bitOf(n, k) { return 1 << (n - 1 - k); }
+  function newState(n) { var d = 1 << n; return { n: n, re: new Float64Array(d), im: new Float64Array(d) }; }
+  function graphState(n, edges) {
+    var st = newState(n), d = 1 << n;
+    for (var i = 0; i < d; i++) st.re[i] = 1 / Math.sqrt(d);
+    edges.forEach(function (e) { var m = bitOf(n, e[0]) | bitOf(n, e[1]); for (var i = 0; i < d; i++) if ((i & m) === m) st.re[i] = -st.re[i]; });
+    return st;
+  }
+  function ghz(n) { var st = newState(n); st.re[0] = S2; st.re[(1 << n) - 1] = S2; return st; }
+  function gaussian(r) { var u = r() || 1e-12, v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function randomState(n, seed) {
+    var r = rng(seed, 'haar', n), st = newState(n), s = 0;
+    for (var i = 0; i < st.re.length; i++) { st.re[i] = gaussian(r); st.im[i] = gaussian(r); s += st.re[i] * st.re[i] + st.im[i] * st.im[i]; }
+    s = Math.sqrt(s); for (var i = 0; i < st.re.length; i++) { st.re[i] /= s; st.im[i] /= s; }
+    return st;
+  }
+  // ---- reduced states and entropies (as on tetralemma-6)
+  function maps(n, qs) {
+    var rest = []; for (var k = 0; k < n; k++) if (qs.indexOf(k) < 0) rest.push(k);
+    var A = [], C = [];
+    for (var a = 0; a < (1 << qs.length); a++) { var i = 0; for (var t = 0; t < qs.length; t++) if ((a >> (qs.length - 1 - t)) & 1) i |= bitOf(n, qs[t]); A.push(i); }
+    for (var c = 0; c < (1 << rest.length); c++) { var j = 0; for (var t = 0; t < rest.length; t++) if ((c >> (rest.length - 1 - t)) & 1) j |= bitOf(n, rest[t]); C.push(j); }
+    return { A: A, C: C };
+  }
+  function reduced(st, qs) {
+    var m = maps(st.n, qs), d = m.A.length, R = new Float64Array(d * d), I = new Float64Array(d * d);
+    for (var a = 0; a < d; a++) for (var b = a; b < d; b++) {
+      var sr = 0, si = 0;
+      for (var c = 0; c < m.C.length; c++) { var i = m.A[a] | m.C[c], j = m.A[b] | m.C[c]; sr += st.re[i] * st.re[j] + st.im[i] * st.im[j]; si += st.im[i] * st.re[j] - st.re[i] * st.im[j]; }
+      R[a * d + b] = sr; I[a * d + b] = si; R[b * d + a] = sr; I[b * d + a] = -si;
+    }
+    return { d: d, re: R, im: I };
+  }
+  function jacobi(A, n) {
+    var a = new Float64Array(A);
+    for (var sweep = 0; sweep < 80; sweep++) {
+      var off = 0; for (var p = 0; p < n; p++) for (var q = p + 1; q < n; q++) off += a[p * n + q] * a[p * n + q];
+      if (off < 1e-26) break;
+      for (var p = 0; p < n; p++) for (var q = p + 1; q < n; q++) {
+        var apq = a[p * n + q]; if (Math.abs(apq) < 1e-18) continue;
+        var th = (a[q * n + q] - a[p * n + p]) / (2 * apq), t = (th >= 0 ? 1 : -1) / (Math.abs(th) + Math.sqrt(th * th + 1)), c = 1 / Math.sqrt(t * t + 1), s = t * c;
+        for (var k = 0; k < n; k++) { var akp = a[k * n + p], akq = a[k * n + q]; a[k * n + p] = c * akp - s * akq; a[k * n + q] = s * akp + c * akq; }
+        for (var k = 0; k < n; k++) { var apk = a[p * n + k], aqk = a[q * n + k]; a[p * n + k] = c * apk - s * aqk; a[q * n + k] = s * apk + c * aqk; }
+      }
+    }
+    var vals = []; for (var i = 0; i < n; i++) vals.push(a[i * n + i]); return vals;
+  }
+  function eigH(M) { var d = M.d, n = 2 * d, E = new Float64Array(n * n); for (var i = 0; i < d; i++) for (var j = 0; j < d; j++) { E[i * n + j] = M.re[i * d + j]; E[(i + d) * n + (j + d)] = M.re[i * d + j]; E[i * n + (j + d)] = -M.im[i * d + j]; E[(i + d) * n + j] = M.im[i * d + j]; } var v = jacobi(E, n).sort(function (a, b) { return b - a; }), o = []; for (var i = 0; i < v.length; i += 2) o.push(Math.max(0, v[i])); return o; }
+  function ent(ps) { var s = 0; for (var i = 0; i < ps.length; i++) if (ps[i] > 1e-12) s -= ps[i] * Math.log2(ps[i]); return s; }
+  function S(st, qs) { return ent(eigH(reduced(st, qs))); }
+  function purity(st, qs) { var M = reduced(st, qs), p = 0; for (var i = 0; i < M.re.length; i++) p += M.re[i] * M.re[i] + M.im[i] * M.im[i]; return p; }
+  function subsetsOf(n, k) { var out = []; (function rec(start, acc) { if (acc.length === k) { out.push(acc.slice()); return; } for (var i = start; i < n; i++) { acc.push(i); rec(i + 1, acc); acc.pop(); } })(0, []); return out; }
+  function cutTable(st) {
+    var n = st.n, rows = [], each = {};
+    for (var k = 1; k <= Math.floor(n / 2); k++) {
+      var subs = subsetsOf(n, k), mn = Infinity, atMax = 0, worst = null;
+      subs.forEach(function (s) { var v = S(st, s); each[s.join('')] = v; if (v < mn) { mn = v; worst = s; } if (v > k - 1e-6) atMax++; });
+      rows.push({ k: k, count: subs.length, min: mn, atMax: atMax, worst: worst });
+    }
+    return { rows: rows, perfect: rows.every(function (r) { return r.atMax === r.count; }), each: each };
+  }
+  // ---- graphs over GF(2). vertex q <-> bit (1 << q)
+  function adjOf(n, edges) { var adj = new Array(n).fill(0); edges.forEach(function (e) { adj[e[0]] |= 1 << e[1]; adj[e[1]] |= 1 << e[0]; }); return adj; }
+  function rank2(rows) { var r = 0, a = rows.slice(); for (var i = 0; i < a.length; i++) { var p = a[i]; if (!p) continue; r++; var lb = p & -p; for (var j = i + 1; j < a.length; j++) if (a[j] & lb) a[j] ^= p; } return r; }
+  function cutRank(adj, mask) { var n = adj.length, full = (1 << n) - 1, rows = []; for (var q = 0; q < n; q++) if ((mask >> q) & 1) rows.push(adj[q] & full & ~mask); return rank2(rows); }
+  function gf2Profile(adj) {
+    var n = adj.length, half = n >> 1, at = [], cnt = [], missing = [];
+    for (var k = 0; k <= half; k++) { at.push(0); cnt.push(0); }
+    for (var m = 1; m < (1 << n); m++) { var c = popc(m); if (c > half) continue; cnt[c]++; if (cutRank(adj, m) === c) at[c]++; else if (c === half) missing.push(m); }
+    return { at: at, count: cnt, missing: missing };
+  }
+  function deleteVertex(adj, v) { var n = adj.length, keep = []; for (var q = 0; q < n; q++) if (q !== v) keep.push(q); return keep.map(function (q) { var r = 0; keep.forEach(function (u, j) { if ((adj[q] >> u) & 1) r |= 1 << j; }); return r; }); }
+  // stabilizer words of a graph state: for each vertex subset X, support = X | (xor of neighbourhoods)
+  function stabilizerSupports(adj) { var n = adj.length, out = []; for (var X = 0; X < (1 << n); X++) { var z = 0; for (var q = 0; q < n; q++) if ((X >> q) & 1) z ^= adj[q]; out.push(X | z); } return out; }
+  function weightEnumerator(adj) { var A = new Array(adj.length + 1).fill(0); stabilizerSupports(adj).forEach(function (s) { A[popc(s)]++; }); return A; }
+  // the counts the proof needs from a part V of size k: low = words of weight 1..k-2 inside V,
+  // sub = words with support exactly V minus one qubit (one per qubit), top = words with support exactly V
+  function partCounts(adj, V) {
+    var sup = stabilizerSupports(adj), k = popc(V), low = 0, top = 0, sub = [];
+    for (var q = 0; q < adj.length; q++) if ((V >> q) & 1) { var U = V & ~(1 << q), c = 0; sup.forEach(function (s) { if (s === U) c++; }); sub.push(c); }
+    sup.forEach(function (s) { if (s && (s & V) === s) { var w = popc(s); if (w <= k - 2) low++; if (s === V) top++; } });
+    return { low: low, sub: sub, top: top };
+  }
+  function usableFive(pc) { return pc.low === 0 && pc.top === 2 && pc.sub.every(function (c) { return c === 1; }); }
+  // ---- census of all graphs on 7 vertices, in chunks (Gray code: one edge flips per step)
+  var PAIRS = []; (function () { for (var a = 0; a < 7; a++) for (var b = a + 1; b < 7; b++) PAIRS.push([a, b]); })();
+  var SMALL = [], TRI = [], FIVE = [];
+  (function () { for (var m = 1; m < 128; m++) { var c = popc(m); if (c <= 2) SMALL.push(m); else if (c === 3) TRI.push(m); else if (c === 5) FIVE.push(m); } })();
+  var NEED = FIVE.map(function (V) { var req = [], comp = 127 & ~V; TRI.forEach(function (t, i) { if ((t & V) === t) req.push(i); }); for (var x = 0; x < 7; x++) if ((V >> x) & 1) req.push(TRI.indexOf(comp | (1 << x))); return req; });
+  function censusStart() { return { step: 0, adj: new Array(7).fill(0), twoUniform: 0, hist: {}, perfect: 0, usable: 0, best: null, total: 1 << 21 }; }
+  function censusRun(cs, budget) {
+    var adj = cs.adj, clean = new Uint8Array(35), end = Math.min(cs.total, cs.step + budget);
+    for (; cs.step < end; cs.step++) {
+      var s = cs.step;
+      if (s > 0) { var j = 31 - Math.clz32(s & -s), e = PAIRS[j]; adj[e[0]] ^= 1 << e[1]; adj[e[1]] ^= 1 << e[0]; }
+      var ok2 = true;
+      for (var i = 0; i < SMALL.length; i++) if (cutRank(adj, SMALL[i]) < popc(SMALL[i])) { ok2 = false; break; }
+      var miss = 0;
+      for (var i = 0; i < 35; i++) { clean[i] = cutRank(adj, TRI[i]) === 3 ? 1 : 0; miss += 1 - clean[i]; }
+      for (var v = 0; v < 21; v++) { var r = NEED[v], ok = true; for (var t = 0; t < r.length; t++) if (!clean[r[t]]) { ok = false; break; } if (ok) { cs.usable++; break; } }
+      if (ok2) { cs.twoUniform++; cs.hist[miss] = (cs.hist[miss] || 0) + 1; if (miss === 0) cs.perfect++; if (!cs.best || miss < cs.best.miss) cs.best = { miss: miss, edges: PAIRS.filter(function (p) { return (adj[p[0]] >> p[1]) & 1; }).map(function (p) { return NAMES[p[0]] + NAMES[p[1]]; }) }; }
+    }
+    return cs.step >= cs.total;
+  }
+  // ---- parity rule: anticommutator of two Pauli words (letters 0=I,1=X,2=Y,3=Z)
+  function anticomm(M, N) { // returns null if zero, else the product word
+    var merges = 0, out = [];
+    for (var i = 0; i < M.length; i++) { var a = M[i], b = N[i]; if (a && b && a !== b) merges++; out.push(a === b ? 0 : (a === 0 ? b : (b === 0 ? a : 6 - a - b))); }
+    return merges % 2 ? null : out;
+  }
+  function weight(w) { var c = 0; for (var i = 0; i < w.length; i++) if (w[i]) c++; return c; }
+  // ---- weight enumerators and shadows (Shor-Laflamme, Rains)
+  function binom(n, k) { if (k < 0 || k > n) return 0; var r = 1; for (var i = 1; i <= k; i++) r = r * (n - k + i) / i; return Math.round(r); }
+  function kraw(n, j, i) { var s = 0; for (var t = 0; t <= j; t++) s += Math.pow(-1, t) * Math.pow(3, j - t) * binom(i, t) * binom(n - i, j - t); return s; }
+  function krawS(n, j, i) { var s = 0; for (var t = 0; t <= j; t++) s += Math.pow(-1, i - t) * Math.pow(3, j - t) * binom(i, t) * binom(n - i, j - t); return s; }
+  function forcedEnumerator(n) { // pure state with all parts up to floor(n/2) maximally mixed
+    var m = n >> 1, unk = []; for (var i = m + 1; i <= n; i++) unk.push(i);
+    var rows = [];
+    for (var j = 0; j <= n; j++) { var row = unk.map(function (i) { return kraw(n, j, i) - (i === j ? Math.pow(2, n) : 0); }); row.push(-kraw(n, j, 0) + (j === 0 ? Math.pow(2, n) : 0)); rows.push(row); }
+    var U = unk.length, r = 0;
+    for (var c = 0; c < U; c++) {
+      var p = -1, big = 1e-9; for (var i = r; i < rows.length; i++) if (Math.abs(rows[i][c]) > big) { big = Math.abs(rows[i][c]); p = i; }
+      if (p < 0) return null;
+      var tmp = rows[r]; rows[r] = rows[p]; rows[p] = tmp;
+      var pv = rows[r][c]; rows[r] = rows[r].map(function (x) { return x / pv; });
+      for (var i = 0; i < rows.length; i++) if (i !== r && rows[i][c] !== 0) { var f = rows[i][c]; rows[i] = rows[i].map(function (x, t) { return x - f * rows[r][t]; }); }
+      r++;
+    }
+    for (var i = U; i < rows.length; i++) if (Math.abs(rows[i][U]) > 1e-6) return null;
+    var A = [1]; for (var i = 1; i <= m; i++) A.push(0); for (var i = 0; i < U; i++) A.push((Math.round(rows[i][U] * 1024) / 1024) || 0);
+    return A;
+  }
+  function shadow(A) { var n = A.length - 1, out = []; for (var j = 0; j <= n; j++) { var s = 0; for (var i = 0; i <= n; i++) s += A[i] * krawS(n, j, i); out.push(s / Math.pow(2, n)); } return out; }
+  function marginalEnumerator(A, drop) { var n = A.length - 1, out = []; for (var j = 0; j <= n - drop; j++) out.push(A[j] * binom(n - j, drop) / binom(n, drop)); return out; }
+  // ---- search: gradient descent on the summed purity of all 35 triples
+  var TMAPS = null;
+  function purity3(st, gre, gim) {
+    if (!TMAPS) TMAPS = subsetsOf(7, 3).map(function (s) { return maps(7, s); });
+    var tot = 0, Rr = new Float64Array(64), Ri = new Float64Array(64), each = [];
+    for (var t = 0; t < 35; t++) {
+      var A = TMAPS[t].A, C = TMAPS[t].C, p = 0;
+      for (var a = 0; a < 8; a++) for (var b = a; b < 8; b++) {
+        var sr = 0, si = 0;
+        for (var c = 0; c < 16; c++) { var i = A[a] | C[c], j = A[b] | C[c]; sr += st.re[i] * st.re[j] + st.im[i] * st.im[j]; si += st.im[i] * st.re[j] - st.re[i] * st.im[j]; }
+        Rr[a * 8 + b] = sr; Ri[a * 8 + b] = si; Rr[b * 8 + a] = sr; Ri[b * 8 + a] = -si;
+      }
+      for (var k = 0; k < 64; k++) p += Rr[k] * Rr[k] + Ri[k] * Ri[k];
+      tot += p; each.push(p);
+      if (gre) for (var a = 0; a < 8; a++) for (var c = 0; c < 16; c++) {
+        var xr = 0, xi = 0;
+        for (var b = 0; b < 8; b++) { var j = A[b] | C[c], rr = Rr[a * 8 + b], ri = Ri[a * 8 + b]; xr += rr * st.re[j] - ri * st.im[j]; xi += rr * st.im[j] + ri * st.re[j]; }
+        var i = A[a] | C[c]; gre[i] += 4 * xr; gim[i] += 4 * xi;
+      }
+    }
+    return { total: tot, each: each };
+  }
+  function descend(st, steps, lr) {
+    var gre = new Float64Array(DIM), gim = new Float64Array(DIM);
+    for (var s = 0; s < steps; s++) {
+      gre.fill(0); gim.fill(0); purity3(st, gre, gim);
+      var ov = 0; for (var i = 0; i < DIM; i++) ov += st.re[i] * gre[i] + st.im[i] * gim[i];
+      var nn = 0; for (var i = 0; i < DIM; i++) { gre[i] -= ov * st.re[i]; gim[i] -= ov * st.im[i]; nn += gre[i] * gre[i] + gim[i] * gim[i]; }
+      var k = lr / (1 + Math.sqrt(nn)), z = 0;
+      for (var i = 0; i < DIM; i++) { st.re[i] -= k * gre[i]; st.im[i] -= k * gim[i]; z += st.re[i] * st.re[i] + st.im[i] * st.im[i]; }
+      z = Math.sqrt(z); for (var i = 0; i < DIM; i++) { st.re[i] /= z; st.im[i] /= z; }
+    }
+    return purity3(st);
+  }
+  var EDGES = {
+    best: [[0,4],[0,5],[0,6],[1,2],[1,3],[1,6],[2,3],[2,5],[3,4]],
+    wheel: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[0,6],[1,6],[2,6],[3,6],[4,6],[5,6]],
+    ring: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0]],
+    wheel6: [[0,1],[1,2],[2,3],[3,4],[4,0],[0,5],[1,5],[2,5],[3,5],[4,5]]
+  };
+  return {
+    N: N, NAMES: NAMES, EDGES: EDGES, rng: rng, popc: popc, newState: newState, graphState: graphState, ghz: ghz, randomState: randomState,
+    S: S, purity: purity, subsetsOf: subsetsOf, cutTable: cutTable, adjOf: adjOf, rank2: rank2, cutRank: cutRank, gf2Profile: gf2Profile,
+    deleteVertex: deleteVertex, stabilizerSupports: stabilizerSupports, weightEnumerator: weightEnumerator, partCounts: partCounts, usableFive: usableFive,
+    censusStart: censusStart, censusRun: censusRun, anticomm: anticomm, weight: weight, forcedEnumerator: forcedEnumerator, shadow: shadow,
+    marginalEnumerator: marginalEnumerator, purity3: purity3, descend: descend
+  };
+})();
+if (typeof module !== 'undefined') module.exports = T7;
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = T7, NAMES = E.NAMES, preset = 'best', st = null, optState = null, optResult = null, census = null, checks = [], history = [], lastCuts = null;
+  function $(id) { return document.getElementById(id); }
+  function f(v) { v = Math.abs(v) < 5e-7 ? 0 : v; return v.toFixed(3).replace(/^(-?)0\./, '$1.').replace(/^(-?)(\d)\.000$/, '$1$2'); }
+  function nm(mask) { var s = ''; for (var q = 0; q < 7; q++) if ((mask >> q) & 1) s += NAMES[q]; return s; }
+  function seed() { return $('seed').value; }
+  function build(k) {
+    if (k === 'ghz') return E.ghz(7);
+    if (k === 'random') return E.randomState(7, seed());
+    if (k === 'opt') return optState ? { n: 7, re: new Float64Array(optState.re), im: new Float64Array(optState.im) } : null;
+    return E.graphState(7, E.EDGES[k]);
+  }
+  function setPreset(k) { var s = build(k); if (!s) { $('omsg').textContent = 'press search first.'; return; } preset = k; st = s; history.push({ op: 'set', preset: k }); render(); }
+  $('cards').addEventListener('click', function (e) { var el = e.target.closest('.card'); if (el) setPreset(el.dataset.k); });
+
+  function drawGraph() {
+    var cv = $('graph'), cx = cv.getContext('2d'), W = cv.width, c = W / 2, R = W / 2 - 34, pos = [];
+    cx.clearRect(0, 0, W, W);
+    var edges = E.EDGES[preset];
+    for (var q = 0; q < 7; q++) {
+      if (preset === 'wheel') pos.push(q === 6 ? [c, c] : [c + R * Math.sin(q * Math.PI / 3), c - R * Math.cos(q * Math.PI / 3)]);
+      else pos.push([c + R * Math.sin(q * 2 * Math.PI / 7), c - R * Math.cos(q * 2 * Math.PI / 7)]);
+    }
+    cx.font = '14px Georgia, serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    if (!edges) {
+      cx.fillStyle = '#7d879a'; cx.fillText(preset === 'ghz' ? 'GHZ is not a graph state here' : 'not a graph state', c, W - 12);
+      if (preset === 'ghz') { cx.strokeStyle = '#2b3447'; cx.beginPath(); cx.arc(c, c, R, 0, Math.PI * 2); cx.stroke(); }
+    } else {
+      var missing = lastCuts ? lastCuts.missingMasks : [];
+      cx.strokeStyle = '#7cc4ff'; cx.lineWidth = 1.5;
+      edges.forEach(function (e) { cx.beginPath(); cx.moveTo(pos[e[0]][0], pos[e[0]][1]); cx.lineTo(pos[e[1]][0], pos[e[1]][1]); cx.stroke(); });
+      var inMissing = 0; missing.forEach(function (m) { inMissing |= m; });
+      if (missing.length && missing.length <= 3) { cx.fillStyle = '#ffb86b'; cx.fillText('missing: ' + missing.map(nm).join(' '), c, W - 12); }
+    }
+    for (var q = 0; q < 7; q++) { cx.fillStyle = '#161c28'; cx.strokeStyle = '#2b3447'; cx.beginPath(); cx.arc(pos[q][0], pos[q][1], 13, 0, Math.PI * 2); cx.fill(); cx.stroke(); cx.fillStyle = '#d7dde8'; cx.fillText(NAMES[q], pos[q][0], pos[q][1] + 1); }
+  }
+  function render() {
+    var ct = E.cutTable(st), labels = ['', '1 | 6', '2 | 5', '3 | 4'];
+    ct.missingMasks = E.subsetsOf(7, 3).filter(function (s) { return ct.each[s.join('')] < 3 - 1e-6; }).map(function (s) { var m = 0; s.forEach(function (q) { m |= 1 << q; }); return m; });
+    lastCuts = ct;
+    var t = '<tr><th>cut</th><th>how many</th><th>at maximum</th><th>least</th></tr>';
+    ct.rows.forEach(function (r) { t += '<tr><td>' + labels[r.k] + '</td><td>' + r.count + '</td><td><span class="bar"><i style="width:' + r.atMax / r.count * 100 + '%"></i></span> ' + r.atMax + '</td><td>' + f(r.min) + ' of ' + r.k + (r.atMax < r.count ? ' <span class="dim">(' + r.worst.map(function (q) { return NAMES[q]; }).join('') + ')</span>' : '') + '</td></tr>'; });
+    $('cuts').innerHTML = t;
+    var tot = 0, at = 0; ct.rows.forEach(function (r) { tot += r.count; at += r.atMax; });
+    $('corner').innerHTML = '<div>' + at + ' of ' + tot + ' cuts at maximum.</div><div class="dim">' + (ct.perfect ? 'perfect (this should never print).' : 'not perfect: no seven-qubit state is.') + '</div>';
+    $('tri').innerHTML = E.subsetsOf(7, 3).map(function (s) { var v = ct.each[s.join('')], full = v > 3 - 1e-6, a = Math.max(0, Math.min(1, v / 3)); return '<div title="' + f(v) + ' bits" style="background:rgba(124,196,255,' + (0.08 + 0.55 * a * a * a).toFixed(3) + ');' + (full ? '' : 'color:#ffb86b;border-color:#ffb86b') + '">' + s.map(function (q) { return NAMES[q]; }).join('') + (full ? '' : '<br>' + f(v)) + '</div>'; }).join('');
+    var cards = document.querySelectorAll('.card'); for (var i = 0; i < cards.length; i++) cards[i].classList.toggle('on', cards[i].dataset.k === preset);
+    drawGraph(); record();
+  }
+
+  function renderStatic() {
+    var adj = E.adjOf(7, E.EDGES.best), t = '<tr><th>ask (delete)</th><th>cuts of the six at maximum</th></tr>';
+    for (var v = 0; v < 7; v++) { var p = E.gf2Profile(E.deleteVertex(adj, v)), a = p.at[1] + p.at[2] + p.at[3], n = p.count[1] + p.count[2] + p.count[3]; t += '<tr><td>' + NAMES[v] + '</td><td>' + a + ' of ' + n + '</td></tr>'; }
+    $('removal').innerHTML = t;
+    var a6 = E.adjOf(6, E.EDGES.wheel6), rows6 = E.subsetsOf(6, 4).map(function (s) { var m = 0; s.forEach(function (q) { m |= 1 << q; }); return { s: s, pc: E.partCounts(a6, m) }; });
+    t = '<tr><th>perfect six: 4-part</th><th>low</th><th>weight 4</th></tr>';
+    rows6.forEach(function (r) { t += '<tr><td>' + r.s.map(function (q) { return 'ABCDEF'[q]; }).join('') + '</td><td>' + r.pc.low + '</td><td class="' + (r.pc.top === 3 ? 'good' : 'bad') + '">' + r.pc.top + '</td></tr>'; });
+    t += '<tr><td colspan="3" class="dim">needed: low 0, weight-4 count 3</td></tr>';
+    $('six').innerHTML = t;
+    var adj7 = E.adjOf(7, E.EDGES.best);
+    t = '<tr><th>best seven: 5-part</th><th>low</th><th>weight 4, each j</th><th>weight 5</th><th>usable</th></tr>';
+    E.subsetsOf(7, 5).forEach(function (s) { var m = 0; s.forEach(function (q) { m |= 1 << q; }); var pc = E.partCounts(adj7, m), u = E.usableFive(pc); t += '<tr><td>' + s.map(function (q) { return NAMES[q]; }).join('') + '</td><td>' + pc.low + '</td><td>' + pc.sub.join(' ') + '</td><td>' + pc.top + '</td><td class="' + (u ? 'good' : 'dim') + '">' + (u ? 'yes' : 'no') + '</td></tr>'; });
+    t += '<tr><td colspan="5" class="dim">needed: low 0, weight 4 = 1 1 1 1 1, weight 5 = 2</td></tr>';
+    $('fives').innerHTML = t;
+    t = '<tr><th>n</th><th>forced A<sub>0</sub>&hellip;A<sub>n</sub></th><th>shadow</th><th>verdict</th></tr>';
+    [4, 5, 6, 7, 8].forEach(function (n) { var A = E.forcedEnumerator(n), Sh = E.shadow(A), negA = A.some(function (x) { return x < -1e-9; }), negS = Sh.some(function (x) { return x < -1e-9; }); t += '<tr><td>' + n + '</td><td>' + A.map(fr).join(', ') + '</td><td>' + Sh.map(fr).join(', ') + '</td><td class="' + (negA || negS ? 'bad' : 'good') + '">' + (negA ? 'negative count: excluded' : negS ? 'negative shadow: excluded' : 'allowed by LP') + '</td></tr>'; });
+    t += '<tr><td>7, best graph</td><td>' + E.weightEnumerator(adj7).join(', ') + '</td><td colspan="2" class="dim">an actual state: three words of weight 3</td></tr>';
+    $('lp').innerHTML = t;
+  }
+  function fr(x) { if (Math.abs(x - Math.round(x)) < 1e-9) return String(Math.round(x)); for (var d = 2; d <= 256; d *= 2) if (Math.abs(x * d - Math.round(x * d)) < 1e-9) return Math.round(x * d) + '/' + d; return x.toFixed(4); }
+
+  $('census').onclick = function () {
+    var btn = this; btn.disabled = true; var cs = E.censusStart(), t0 = performance.now();
+    (function chunk() {
+      var done = E.censusRun(cs, 65536);
+      $('cmsg').textContent = Math.round(cs.step / cs.total * 100) + '%';
+      if (!done) { setTimeout(chunk, 0); return; }
+      cs.ms = Math.round(performance.now() - t0); census = cs; history.push({ op: 'census', twoUniform: cs.twoUniform, hist: cs.hist, usable: cs.usable });
+      $('cmsg').innerHTML = cs.total.toLocaleString('en') + ' graphs in ' + cs.ms + ' ms.';
+      var t = '<tr><th>graphs with all qubits and pairs maximally mixed</th><td>' + cs.twoUniform.toLocaleString('en') + '</td></tr>';
+      Object.keys(cs.hist).sort(function (a, b) { return a - b; }).forEach(function (k) { t += '<tr><th>&hellip; of which miss ' + k + ' triple' + (k === '1' ? '' : 's') + '</th><td>' + cs.hist[k].toLocaleString('en') + '</td></tr>'; });
+      t += '<tr><th>perfect (miss none)</th><td class="' + (cs.perfect ? 'good' : 'bad') + '">' + cs.perfect + '</td></tr>';
+      t += '<tr><th>graphs with a five-qubit part usable by the proof</th><td>' + cs.usable + '</td></tr>';
+      t += '<tr><th>a best graph found</th><td>' + cs.best.edges.join(' ') + ' (misses ' + cs.best.miss + ')</td></tr>';
+      $('ctab').innerHTML = t; record();
+    })();
+  };
+
+  $('search').onclick = function () {
+    var btn = this; btn.disabled = true; var s = E.randomState(7, seed()), start = E.purity3(s).total, done = 0;
+    $('omsg').textContent = 'start ' + start.toFixed(4) + '\u2026';
+    (function chunk() {
+      var r = E.descend(s, 100, 0.05); done += 100;
+      $('omsg').textContent = 'step ' + done + ': ' + r.total.toFixed(4) + ' (perfect would be 4.375)';
+      if (done < 800) { setTimeout(chunk, 0); return; }
+      optState = s; var exact = r.each.filter(function (p) { return Math.abs(p - 0.125) < 1e-4; }).length;
+      optResult = { seed: seed(), start: +start.toFixed(6), end: +r.total.toFixed(6), steps: done, minTriple: +Math.min.apply(null, r.each).toFixed(6), maxTriple: +Math.max.apply(null, r.each).toFixed(6), exactlyMixed: exact };
+      history.push({ op: 'search', result: optResult });
+      $('omsg').innerHTML = 'from ' + start.toFixed(4) + ' to <b>' + r.total.toFixed(4) + '</b> in ' + done + ' steps. Triples between ' + optResult.minTriple.toFixed(4) + ' and ' + optResult.maxTriple.toFixed(4) + '; ' + exact + ' of 35 exactly &#8539;.';
+      btn.disabled = false; setPreset('opt');
+    })();
+  };
+
+  function record() {
+    var r6 = function (v) { return Math.round(v * 1e6) / 1e6; };
+    $('rec').value = JSON.stringify({
+      version: 'tetralemma-7/1', seed: seed(), preset: preset,
+      cuts: lastCuts ? lastCuts.rows.map(function (r) { return { size: r.k, count: r.count, atMax: r.atMax, min: r6(r.min) }; }) : null,
+      missingTriples: lastCuts ? lastCuts.missingMasks.map(nm) : null,
+      census: census ? { graphs: census.total, twoUniform: census.twoUniform, missingTriples: census.hist, perfect: census.perfect, usableFive: census.usable, ms: census.ms } : null,
+      search: optResult, checks: checks, history: history.slice(-40),
+      note: 'Sequel to tetralemma-6.html: no seven-qubit state is perfect (Huber, Guhne, Siewert 2017).'
+    }, null, 1);
+  }
+
+  function runChecks() {
+    var out = []; function add(name, ok, detail) { out.push({ check: name, ok: !!ok, detail: detail || '' }); }
+    var best = E.cutTable(E.graphState(7, E.EDGES.best)), b = best.rows.map(function (r) { return r.atMax; }).join('/');
+    add('best graph (state vector): 7 of 7 qubits, 21 of 21 pairs, 32 of 35 triples maximally mixed', b === '7/21/32', b);
+    var agree = true; ['best', 'wheel', 'ring'].forEach(function (k) { var ct = E.cutTable(E.graphState(7, E.EDGES[k])), adj = E.adjOf(7, E.EDGES[k]); [1, 2, 3].forEach(function (sz) { E.subsetsOf(7, sz).forEach(function (s) { var m = 0; s.forEach(function (q) { m |= 1 << q; }); if (Math.abs(ct.each[s.join('')] - E.cutRank(adj, m)) > 1e-6) agree = false; }); }); });
+    add('GF(2) cut rank equals the state-vector entropy on all 63 cuts of three graphs', agree);
+    var wh = E.gf2Profile(E.adjOf(7, E.EDGES.wheel)), rg = E.gf2Profile(E.adjOf(7, E.EDGES.ring));
+    add('wheel (hexagon + hub) also reaches 32 of 35; the ring of seven only 28', wh.at[3] === 32 && rg.at[3] === 28, 'wheel ' + wh.at.join('/') + ', ring ' + rg.at.join('/'));
+    var a6 = E.adjOf(6, E.EDGES.wheel6), ok6 = E.subsetsOf(6, 4).every(function (s) { var m = 0; s.forEach(function (q) { m |= 1 << q; }); var pc = E.partCounts(a6, m); return pc.low === 0 && pc.top === 3; });
+    add('perfect six: every four-qubit part has no low-weight words and weight-4 count 3, as the method requires', ok6);
+    var adj7 = E.adjOf(7, E.EDGES.best), usable = E.subsetsOf(7, 5).filter(function (s) { var m = 0; s.forEach(function (q) { m |= 1 << q; }); return E.usableFive(E.partCounts(adj7, m)); }).length;
+    add('best seven: no five-qubit part meets the proof\'s conditions (else 20 = 12 would be forced)', usable === 0, usable + ' usable of 21');
+    var r = E.rng('tetralemma-check', 'parity', 0), pOk = true, tried = 0;
+    for (var t = 0; t < 3000; t++) { var M = [], Nw = []; for (var i = 0; i < 7; i++) { M.push(Math.floor(r() * 4)); Nw.push(Math.floor(r() * 4)); } var ac = E.anticomm(M, Nw); if (ac) { tried++; if ((E.weight(ac) - E.weight(M) - E.weight(Nw)) % 2 !== 0) pOk = false; } }
+    add('parity rule: |{M,N}| = |M| + |N| mod 2 on random seven-letter Pauli words', pOk, tried + ' non-vanishing pairs');
+    var we = E.weightEnumerator(adj7).join(',');
+    add('best graph weight enumerator 1,0,0,3,29,42,34,19 (sums to 128)', we === '1,0,0,3,29,42,34,19', we);
+    var A7 = E.forcedEnumerator(7), S7 = E.shadow(A7), nonneg = function (v) { return v.every(function (x) { return x > -1e-9; }); };
+    var marg = [1, 2].every(function (d) { var Am = E.marginalEnumerator(A7, d); return nonneg(Am) && nonneg(E.shadow(Am)); });
+    add('LP: n = 7 forces 1,0,0,0,35,42,28,22 with non-negative shadow (and for its 5- and 6-parts): not excluded', A7.join(',') === '1,0,0,0,35,42,28,22' && nonneg(S7) && marg);
+    var A4 = E.forcedEnumerator(4), A8 = E.forcedEnumerator(8);
+    add('LP: n = 4 has negative shadow, n = 8 a negative count (A6 = -84)', E.shadow(A4)[0] < 0 && A8[6] === -84, 'S0(4) = ' + E.shadow(A4)[0] + ', A(8) = ' + A8.join(','));
+    var p = E.purity3(E.graphState(7, E.EDGES.best)).total;
+    add('summed triple purity: best graph 4.75 = 32/8 + 3/4, above the perfect 4.375', Math.abs(p - 4.75) < 1e-9, p.toFixed(6));
+    checks = out.map(function (c) { return { check: c.check, ok: c.ok }; });
+    $('checks').innerHTML = out.map(function (c) { return '<div class="msg"><span class="' + (c.ok ? 'good' : 'bad') + '">' + (c.ok ? 'pass' : 'FAIL') + '</span> ' + c.check + (c.detail ? ' <span class="dim">' + c.detail + '</span>' : '') + '</div>'; }).join('') + '<div class="dim msg">' + out.filter(function (c) { return c.ok; }).length + ' of ' + out.length + ' pass.</div>';
+  }
+  runChecks();
+  renderStatic();
+  setPreset('best');
+})();
+</script>
+</body>
+</html>
