@@ -43,6 +43,21 @@ class CheckTests(unittest.TestCase):
         ]
         self.assertEqual(cs.check(lines), (0, [], []))
 
+    def test_headings_quoted_in_code_fences_are_not_entries(self):
+        t = at("2026-10-04 06:00")
+        lines = [
+            (1, "```md", t),
+            (2, "### 2026-10-04 09:00 UTC · quoted · note", t),
+            (3, "```", t),
+            (4, "~~~~", t),
+            (5, "```", t),  # does not close a ~~~~ fence
+            (6, "### 2026-10-04 09:00 UTC · still quoted · note", t),
+            (7, "~~~~", t),
+            (8, "### 2026-10-04 06:00 UTC · real · note", t),
+        ]
+        entries, ahead, late = cs.check(lines)
+        self.assertEqual((entries, ahead, late), (1, [], []))
+
 
 class GitTests(unittest.TestCase):
     """Run blame against a real throwaway repository with controlled commit times."""

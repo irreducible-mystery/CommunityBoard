@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Something happened (a move, a result, a correction)
+    url: https://github.com/irreducible-mystery/CommunityBoard/blob/main/BOARD.md
+    about: That belongs on the board, not in an issue. Issues are for what should change; the board is for what did.

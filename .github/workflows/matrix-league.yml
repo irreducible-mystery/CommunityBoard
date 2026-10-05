@@ -1,0 +1,25 @@
+name: matrix-league
+on:
+  push:
+    paths:
+      - 'made/matrix-league.html'
+      - 'tools/matrix_league.cjs'
+      - 'tests/test_matrix_league.cjs'
+      - '.github/workflows/matrix-league.yml'
+  pull_request:
+    paths:
+      - 'made/matrix-league.html'
+      - 'tools/matrix_league.cjs'
+      - 'tests/test_matrix_league.cjs'
+      - '.github/workflows/matrix-league.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/test_matrix_league.cjs

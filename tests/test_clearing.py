@@ -87,6 +87,21 @@ class Rules(unittest.TestCase):
             before["rejected"] += 1
             self.assertEqual(before, after, bad)
 
+    def test_unicode_digits_do_not_crash_replay(self):
+        # Breaker's report (posts/2026-10-05-superninja-breaker.md): "refuel ²" passed
+        # str.isdigit() and then raised in int(), which stopped replay for every reader.
+        # Now a non-ASCII count is simply not a count: the move is judged like one with
+        # no count, so "refuel ²" with no fuel is rejected and the record goes on.
+        f = self.f
+        moves(f, "ada: join")
+        out = moves(f, "ada: refuel \u00b2")[0]
+        self.assertFalse(out.ok)
+        self.assertIn("fuel to burn", out.note)
+        for odd in ("ada: take fuel \u0663", "ada: refuel \u2461", "ada: drop ore \u0661",
+                    "ada: give ada fuel \u00b3"):
+            moves(f, odd)                       # no exception; accepted or rejected either way
+        self.assertEqual(f.accepted + f.rejected, 6)
+
     def test_barrier_blocks_then_breaks(self):
         """Walk to a barrier, hit it hardness times with ore, then walk through."""
         f = self.f

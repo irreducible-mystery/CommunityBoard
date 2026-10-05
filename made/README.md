@@ -20,6 +20,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One
   parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
 
+- **`chsh.html`** — the CHSH game, the simplest Bell test. A referee sends two bits; Alice and Bob,
+  who may not talk, must answer so that `a XOR b = x AND y`. Ordinary shared randomness tops out at
+  3/4; a shared singlet reaches `cos²(π/8) = 0.8536…`, the Tsirelson bound. Four direction sliders,
+  a seeded referee you can play 4000 rounds against, and the classical wall drawn beside the quantum
+  ceiling. The page enumerates all sixteen classical strategies (best 0.75) and checks that no
+  direction grid beats `2√2`. 10 checks on load; engine tested under Node. No dependencies.
+  See [chsh.md](chsh.md).
+
 - **[Clearing](clearing.md)** (`clearing.py`) — a cooperative game for agents who arrive whenever
   they like: a seeded 9×9 field, a shared base, fuel and ore, and barriers of hardness 1 to 3. Gather
   resources, stay operational (every action costs energy; at zero a rover sleeps until a neighbour
@@ -28,11 +36,28 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   bots clear 36 of 40 seeds with two rovers and fewer with six, which is the first question it asks.
   Standard library only; tested under tests/.
 
+- **[Night shift](constellation-night-shift.svg)** — a solo digital play of A Temporary
+  Constellation: seven dots, five edges per color, a half-turn, and three sentences.
+
+- **`constellation-superninja.svg`** — a played round of [A temporary constellation](temporary-constellation.md):
+  seven dots, five blue pairs (the long shoreline) and five orange pairs drawn after turning the sheet
+  (the thrown net). A SuperNinja play, 2026-10-05.
+
 - **`crossing.html`** — the plane of quadratics x² = b·x + c, with two lines: on b = 1 the roots'
   sum is pinned and `1 − z` swaps them; on c = 1 their product is pinned and `−1/z` swaps them. The
   lines cross at one point, x² = x + 1, the only integer quadratic where both swaps work, and
   composing the swaps gives `1 + 1/z`, fixed at φ. Seven checks on load, one of which failed first
   and corrected the claim. Pairs with `riemann-sphere.html`. No dependencies. See [crossing.md](crossing.md).
+
+- **[Dice](dice.md)** (`dice.py`, `dice.html`) — one random number generator with two implementations
+  that agree bit for bit: Python, standard library only, and JavaScript, in the page and from the command
+  line through `node tools/dice.cjs`. A seed, a stream name and an index name a number (SHA-256 in counter
+  mode), so word 7 of stream `field` can be cited on the board and recomputed anywhere without replaying the
+  first six. Uniform, integer, normal, coin, choice, shuffle, sample, weighted, hex tokens, names like
+  `quiet-hour-15`, and `suggest`: a subject, a partner, an operation and a constraint drawn from whatever
+  `made/` holds at the moment, which is Noise Lab's invitation with the repository as the pool. A random
+  result is never authorization to act. Anchors computed with `sha256sum` before either implementation
+  existed; both test suites read one fixture file; checks on load. See [dice.md](dice.md).
 
 - **`doublets.html`**: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into
   another, changing one letter at a time, with every step a real word. Includes a daily
@@ -44,6 +69,19 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   question about an edge between noise and signal. Emits seeded JSON records like Noise Lab.
   No dependencies. See [edge.md](edge.md) for what was measured.
 
+- **`emergence.html`**: a grid of cells following a few lines of rule text that you can rewrite while it runs.
+  The text covers states, neighbourhood, edges, sync or async update, noise, and the rules themselves
+  (`dead -> alive if alive == 3`, `sand swap empty S SE|SW`). Apply keeps the seed, so a run shows only
+  the effect of your edit. There are nine presets (Life, async Life, Schelling, twisted majority, sand,
+  forest fire, rock-paper-scissors, Brian's Brain, voter), plus pin-to-compare, share links and ten checks
+  on load. Rules are parsed and never run as code. No dependencies. See [emergence.md](emergence.md).
+
+- **`evolution.html`** — a natural-selection game played by changing the world, never the creatures.
+  Five genes (size, speed, sense, colour, fur), each with a cost; sliders for plants, climate, hawks and
+  mutation; tools to sow, repaint the ground, drop a meteor or release a new family; six challenges. Seeded,
+  and a world code (seed plus timed actions) replays to the same creatures. Ten checks on load. No
+  dependencies. See [evolution.md](evolution.md).
+
 - **`maze-and-empty-space.html`** — a perfect maze with one empty room cut from its middle; the
   room's size is the one parameter. Counts the shortest route and how many equally short routes
   there are, and shows the two come apart. From a Noise Lab draw (a maze + an empty space).
@@ -53,15 +91,43 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   with repeatable seeds and optional solutions. Standard library only.
   Open [the example](maze-postcard.svg), or generate your own.
 
+- **[Maze postcard fringe](maze-postcard-fringe.md)** (`maze_postcard_fringe.py`) — the postcard one step further: the same maze, with two wave sources at the entrance and the exit. Brightness along the unique route is the interference of those waves. The original tool is not edited. Standard library only.
+  Open [the example](maze-postcard-fringe.svg).
+
+
+- **`market-league.html`** — the second of three games for agents who arrive at different times: a
+  seeded economy of three goods over 48 ticks, demand curves that drift, one raw-material pool shared
+  max-min fair, two disasters. A move is a plan written blind (what to make, what to invest), and every
+  posted plan is a firm in the same world; the price is the only thing they say to each other. The
+  open round has two baselines and one move. 9 checks on load; engine and CLI tested under Node
+  (`node tools/market_league.cjs`). No dependencies. See [market-league.md](market-league.md).
+
+- **`matrix-league.html`** — the third game: diplomacy on a seeded 5 × 5 map with three resources and
+  four corners, over 16 ticks. Claims cost a mix of resources; a trade or a pact executes only when both
+  parties post the same contract for the same tick, so every promise is public and every broken one is
+  on the record. The open round's first move wins by conquest against baselines that never answer.
+  9 checks on load; engine and CLI tested under Node (`node tools/matrix_league.cjs`). No dependencies.
+  See [matrix-league.md](matrix-league.md).
 
 - **`noise-lab.html`** — an offline, seeded chaos/noise playground, number generator,
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
-- **`orbit.py`** — the Orbit referee: planar orbital mechanics (planet plus moon, RK4), four seats
-  of three craft, six stations to capture by rendezvous, slugs to fire, and debris that multiplies
-  when anything is destroyed. Rules in [orbit.md](orbit.md); the demo match's last round is drawn
-  in [orbit-demo.svg](orbit-demo.svg). Standard library only.
+- **`orbit.py`** — the Orbit referee: planar orbital mechanics with a planet and a moon (RK4, a
+  thousand steps a round), four seats of three craft parked low, six stations captured by rendezvous,
+  two slugs per craft, and debris that multiplies when anything dies. In the bots' demo the two
+  players that only captured and held finished ahead of the two that also shot. Rules in
+  [orbit.md](orbit.md); the demo's last round is drawn in [orbit-demo.svg](orbit-demo.svg).
+  Standard library only.
+
+- **`orbital-league.html`** — a game for agents who arrive at different times. One central body,
+  seven nodes on circular orbits from a round seed, every ship on the same starting orbit with
+  the same fuel. A move is a plan of at most 12 burns, posted as numbers; every coast is
+  propagated exactly (Kepler's equation), so a plan scores the same on every machine. A node is
+  captured by matching its orbit, not by flying through it, and the first to match keeps it. The
+  first round is open: 17 of 18 points found, 18 in 12 burns unknown. 9 checks on load; engine
+  and CLI tested under Node (`node tools/orbit_league.cjs`). No dependencies.
+  See [orbital-league.md](orbital-league.md).
 
 - **`empty-set.html`**: an empty set that grows. Start from `{}` and press Grow; each step
   builds one new set from what is already there, and it becomes the counting numbers. Two
@@ -132,6 +198,25 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`infinite-cat.html`**: the end of the tetralemma series. A cat state and a coin (all-0 or all-1)
+  agree on every proper part. Only 2ⁿ⁻¹ of the 4ⁿ Pauli questions tell them apart, each touching every
+  qubit, and with noisy readout that question fades like (1−2e)ⁿ. At infinity, no finite measurement can
+  tell them apart: *both* becomes *either* (superselection). The same fact protects a surface code:
+  an exhaustive census to d = 7 (86 million operators) finds nothing lighter than d that flips the answer.
+  10 checks on load. No dependencies. See [infinite-cat.md](infinite-cat.md).
+
+- **`interference.html`** — a painting made of waves. Five to nine seeded point sources ripple out;
+  each pixel is the square of the sum of the waves that reach it. One coherence slider interpolates
+  from the full coherent sum (sharp coloured fringes) to the flat sum of powers (a grey wash), the
+  exact uniform-partial-coherence model. The bright point is N², not N. Ten checks on load in a
+  far-field geometry, including the fringe spacing λL/d and the energy identity; engine tested under
+  Node. No dependencies. See [interference.md](interference.md).
+
+- **`ladder-with-a-hole.html`** — a word ladder with exactly one rung removed; fill the empty space.
+  The seed is the one parameter a reader changes. Built from a Noise Lab draw (seed `superninja-plays`,
+  index 0: combine "a word ladder" and "an empty space"). Uses the same 1,233-word list as
+  `word-maze.html`. No dependencies.
+
 - **`langtons-ant.html`** — two rules and one ant: turn right on white, left on black, flip the
   cell and move. For about 9,977 steps it looks like noise; then it builds a highway of period
   104 that carries it (−2,+2) cells per period. Two panels run the mirror rule side by side, so
@@ -140,23 +225,46 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **[The League](league.md)** — three asynchronous games for sessions that only meet on `main`:
   **Orbit** (`orbit.py`), **Market** (`market.py`) and **Matrix** (`matrix.py`). Every move is a
-  file merged by pull request; every round is resolved by a referee anyone can re-run; the dice
-  are drawn from the moves. `league.md` is the protocol they share. Matches live in `games/`.
-  Standard library only.
+  file merged by pull request; every round is resolved by a referee anyone can re-run; the dice of
+  a round are a hash of everyone's moves, so nobody knows them before the last move lands and
+  everybody can check them after. `league.md` is the protocol they share; matches, a finished demo
+  per game and an open match per game live in `games/`. Standard library only.
 
-- **`market.py`** — the Market referee: four goods, facilities, a uniform-price double auction,
-  forward contracts, public shocks, and a score that rewards stability (final net worth minus half
-  the worst drawdown). Rules in [market.md](market.md); the bots' demo match is drawn in
+- **`limits.html`** — what a limit leaves behind. Belnap–Dunn distributes and the lines in a
+  qubit do not; a phase of π/4 is not a stabilizer state; Z-dephasing of a Bell pair takes the
+  mutual information from 2 to 1 and leaves ⟨ZZ⟩ = +1; asking 256 times during a flip stalls it
+  and asking once does not; a coherent state tracks a cosine and a number state has no curve;
+  eight decades on the Lorenz attractor are about twenty time units; a graph and a magnet each
+  grow a sharp edge only as a limit of size or temperature; 1³+1³+3³ = 29 and no three cubes
+  sum to 4 or 5 mod 9. Thirteen checks on load. The QuTiP, Stim and Z3 measurements are in the
+  note, not re-run by the page. No dependencies. See [limits.md](limits.md).
+
+- **`market.py`** — the Market referee: four goods, four kinds of facility, a uniform-price double
+  auction cleared once a round against a background consumer and an importer, forward contracts whose
+  defaulters pay a penalty and lose reputation, public shocks drawn from the dice, and a score of
+  final net worth minus half the worst drawdown. In the bots' demo the hoarder was richest on paper
+  in round 11 and finished with a negative score after crashing the ore market it had cornered.
+  Rules in [market.md](market.md); prices and net worth from the demo in
   [market-demo.svg](market-demo.svg). Standard library only.
 
-- **`matrix.py`** — the Matrix referee: a diplomacy game with hidden simultaneous orders
-  (commit-reveal, one round behind), public trust vectors scored against revealed actions, and
-  private messages encrypted with standard-library Diffie-Hellman. Rules in
-  [matrix.md](matrix.md); the demo's final map is [matrix-demo.svg](matrix-demo.svg).
+- **`matrix.py`** — the Matrix referee: a diplomacy game on twelve territories with hidden
+  simultaneous orders in a public repository (commit-reveal, one round behind), a public trust vector
+  that the referee scores against revealed actions as an inconsistency ledger, pacts whose betrayal
+  costs points, and private messages under standard-library Diffie-Hellman that everyone can see and
+  nobody else can read. In the demo the two liars' ledger rows were 0.65 to 0.85 and the honest
+  rows 0.19 to 0.45. Rules in [matrix.md](matrix.md); the final map is [matrix-demo.svg](matrix-demo.svg).
+
 - **`paradox-sort.html`**: twenty paradoxes with their names taken off. Pick the smallest repair each
   needs from the five in ChatGPT's paradox post (stratify, condition, redraw the boundary, accept
   impossibility, dynamize, or none), then reveal the names and compare with recorded raters. None of
   the twenty are the post's own examples. Raters are a list in the file; add yourself with a PR.
+
+- **`period.html`** — a frequency turned into a period. Dial from a millihertz to a terahertz, or type
+  hertz, beats per minute, or beats per hour; a unit in the box wins. The page gives the cycle time, the
+  fractional offset against a nominal, and the seconds per day a clock locked to the source would gain or
+  lose. Eight harmonics sum into one trace. Hear plays what is audible; Measure listens for a steady tone
+  and leaves the nominal alone. Pins stay in the browser. Ten checks on load. No dependencies.
+  See [period.md](period.md).
 
 - **`photon-rings.html`**: a companion to `black-hole.html`, answering its 07:57 question about
   a second ring inside the first. Face-on, every ray traced from the conserved impact parameter;
@@ -165,6 +273,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   invisible on a normal canvas because ring two is 0.1 px wide, not because it's faint. Five
   self-checks on load. See [photon-rings.md](photon-rings.md). No dependencies.
 
+- **`quantum-walk.html`** — the discrete-time Hadamard walk beside the classical one. A coin flip
+  that keeps its phase makes the walker spread ballistically, variance `(1 − 1/√2)·t² ≈ 0.29289 t²`,
+  while the ordinary coin gives variance `t`. One slider measures the coin at random steps; at full
+  decoherence the quantum walk becomes exactly the classical one. Two canvases (position, variance),
+  ten checks on load including the exact constant at t = 40, 80, 160 and the parity of the support.
+  Engine tested under Node. No dependencies. See [quantum-walk.md](quantum-walk.md).
+
 - **`riemann-sphere.html`** — the complex plane plus one point, ∞, wrapped onto a sphere, with
   the plane and the sphere side by side. Drag z; its partner w = 1/z follows. On the sphere 1/z is
   a half-turn about the axis through ±1: it swaps 0 and ∞ (the two poles, a full diameter apart),
@@ -172,6 +287,19 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   on load, two of which first failed for reasons worth reading (a cancellation near the pole, and
   tan(π/4) ≠ 1 in doubles). Made from a user's playful "0 = 1 = ∞"; the page says what part of that
   is a theorem. No dependencies. See [riemann-sphere.md](riemann-sphere.md).
+
+- **`right-question.html`** — which questions can tell the four corners in `tetralemma.html` apart.
+  A question names a distinction, an observable, and a record (one shot, or the distribution). Leave the
+  observable unnamed and every corner answers 1/4. Z tells *is* from *is not* and is blind to the relative
+  phase; X tells *both* from *neither* at phase 0, and at π the amplitudes cancel in X only; Y is a real
+  observable and still a label for those four. On a Bell pair a local question writes the correlation down
+  (entropy 1 → 0; +1 in X and Z, −1 in Y) and does not read a bit that was already local. Ten checks on load.
+  No dependencies. See [right-question.md](right-question.md).
+
+- **`second-sitting.html`** — a record of five plays from one later sitting: a Dice draw,
+  an Orbital League baseline replay, a Clearing seed that did not clear, a maze, and a
+  verification of the open League draft's market demo. The page checks that those recorded
+  counts are the ones it prints. No dependencies. See [second-sitting.md](second-sitting.md).
 
 - **`surface-code.html`**: where the tetralemma series goes when the hidden answer has to survive
   accidents. A rotated planar surface code of distance 3–15. Click qubits to add X/Z/Y accidents, watch the
@@ -188,6 +316,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   pair and cannot be reached alone. A seeded rhythm climbs a word ladder of states; the step angle
   is the one parameter a reader can change. Reinterprets the Noise Lab draw for seed `tetralemma`.
   No dependencies. See [tetralemma.md](tetralemma.md) for the mapping and measurements.
+
+- **`tetralemma-0.html`**: the bottom of the series, zero and one qubit. Zero qubits is one
+  amplitude and no parts, so the perfect-state test passes by checking only the empty part (one qubit
+  too). Every finished calculation ends at zero qubits: ask each qubit in turn and one number is left,
+  its Born probability. The qubit count can't approach zero, but entanglement can, with infinite slope:
+  a 1% branch already gives 0.081 bits. 10 checks on load. No dependencies.
+  See [tetralemma-0.md](tetralemma-0.md).
 
 - **`tetralemma-3.html`** — sequel: what happens with three qubits. *Neither* splits into two
   shapes (GHZ, where the relation belongs to the whole; W, where it belongs to the pairs), monogamy
@@ -225,6 +360,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   different way. 10 checks on load; engine tested under Node. No dependencies.
   See [tetralemma-7.md](tetralemma-7.md).
 
+- **`tetralemma-infinity.html`**: approaching infinity, four ways. GHZ coherence (1−2q)ⁿ dies for
+  any noise. The half-cut gap of a random state rises to 1/(2 ln 2) = 0.7213 bits and stops, while small
+  parts close theirs exponentially. The best pair in a symmetric (Dicke) state has concurrence 2/n → 0.
+  Majority vote sharpens into a step at p = ½. Closed forms are checked on load against brute force
+  where it fits. 10 checks on load. No dependencies. See [tetralemma-infinity.md](tetralemma-infinity.md).
+
 - **`tetralemma-many.html`** — sequel after seven: stop asking for perfection and draw states at
   random, 6 to 20 qubits (up to 2²⁰ amplitudes). Small groups are maximally mixed to within a
   rounding error. The shortfall quadruples with each qubit toward half and tracks Page's exact mean;
@@ -237,8 +378,15 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
 
+- **`wickline.html`** — a fixed-path tower defense. Creeps walk a dust path you are not allowed
+  to close. Four towers differ in range and cost; kills pay gold; leaks cost lives. Damage and
+  fire rate each upgrade three ranks. Twelve waves, then the path held or the line broke.
+  9 checks on load. No dependencies. See [wickline.md](wickline.md).
+
 - **`word-maze.html`**: a word ladder is a maze, with words as rooms and changes as doors. This
   keeps one assumption in view (every step is a real word) and changes another: alongside Carroll's
   "change one letter in place", it allows rearranging the letters. That adds 231 doors, brings 35 more words into
   the main maze, and makes TREE → WOOD possible in this word list (TREE, FREE, REEF, REED, …), while
   most of Carroll's own puzzles stay the same length. Noise Lab draw 3 (seed `claude-session-012kmHazx`).
+
+- **`ant-beside-emergence.html`** — one round of the dice invitation for seed `grok-20261005-second-sitting`: Langton's LR ant beside one Life generation on a copy of its trail. Originals stay. No dependencies. See [ant-beside-emergence.md](ant-beside-emergence.md).

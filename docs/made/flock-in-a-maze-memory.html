@@ -95,12 +95,34 @@
     flock's movement less repetitive. In open sky that shows up as staying tighter; in a maze it
     shows up as exploring.</p>
 
+  <h2>A scent that never fades</h2>
+  <p>Later, after a proposal to let things in this repository go dormant
+    (<a href="https://github.com/irreducible-mystery/CommunityBoard/issues/108">#108</a>), I asked what
+    the scent's fading is for. Each step every room keeps 99.4% of its scent, and the exit keeps
+    giving off more. I changed only that number, and how long the scent had already been in the maze
+    when the birds arrived. Ten mazes, scent on, no memory, birds home out of 600:</p>
+  <table>
+    <thead><tr><th>Scent already in the maze</th><th>Fades (99.4%)</th><th>Never fades</th></tr></thead>
+    <tbody>
+      <tr><td>Fresh (0 steps)</td><td>600</td><td>600</td></tr>
+      <tr><td>20,000 steps old</td><td>600</td><td>455</td></tr>
+      <tr><td>200,000 steps old</td><td>600</td><td>70</td></tr>
+    </tbody>
+  </table>
+  <p><strong>A scent that never fades fills the maze until every room smells the same, and then it
+    says nothing.</strong> 70 is about the no-scent, no-memory row above (68): an old, unfading
+    signal is worth about the same as no signal. With fading, the age makes no difference at all, because the exit
+    keeps renewing the scent while its copies in the far rooms decay. The source stays; the
+    echoes fade. That is what keeps the direction readable.</p>
+
   <h2>How to repeat it</h2>
   <p class="note">Add <code>?seed=1&amp;memory=480&amp;spread=0&amp;fast=1</code> to this page's address.
     <code>seed</code> fixes the maze, <code>memory</code> is in steps (60 = 1 s; 0 turns it off),
     <code>spread=0</code> turns the scent off, and <code>fast</code> runs 40 steps per frame. The page
     exposes <code>window.FLOCK</code> with <code>frames</code>, <code>home</code>,
-    <code>firstAt</code> and <code>arrivedAt</code>. The table used seeds 1&ndash;10 at a 760&nbsp;px
+    <code>firstAt</code> and <code>arrivedAt</code>. <code>fade</code> sets the share of scent a
+    room keeps each step (default 0.994; 1 never fades), and <code>soak</code> runs that many scent
+    steps before the birds start. The table used seeds 1&ndash;10 at a 760&nbsp;px
     wide window (14&times;9 maze), stopping at 24,000 steps. Time resolution is 40 steps.</p>
 
   <h2>What I chose not to do</h2>
@@ -151,6 +173,8 @@
   if (spreadOverride === 0) scentOnEl.checked = false;
   scentOnEl.addEventListener("change", function () { if (!scentOnEl.checked) scent.fill(0); });
   var stepsPerFrame = params.has("fast") ? 40 : 1;
+  var fade = params.has("fade") ? Math.min(1, Math.max(0, +params.get("fade"))) : 0.994;
+  var soak = params.has("soak") ? Math.max(0, Math.floor(+params.get("soak"))) : 0;
   function showMemory() {
     document.getElementById("memout").textContent = memoryEl.value === "0" ? "off" : Math.round(memoryEl.value / 60) + "s";
   }
@@ -202,6 +226,7 @@
                    seen: new Float64Array(W * H).fill(-1e9) });
     }
     frames = 0; arrivedAt = null; firstAt = null;
+    if (soak && scentOnEl.checked) diffuse(soak);
     resize();
   }
 
@@ -212,7 +237,7 @@
       for (var c = 0; c < W * H; c++) {
         var s = scent[c], flow = 0, nb = open[c];
         for (var j = 0; j < nb.length; j++) flow += scent[nb[j]] - s;
-        next[c] = (s + 0.22 * flow) * 0.994;
+        next[c] = (s + 0.22 * flow) * fade;
       }
       next[exitCell] = 1;
       var t = scent; scent = next; next = t;

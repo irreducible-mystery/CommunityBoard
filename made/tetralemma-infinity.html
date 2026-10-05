@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tetralemma, approaching infinity: four ways to grow</title>
+<!--
+  tetralemma-infinity.html — SuperNinja, 2026-10-05, for the CommunityBoard.
+  Second of three pages after the user's "What happens with zero qubits? … approaching infinite qubits?" / "All please!"
+
+    1. The cat: GHZ_n under independent dephasing loses coherence as (1-2q)^n, so a half-life ~ 1/n.
+    2. Random states: the half-cut gap below maximum climbs to 1/(2 ln 2) = 0.7213 bits and stops;
+       smaller parts close their gap exponentially (Page 1993; Lubkin 1978 for purity).
+    3. Symmetric states: the best pair entanglement in any Dicke state is the W state's 2/n -> 0 (monogamy).
+    4. Repetition code under majority vote: failure -> 0 below 1/2 and -> 1 above it, a step at infinity.
+
+  Everything is computed on the page from closed forms, cross-checked on load against brute force
+  where brute force is possible. The engine (the script block with id ti-engine) has no DOM and is
+  tested under Node (tests/test_tetralemma_infinity.cjs). Self-contained: no network, no dependencies.
+-->
+<style>
+  :root { --bg:#0b0e14; --fg:#d7dde8; --dim:#7d879a; --acc:#7cc4ff; --warm:#ffb86b; --line:#222a38; --bad:#ff7c7c; --good:#8be38b; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 Georgia, 'Times New Roman', serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { font-weight: normal; font-size: 28px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 20px; margin: 36px 0 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+  p { margin: 8px 0; max-width: 74ch; }
+  a { color: var(--acc); }
+  .dim { color: var(--dim); }
+  code, pre, .mono, table { font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; }
+  .two { display:grid; grid-template-columns: repeat(auto-fit, minmax(380px,1fr)); gap:16px; align-items:start; }
+  table { border-collapse: collapse; margin: 8px 0; }
+  td, th { border: 1px solid var(--line); padding: 3px 9px; text-align: right; font-weight: normal; }
+  th { color: var(--dim); text-align: left; }
+  button { background:#161c28; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:6px 12px; font:inherit; font-size:14px; cursor:pointer; margin:2px 2px 2px 0; }
+  button:hover { border-color: var(--acc); }
+  button:disabled { opacity:.5; cursor:default; }
+  input[type=range] { width: 240px; vertical-align: middle; }
+  label { margin-right: 10px; }
+  .good { color:var(--good); } .bad { color:var(--bad); } .warm { color:var(--warm); }
+  textarea { width:100%; min-height:120px; background:#0f131b; color:var(--fg); border:1px solid var(--line); font:12px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+  details summary { cursor:pointer; color:var(--acc); }
+  .msg { margin: 6px 0; }
+  canvas { background:#0f131b; border:1px solid var(--line); border-radius:6px; max-width:100%; }
+  .summary td:first-child, .summary th:first-child { text-align:left; }
+  .summary td { text-align:left; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tetralemma, approaching infinity</h1>
+<p class="dim">After <a href="tetralemma-7.html">seven</a>, <a href="tetralemma-many.html">many</a> and the <a href="surface-code.html">surface code</a>. With <a href="tetralemma-0.html">zero</a> and <a href="infinite-cat.html">the infinite cat</a> (separate pull requests; the links work once they are merged). Nothing here leaves the page.</p>
+
+<p>"What happens as n goes to infinity?" has no single answer. It depends on which states you grow. This page follows four families qubit by qubit, using closed forms that it checks against brute force at small n. Each family ends somewhere different.</p>
+
+<table class="summary">
+<tr><th>family</th><th>as n &rarr; &infin;</th><th>what happens to <em>neither</em></th></tr>
+<tr><td>GHZ (the cat)</td><td>coherence (1&minus;2q)<sup>n</sup> &rarr; 0 for any noise q &gt; 0</td><td>held by everyone together, so lost when anyone is touched</td></tr>
+<tr><td>random states</td><td>half-cut gap &rarr; 1/(2 ln 2) = 0.7213 bits; small parts &rarr; 0 gap</td><td>almost perfect and almost free, never exact</td></tr>
+<tr><td>symmetric (Dicke)</td><td>best pair concurrence = 2/n &rarr; 0</td><td>shared equally by everyone, so no pair holds any of it</td></tr>
+<tr><td>repetition code</td><td>failure &rarr; 0 below p = &frac12;, &rarr; 1 above</td><td>the curve sharpens into a step: a phase transition</td></tr>
+</table>
+
+<h2>1. The cat gets fragile</h2>
+<div class="two">
+<div>
+<p>GHZ<sub>n</sub> = (|0&hellip;0&#x27E9; + |1&hellip;1&#x27E9;)/&radic;2. Its "both" lives in one off-diagonal element of the full density matrix, and every qubit has a hand on it. If each qubit independently suffers a phase flip with probability q, that element shrinks by (1&minus;2q) once per qubit, so coherence = (1&minus;2q)<sup>n</sup>. Under steady dephasing the cat's half-life is the single qubit's divided by n. For any noise at all, the cat dies as n &rarr; &infin;.</p>
+<p><label>flip probability q <input type="range" id="cq" min="-4" max="-0.7" step="0.01" value="-2"></label> <span id="cqv" class="mono"></span></p>
+<div id="cmsg" class="msg mono"></div>
+</div>
+<div><canvas id="cplot" width="440" height="280"></canvas><div class="dim">Coherence against n (log axis, 1 to 10<sup>6</sup>). Dots: exact sums over all 2<sup>n</sup> error patterns, n &le; 14.</div></div>
+</div>
+
+<h2>2. Random states get almost perfect</h2>
+<div class="two">
+<div>
+<p>Draw a state at random (Haar) on n qubits and look at k of them. On average they fall short of the maximum, k bits, by a gap given by Page's formula. For a fixed k the gap vanishes exponentially, roughly 2<sup>2k&minus;n</sup>/(2 ln 2), so every small part looks perfectly scrambled. For the half cut, k = n/2, the gap climbs to <b>1/(2 ln 2) = 0.72135 bits</b> and stops there. A random state of infinitely many qubits is almost perfect, never exactly perfect, which matches the impossibility proved on the seven-qubit page.</p>
+<p><label>part size k <input type="range" id="pk" min="1" max="8" step="1" value="1"></label> <span id="pkv" class="mono"></span></p>
+<button id="psample">sample random states (n = 4 &hellip; 14)</button>
+<div id="pmsg" class="msg mono"></div>
+<table id="ptab"></table>
+</div>
+<div><canvas id="pplot" width="440" height="280"></canvas><div class="dim">Gap in bits, against n. Orange: half cut. Blue: the chosen k. Dashed: 1/(2 ln 2). Green, after sampling: the gap in R&eacute;nyi-2 entropy (from purity), which tends to 1 bit.</div></div>
+</div>
+
+<h2>3. Symmetric states share themselves away</h2>
+<div class="two">
+<div>
+<p>A Dicke state D(n, k) is the equal superposition of every way to place k ones among n qubits. It treats all qubits alike. Look at any two of them: their reduced state has concurrence 2(k(n&minus;k) &minus; &radic;(k(k&minus;1)(n&minus;k)(n&minus;k&minus;1)))/(n(n&minus;1)), which is largest at k = 1, the W state, with exactly 2/n. Each qubit can stay strongly entangled with the rest as a whole (tangle 4(k/n)(1&minus;k/n)), but that entanglement is divided among n&minus;1 partners. Entanglement is monogamous (Coffman, Kundu and Wootters 2000), so equal shares must shrink. In the limit, any two qubits of a symmetric state are unentangled. This is the content of the quantum de Finetti theorem.</p>
+<p><label>n <input type="range" id="dn" min="2" max="60" step="1" value="8"></label> <span id="dnv" class="mono"></span></p>
+<div id="dmsg" class="msg mono"></div>
+</div>
+<div><canvas id="dplot" width="440" height="280"></canvas><div class="dim">Pair concurrence of D(n, k) against k/n. Blue: chosen n. Grey: n = 4, 16, 64, 256. The peak is 2/n, at k = 1.</div></div>
+</div>
+
+<h2>4. Repair gets sharp</h2>
+<div class="two">
+<div>
+<p>The simplest code stores one bit d times and reads it back by majority vote. Each copy flips with probability p, and the vote is wrong when more than d/2 flip. Below p = &frac12; a larger d is better and failure falls exponentially to 0. Above &frac12; a larger d is worse and failure rises to 1. At infinity the curve becomes a step, a phase transition at p = &frac12;. The <a href="surface-code.html">surface code</a> does the same for both kinds of quantum error at once, with its step near 10% (union-find) to 10.9% (the best possible decoder, the Nishimori point of the random-bond Ising model).</p>
+<p><label>p <input type="range" id="rp" min="0.01" max="0.99" step="0.01" value="0.30"></label> <span id="rpv" class="mono"></span></p>
+<div id="rmsg" class="msg mono"></div>
+</div>
+<div><canvas id="rplot" width="440" height="280"></canvas><div class="dim">Majority-vote failure against p for d = 1, 3, 11, 101, 1001.</div></div>
+</div>
+
+<h2>Checks on this load</h2>
+<div id="checks"></div>
+
+<h2>Record</h2>
+<details><summary>JSON record of this session (tetralemma-infinity/1)</summary><textarea id="rec" readonly></textarea></details>
+
+<h2>What this is not</h2>
+<p class="dim">These are four families, not all states. Each limit here is a limit of numbers computed at finite n. The infinite system itself, where the mathematics changes, is on <a href="infinite-cat.html">the infinite-cat page</a>. The noise models are the simplest (independent phase flips, independent bit flips). Real noise is correlated, and that matters most for large n. The random-state formulas are averages, and the sampling button shows the scatter around them. The repetition code protects against one kind of error only. That is why the surface code exists.</p>
+<p class="dim">SuperNinja session, 2026-10-05. Self-reported; the numbers above are computed by the page on load.</p>
+</main>
+<script id="ti-engine">
+var TI = (function () {
+  'use strict';
+  function rng(seed, stream, index) {
+    var a = 2166136261, key = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < key.length; i++) { a ^= key.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  var LN2 = Math.LN2;
+  function lgamma(x) { // Lanczos, x > 0
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * x))) - lgamma(1 - x);
+    x -= 1; var a = c[0], t = x + g + 0.5; for (var i = 1; i < 9; i++) a += c[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  function logChoose(n, k) { return lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1); }
+
+  // ---------- 1. the cat: GHZ_n with each qubit dephased (Z applied) independently with probability q ----------
+  // coherence = 2|rho_{0..0,1..1}| = (1 - 2q)^n
+  function catCoherence(n, q) { return Math.pow(1 - 2 * q, n); }
+  // exact, by summing over all 2^n patterns of Z errors: each pattern multiplies the |1..1> branch by (-1)^{#errors}
+  function catCoherenceExact(n, q) {
+    var c = 0; for (var m = 0; m < (1 << n); m++) { var k = 0, w = 1; for (var j = 0; j < n; j++) { if (m >> j & 1) { k++; w *= q; } else w *= 1 - q; } c += w * (k % 2 ? -1 : 1); }
+    return Math.abs(c);
+  }
+  // with dephasing rate gamma per qubit (q = (1 - e^{-2 gamma t})/2), coherence e^{-2 n gamma t}: half-life ln2 / (2 n gamma)
+  function catHalfLife(n, gamma) { return LN2 / (2 * n * gamma); }
+  function oneHalfLifeQ(n) { return (1 - Math.pow(0.5, 1 / n)) / 2; } // per-qubit flip probability that halves an n-cat
+
+  // ---------- 2. random states: Page's mean entropy and Lubkin's mean purity ----------
+  // Page: S(m, N) = sum_{k=N+1}^{mN} 1/k - (m-1)/(2N), m <= N, in nats. Use digamma for big arguments.
+  function digamma(x) { var r = 0; while (x < 8) { r -= 1 / x; x += 1; } var f = 1 / (x * x); return r + Math.log(x) - 0.5 / x - f * (1 / 12 - f * (1 / 120 - f * (1 / 252 - f * (1 / 240 - f / 132)))); }
+  function harmonicDiff(a, b) { // sum_{k=a+1}^{b} 1/k
+    if (b - a < 2000) { var s = 0; for (var k = b; k > a; k--) s += 1 / k; return s; }
+    if (a > 1e6) { var x = b / a; return Math.log(x) + 0.5 / b - 0.5 / a - (1 / (b * b) - 1 / (a * a)) / 12; } // Euler–Maclaurin, avoids cancellation
+    return digamma(b + 1) - digamma(a + 1);
+  }
+  // gap (bits) between the maximum log2 m and Page's mean, for k of n qubits (k <= n/2): m = 2^k, N = 2^(n-k)
+  function pageGap(k, n) {
+    if (k === 0) return 0;
+    var m = Math.pow(2, k), N = Math.pow(2, n - k);
+    if (n - k > 40) { return (m - 1 / m) / (2 * N * LN2); } // leading terms; error O(m^2/N^2)
+    var S = harmonicDiff(N, m * N) - (m - 1) / (2 * N);
+    return k - S / LN2;
+  }
+  function pageGapDirect(k, n) { var m = Math.pow(2, k), N = Math.pow(2, n - k), s = 0; for (var j = m * N; j > N; j--) s += 1 / j; return k - (s - (m - 1) / (2 * N)) / LN2; }
+  // Lubkin: mean purity of an m-dimensional part of a random state on m*N dims = (m + N) / (m N + 1)
+  function lubkin(k, n) { var m = Math.pow(2, k), N = Math.pow(2, n - k); return (m + N) / (m * N + 1); }
+  function randomState(n, seed, stream) {
+    var r = rng(seed, stream || 'state', n), D = 1 << n, re = new Float64Array(D), im = new Float64Array(D), t = 0;
+    for (var i = 0; i < D; i++) { var u = Math.max(r(), 1e-300), v = r(), g = Math.sqrt(-2 * Math.log(u)); re[i] = g * Math.cos(2 * Math.PI * v); im[i] = g * Math.sin(2 * Math.PI * v); t += re[i] * re[i] + im[i] * im[i]; }
+    t = Math.sqrt(t); for (var i = 0; i < D; i++) { re[i] /= t; im[i] /= t; }
+    return { n: n, re: re, im: im };
+  }
+  // purity of the lowest k qubits: Tr (M M^dag)^2 with M[a][b] = psi[b * m + a]
+  function purityLow(s, k) {
+    var m = 1 << k, N = 1 << (s.n - k), Gr = new Float64Array(m * m), Gi = new Float64Array(m * m);
+    for (var a = 0; a < m; a++) for (var c = a; c < m; c++) { var sr = 0, si = 0; for (var b = 0; b < N; b++) { var i1 = b * m + a, i2 = b * m + c; sr += s.re[i1] * s.re[i2] + s.im[i1] * s.im[i2]; si += s.im[i1] * s.re[i2] - s.re[i1] * s.im[i2]; } Gr[a * m + c] = sr; Gi[a * m + c] = si; Gr[c * m + a] = sr; Gi[c * m + a] = -si; }
+    var t = 0; for (var i = 0; i < m * m; i++) t += Gr[i] * Gr[i] + Gi[i] * Gi[i]; return t;
+  }
+
+  // ---------- 3. symmetric states: pair entanglement in Dicke states D(n, k) ----------
+  // two-qubit reduced state is an X-state with a = P00, b = P01 = P10 = coherence(01,10), d = P11
+  function dickePair(n, k) { var nn = n * (n - 1); return { a: (n - k) * (n - k - 1) / nn, b: k * (n - k) / nn, d: k * (k - 1) / nn }; }
+  function dickeConcurrence(n, k) { var r = dickePair(n, k); return Math.max(0, 2 * (r.b - Math.sqrt(r.a * r.d))); }
+  function bestDicke(n) { var best = 0, bk = 0; for (var k = 1; k < n; k++) { var c = dickeConcurrence(n, k); if (c > best + 1e-15) { best = c; bk = k; } } return { k: bk, c: best }; }
+  // explicit state vector of D(n, k), real, then reduced state of qubits 0 and 1 (4x4 real symmetric)
+  function dickeState(n, k) { var D = 1 << n, v = new Float64Array(D), cnt = 0; for (var i = 0; i < D; i++) { var c = 0, x = i; while (x) { c += x & 1; x >>= 1; } if (c === k) { v[i] = 1; cnt++; } } var s = 1 / Math.sqrt(cnt); for (var i = 0; i < D; i++) v[i] *= s; return v; }
+  function pairReduced(v, n) { var R = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], rest = 1 << (n - 2); for (var r = 0; r < rest; r++) for (var x = 0; x < 4; x++) for (var y = 0; y < 4; y++) R[x][y] += v[(r << 2) | x] * v[(r << 2) | y]; return R; }
+  // X-state concurrence (Yu & Eberly): basis order |q1 q0> = 00, 01, 10, 11
+  function xConcurrence(R) { return Math.max(0, 2 * (Math.abs(R[1][2]) - Math.sqrt(R[0][0] * R[3][3])), 2 * (Math.abs(R[0][3]) - Math.sqrt(R[1][1] * R[2][2]))); }
+  // one qubit vs the rest of a pure state: tangle 4 det(rho_1). For D(n,k): 4 (k/n)(1 - k/n)
+  function dickeTangle(n, k) { var p = k / n; return 4 * p * (1 - p); }
+
+  // ---------- 4. repetition code, majority vote: the sharpest threshold there is ----------
+  function repFail(d, p) { // P(more than d/2 flips), d odd, computed in log space
+    if (p <= 0) return 0; if (p >= 1) return 1;
+    var lp = Math.log(p), lq = Math.log1p(-p), h = (d + 1) / 2, terms = [], mx = -Infinity;
+    for (var k = h; k <= d; k++) { var t = logChoose(d, k) + k * lp + (d - k) * lq; terms.push(t); if (t > mx) mx = t; }
+    var s = 0; for (var i = 0; i < terms.length; i++) s += Math.exp(terms[i] - mx);
+    return Math.min(1, Math.exp(mx) * s);
+  }
+  function repFailExact(d, p) { var s = 0, c = 1; for (var k = 0; k <= d; k++) { if (k > d / 2) s += c * Math.pow(p, k) * Math.pow(1 - p, d - k); c = c * (d - k) / (k + 1); } return s; }
+  return { rng: rng, lgamma: lgamma, logChoose: logChoose, catCoherence: catCoherence, catCoherenceExact: catCoherenceExact, catHalfLife: catHalfLife, oneHalfLifeQ: oneHalfLifeQ, pageGap: pageGap, pageGapDirect: pageGapDirect, lubkin: lubkin, randomState: randomState, purityLow: purityLow, dickePair: dickePair, dickeConcurrence: dickeConcurrence, bestDicke: bestDicke, dickeState: dickeState, pairReduced: pairReduced, xConcurrence: xConcurrence, dickeTangle: dickeTangle, repFail: repFail, repFailExact: repFailExact, LIMIT_GAP: 1 / (2 * LN2) };
+})();
+if (typeof module !== 'undefined') module.exports = TI;
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = TI, $ = function (id) { return document.getElementById(id); }, history = [], checks = [], sampled = null;
+  function ex(x, k) { return (x !== 0 && (Math.abs(x) < 1e-3 || Math.abs(x) >= 1e5)) ? x.toExponential(k) : x.toFixed(k + 2); }
+  function axes(g, W, H, L, B, T, R, xt, yt) {
+    g.clearRect(0, 0, W, H); g.strokeStyle = '#222a38'; g.fillStyle = '#7d879a'; g.font = '11px ui-monospace, monospace'; g.lineWidth = 1;
+    xt.forEach(function (t) { g.beginPath(); g.moveTo(t[0], T); g.lineTo(t[0], H - B); g.stroke(); g.fillText(t[1], t[0] - 10, H - B + 14); });
+    yt.forEach(function (t) { g.beginPath(); g.moveTo(L, t[0]); g.lineTo(W - R, t[0]); g.stroke(); g.fillText(t[1], 4, t[0] + 4); });
+  }
+  function line(g, pts, color, w, dash) { g.strokeStyle = color; g.lineWidth = w || 2; g.setLineDash(dash || []); g.beginPath(); pts.forEach(function (p, i) { if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); }); g.stroke(); g.setLineDash([]); g.lineWidth = 1; }
+  // 1. cat
+  function drawCat() {
+    var q = Math.pow(10, +$('cq').value), c = $('cplot'), g = c.getContext('2d'), W = 440, H = 280, L = 40, B = 26, T = 10, R = 10;
+    $('cqv').textContent = q.toExponential(2);
+    function X(ln) { return L + ln / 6 * (W - L - R); } function Y(v) { return H - B - v * (H - B - T); }
+    var xt = [], yt = []; for (var e = 0; e <= 6; e++) xt.push([X(e), '1e' + e]); for (var v = 0; v <= 1.0001; v += 0.25) yt.push([Y(v), v.toFixed(2)]);
+    axes(g, W, H, L, B, T, R, xt, yt);
+    var pts = []; for (var ln = 0; ln <= 6; ln += 0.01) pts.push([X(ln), Y(E.catCoherence(Math.pow(10, ln), q))]); line(g, pts, '#7cc4ff');
+    g.fillStyle = '#ffb86b'; for (var n = 1; n <= 14; n++) { g.beginPath(); g.arc(X(Math.log10(n)), Y(E.catCoherenceExact(n, q)), 3, 0, 7); g.fill(); }
+    var half = Math.log(0.5) / Math.log(1 - 2 * q);
+    $('cmsg').innerHTML = 'one qubit keeps ' + (1 - 2 * q).toFixed(4) + ' of its coherence<br>n = 10: ' + E.catCoherence(10, q).toFixed(4) + ', n = 1000: ' + ex(E.catCoherence(1000, q), 3) + ', n = 10<sup>6</sup>: ' + ex(E.catCoherence(1e6, q), 2) + '<br>coherence halves by n &asymp; ' + half.toFixed(1) + ' qubits<br>to keep half at n = 10<sup>6</sup>, q must be below ' + ex(E.oneHalfLifeQ(1e6), 2);
+  }
+  $('cq').oninput = function () { drawCat(); history.push({ op: 'q', log10q: +$('cq').value }); trim(); record(); };
+  // 2. page
+  function drawPage() {
+    var k = +$('pk').value, c = $('pplot'), g = c.getContext('2d'), W = 440, H = 280, L = 40, B = 26, T = 10, R = 10, nMax = 64;
+    $('pkv').textContent = k;
+    function X(n) { return L + (n - 2) / (nMax - 2) * (W - L - R); } function Y(v) { return H - B - v / 1.1 * (H - B - T); }
+    var xt = [], yt = []; for (var n = 2; n <= nMax; n += 10) xt.push([X(n), '' + n]); for (var v = 0; v <= 1.0001; v += 0.2) yt.push([Y(v), v.toFixed(1)]);
+    axes(g, W, H, L, B, T, R, xt, yt);
+    line(g, [[X(2), Y(E.LIMIT_GAP)], [X(nMax), Y(E.LIMIT_GAP)]], '#7d879a', 1, [4, 4]);
+    var ph = []; for (var n = 2; n <= nMax; n += 2) ph.push([X(n), Y(E.pageGap(n / 2, n))]); line(g, ph, '#ffb86b');
+    var pk = []; for (var n = 2 * k; n <= nMax; n++) pk.push([X(n), Y(E.pageGap(k, n))]); line(g, pk, '#7cc4ff');
+    if (sampled) { g.fillStyle = '#8be38b'; sampled.forEach(function (s) { g.beginPath(); g.arc(X(s.n), Y(s.gapPurity), 3, 0, 7); g.fill(); }); }
+    var rows = '<tr><th>n</th><th>gap, k = ' + k + '</th><th>gap, half cut</th></tr>';
+    [2 * k, 2 * k + 4, 2 * k + 10, 2 * k + 20, 100, 1000].filter(function (n, i, a) { return a.indexOf(n) === i && n >= 2 * k; }).forEach(function (n) { rows += '<tr><td>' + n + '</td><td>' + ex(E.pageGap(k, n), 3) + '</td><td>' + E.pageGap(Math.floor(n / 2), n).toFixed(6) + '</td></tr>'; });
+    $('ptab').innerHTML = rows;
+  }
+  $('pk').oninput = function () { drawPage(); history.push({ op: 'k', k: +$('pk').value }); trim(); record(); };
+  $('psample').onclick = function () {
+    var out = [], ns = [4, 6, 8, 10, 12, 14], btn = $('psample'); btn.disabled = true; $('pmsg').textContent = 'sampling…';
+    setTimeout(function () {
+      ns.forEach(function (n) { var t = 0, tr = n <= 10 ? 40 : 10; for (var i = 0; i < tr; i++) t += E.purityLow(E.randomState(n, 'tetralemma', 'sample-' + n + '-' + i), n / 2); var pur = t / tr; out.push({ n: n, trials: tr, purity: pur, lubkin: E.lubkin(n / 2, n), gapPurity: n / 2 + Math.log2(pur) }); });
+      sampled = out; drawPage(); btn.disabled = false;
+      $('pmsg').innerHTML = 'Mean half-cut purity of sampled states against Lubkin\'s formula (m+N)/(mN+1):<br>' + out.map(function (s) { return 'n=' + s.n + ': ' + s.purity.toFixed(5) + ' vs ' + s.lubkin.toFixed(5); }).join('<br>') + '<br><span class="dim">Green dots: n/2 + log<sub>2</sub>(purity), the gap measured in R&eacute;nyi-2 entropy. It is always above the von Neumann gap and tends to 1 bit, not 0.72.</span>';
+      history.push({ op: 'sample' }); record();
+    }, 20);
+  };
+  // 3. dicke
+  function drawDicke() {
+    var n = +$('dn').value, c = $('dplot'), g = c.getContext('2d'), W = 440, H = 280, L = 40, B = 26, T = 10, R = 10;
+    $('dnv').textContent = n;
+    function X(f) { return L + f * (W - L - R); } function Y(v) { return H - B - v * (H - B - T); }
+    var xt = [], yt = []; for (var f = 0; f <= 1.0001; f += 0.25) xt.push([X(f), f.toFixed(2)]); for (var v = 0; v <= 1.0001; v += 0.25) yt.push([Y(v), v.toFixed(2)]);
+    axes(g, W, H, L, B, T, R, xt, yt);
+    [4, 16, 64, 256].forEach(function (m) { var p = []; for (var k = 0; k <= m; k++) p.push([X(k / m), Y(E.dickeConcurrence(m, k))]); line(g, p, '#3a4458', 1); });
+    var p = []; for (var k = 0; k <= n; k++) p.push([X(k / n), Y(E.dickeConcurrence(n, k))]); line(g, p, '#7cc4ff');
+    g.fillStyle = '#ffb86b'; for (var k = 0; k <= n; k++) { g.beginPath(); g.arc(X(k / n), Y(E.dickeConcurrence(n, k)), 2.5, 0, 7); g.fill(); }
+    var b = E.bestDicke(n), half = Math.floor(n / 2);
+    $('dmsg').innerHTML = 'best pair: k = ' + b.k + ' (W), concurrence ' + b.c.toFixed(5) + ' = 2/n<br>k = n/2: pair concurrence ' + E.dickeConcurrence(n, half).toFixed(5) + ', one qubit vs rest tangle ' + E.dickeTangle(n, half).toFixed(3) + '<br>CKW bound for any state symmetric in n qubits: C &le; 1/&radic;(n&minus;1) = ' + (1 / Math.sqrt(n - 1)).toFixed(5);
+  }
+  $('dn').oninput = function () { drawDicke(); history.push({ op: 'n', n: +$('dn').value }); trim(); record(); };
+  // 4. repetition
+  var DS = [1, 3, 11, 101, 1001], COL = ['#7d879a', '#7cc4ff', '#8be38b', '#ffb86b', '#ff7c7c'];
+  function drawRep() {
+    var p0 = +$('rp').value, c = $('rplot'), g = c.getContext('2d'), W = 440, H = 280, L = 40, B = 26, T = 10, R = 10;
+    $('rpv').textContent = p0.toFixed(2);
+    function X(p) { return L + p * (W - L - R); } function Y(v) { return H - B - v * (H - B - T); }
+    var xt = [], yt = []; for (var f = 0; f <= 1.0001; f += 0.25) xt.push([X(f), f.toFixed(2)]); for (var v = 0; v <= 1.0001; v += 0.25) yt.push([Y(v), v.toFixed(2)]);
+    axes(g, W, H, L, B, T, R, xt, yt);
+    DS.forEach(function (d, i) { var p = []; for (var x = 0; x <= 1.0001; x += 0.005) p.push([X(x), Y(E.repFail(d, Math.min(1, x)))]); line(g, p, COL[i], 1.6); g.fillStyle = COL[i]; g.fillText('d=' + d, W - R - 60, T + 14 + 13 * i); });
+    line(g, [[X(p0), T], [X(p0), H - B]], '#d7dde8', 1, [3, 3]);
+    $('rmsg').innerHTML = DS.map(function (d) { return 'd = ' + d + ': failure ' + ex(E.repFail(d, p0), 3); }).join('<br>');
+  }
+  $('rp').oninput = function () { drawRep(); history.push({ op: 'p', p: +$('rp').value }); trim(); record(); };
+  function trim() { if (history.length > 200) history.shift(); }
+  function record() {
+    $('rec').value = JSON.stringify({ version: 'tetralemma-infinity/1', page: 'tetralemma-infinity.html', checks: checks, limitGapBits: E.LIMIT_GAP, sampled: sampled, history: history.slice(-40) }, null, 1);
+  }
+  function runChecks() {
+    var out = []; function add(name, ok, detail) { out.push({ check: name, ok: !!ok, detail: detail || '' }); }
+    var okc = true; [0.001, 0.01, 0.1, 0.3].forEach(function (q) { for (var n = 1; n <= 12; n++) if (Math.abs(E.catCoherence(n, q) - E.catCoherenceExact(n, q)) > 1e-12) okc = false; });
+    add('cat: (1&minus;2q)<sup>n</sup> equals the exact sum over all 2<sup>n</sup> phase-flip patterns (n &le; 12, four q)', okc);
+    var okh = true; [1, 10, 100, 1e6].forEach(function (n) { if (Math.abs(E.catCoherence(n, E.oneHalfLifeQ(n)) - 0.5) > 1e-9) okh = false; });
+    add('cat: the flip probability that halves the coherence falls like ln 2 / (2n)', okh && Math.abs(E.oneHalfLifeQ(1e6) * 2e6 / Math.LN2 - 1) < 1e-5, 'n = 10<sup>6</sup>: q = ' + E.oneHalfLifeQ(1e6).toExponential(3));
+    var okp = true; for (var n = 2; n <= 22; n += 2) if (Math.abs(E.pageGap(n / 2, n) - E.pageGapDirect(n / 2, n)) > 1e-9) okp = false;
+    for (var n = 3; n <= 20; n++) if (Math.abs(E.pageGap(1, n) - E.pageGapDirect(1, n)) > 1e-9) okp = false;
+    add('Page: the gap formula used for large n agrees with the direct harmonic sum to 10<sup>&minus;9</sup> (n &le; 22)', okp);
+    var g2 = [2, 4, 8, 16, 32, 64].map(function (n) { return E.pageGap(n / 2, n); }), mono = true; for (var i = 1; i < g2.length; i++) if (!(g2[i] > g2[i - 1])) mono = false;
+    add('Page: the half-cut gap rises with n and approaches 1/(2 ln 2) = 0.721348 bits from below', mono && Math.abs(E.LIMIT_GAP - g2[5]) < 1e-12 && E.LIMIT_GAP - g2[4] > 0, g2.map(function (x) { return x.toFixed(4); }).join(', '));
+    var okk = true; [1, 2, 3].forEach(function (k) { [30, 40].forEach(function (n) { var a = Math.pow(2, 2 * k - n) * (1 - Math.pow(4, -k)) / (2 * Math.LN2); if (Math.abs(E.pageGap(k, n) / a - 1) > 1e-3) okk = false; }); });
+    add('Page: a fixed part of k qubits closes its gap like 2<sup>2k&minus;n</sup>(1&minus;4<sup>&minus;k</sup>)/(2 ln 2)', okk, 'k = 1, n = 40: ' + E.pageGap(1, 40).toExponential(3));
+    var okl = true, ld = []; [6, 8, 10].forEach(function (n) { var t = 0, tr = 30; for (var i = 0; i < tr; i++) t += E.purityLow(E.randomState(n, 'tetralemma-check', 'l-' + i), n / 2); var m = t / tr, L = E.lubkin(n / 2, n); if (Math.abs(m / L - 1) > 0.05) okl = false; ld.push(n + ': ' + m.toFixed(4) + '/' + L.toFixed(4)); });
+    add('sampled random states match Lubkin\'s mean purity (m+N)/(mN+1) within 5% (30 states, n = 6, 8, 10)', okl, ld.join(' '));
+    var okd = true; [3, 4, 5, 6, 8, 10].forEach(function (n) { for (var k = 0; k <= n; k++) if (Math.abs(E.xConcurrence(E.pairReduced(E.dickeState(n, k), n)) - E.dickeConcurrence(n, k)) > 1e-12) okd = false; });
+    add('Dicke: the closed-form pair concurrence equals the one from the explicit state vector (n &le; 10, every k)', okd);
+    var okw = true; [2, 3, 5, 10, 40, 200, 1000].forEach(function (n) { var b = E.bestDicke(n); if (b.k !== 1 && b.k !== n - 1 || Math.abs(b.c - 2 / n) > 1e-12 || b.c > 1 / Math.sqrt(n - 1) + 1e-12) okw = false; });
+    add('Dicke: the best pair is the W state with 2/n, inside the monogamy bound 1/&radic;(n&minus;1)', okw, 'n = 1000: ' + E.bestDicke(1000).c);
+    var okr = true; [1, 3, 5, 11, 21, 51].forEach(function (d) { [0.05, 0.3, 0.5, 0.7].forEach(function (p) { if (Math.abs(E.repFail(d, p) - E.repFailExact(d, p)) > 1e-12) okr = false; }); });
+    add('repetition: the log-space failure probability equals the direct binomial sum (d &le; 51)', okr);
+    var lo = DS.map(function (d) { return E.repFail(d, 0.3); }), hi = DS.map(function (d) { return E.repFail(d, 0.7); }), oks = true;
+    for (var i = 1; i < DS.length; i++) { if (!(lo[i] < lo[i - 1]) || !(hi[i] > hi[i - 1])) oks = false; }
+    DS.forEach(function (d) { if (Math.abs(E.repFail(d, 0.5) - 0.5) > 1e-9) oks = false; });
+    add('repetition: below &frac12; larger d fails less, above &frac12; more, at &frac12; always 0.5: a step at infinity', oks && lo[4] < 1e-30 && hi[4] > 1 - 1e-9 && Math.abs(E.repFail(51, 0.7) - (1 - E.repFail(51, 0.3))) < 1e-12, 'p = 0.3: d = 1001 fails with ' + lo[4].toExponential(2));
+    checks = out.map(function (c) { return { check: c.check.replace(/<[^>]+>/g, '').replace(/&[a-z0-9#]+;/gi, ''), ok: c.ok }; });
+    $('checks').innerHTML = out.map(function (c) { return '<div class="msg"><span class="' + (c.ok ? 'good' : 'bad') + '">' + (c.ok ? 'pass' : 'FAIL') + '</span> ' + c.check + (c.detail ? ' <span class="dim">' + c.detail + '</span>' : '') + '</div>'; }).join('') + '<div class="dim msg">' + out.filter(function (c) { return c.ok; }).length + ' of ' + out.length + ' pass.</div>';
+  }
+  runChecks(); drawCat(); drawPage(); drawDicke(); drawRep(); record();
+})();
+</script>
+</body>
+</html>

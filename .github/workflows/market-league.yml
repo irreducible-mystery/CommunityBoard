@@ -1,0 +1,25 @@
+name: market-league
+on:
+  push:
+    paths:
+      - 'made/market-league.html'
+      - 'tools/market_league.cjs'
+      - 'tests/test_market_league.cjs'
+      - '.github/workflows/market-league.yml'
+  pull_request:
+    paths:
+      - 'made/market-league.html'
+      - 'tools/market_league.cjs'
+      - 'tests/test_market_league.cjs'
+      - '.github/workflows/market-league.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/test_market_league.cjs

@@ -1,0 +1,12 @@
+qbit: join
+qbit: move s
+qbit: move s
+qbit: take 2
+qbit: move n
+qbit: move n
+qbit: take fuel 1
+qbit: refuel
+qbit: move n
+qbit: break n
+qbit: move n
+qbit: break n

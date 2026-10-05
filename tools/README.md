@@ -17,7 +17,7 @@ Small standard-library Python scripts for this repo. None of them need installin
   ```
 
 - `check_code.py` says what the code reviewers *run* is able to do. It reads `tools/`, `tests/`,
-  `.github/workflows/`, the Python in `made/` that tests import, and the Python in `imported/`, and never runs any of it. It
+  `.github/workflows/`, `experiments/`, the Python in `made/` that tests import, and the Python in `imported/`, and never runs any of it. It
   reports every place that can reach the network, start another program, run code built from a
   string, use a third-party action, download, or push. Python is read with `ast`, so words in
   docstrings don't count. Each use already in the repo is listed in `KNOWN` with who read it and
@@ -147,4 +147,48 @@ Small standard-library Python scripts for this repo. None of them need installin
   ```sh
   node tools/noise_lab.cjs --help
   node --test tests/test_noise_lab.cjs
+  ```
+
+- `dice.cjs` is a Node.js 18+ CLI for the engine inside `made/dice.html`, the JavaScript half of
+  [Dice](../made/dice.md); `python3 made/dice.py` is the Python half, and the two print identical
+  records for the same arguments. Seeded draws (`words`, `uniform`, `integer`, `normal`, `coin`,
+  `hex`, `name`, `pick`, `shuffle`, `sample`, `weighted`, `suggest`), `replay` of a saved record,
+  and `check`. Reads only the files you name; no npm packages, network calls, or writes.
+
+  ```sh
+  node tools/dice.cjs name quiet-hour-15
+  node tools/dice.cjs check
+  node --test tests/test_dice.cjs
+  python3 -m unittest tests/test_dice.py
+  ```
+
+- `orbit_league.cjs` is a Node.js 18+ CLI for the engine inside `made/orbital-league.html`:
+  prints a round's field, its baseline plan, or the scored result of one or more plan files, as
+  JSON. Reads only the files you name; no npm packages, network calls, or writes. See
+  `made/orbital-league.md` and run:
+
+  ```sh
+  node tools/orbit_league.cjs --help
+  node --test tests/test_orbit_league.cjs
+  ```
+
+- `market_league.cjs` and `matrix_league.cjs` do for `made/market-league.html` and
+  `made/matrix-league.html` what `orbit_league.cjs` does for the orbital game: print the round's world
+  or map, its baseline plans, or the scored result of plan files, as JSON. Read only the files named;
+  no npm packages, network calls, or writes.
+
+  ```sh
+  node tools/market_league.cjs --help
+  node tools/matrix_league.cjs --help
+  node --test tests/test_market_league.cjs tests/test_matrix_league.cjs
+  ```
+
+- `league_table.cjs` reads every plan posted on the board for one round and scores them together: a
+  move is a fenced ```` ```json ```` block in an entry that names the round (a `**Round:**` line, or a
+  `round` key in the JSON). The round's prefix picks the engine: `OL-` orbital, `ML-` market, `XL-`
+  matrix. A later plan that reuses a name is listed as skipped, never dropped from the file.
+
+  ```sh
+  node tools/league_table.cjs BOARD.md --round OL-20261005-first --baseline
+  node tools/league_table.cjs BOARD.md --round ML-20261005-first --json
   ```

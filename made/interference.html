@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interference — a painting made of waves</title>
+<style>
+  :root{
+    --bg:#080910; --panel:#11131f; --ink:#e9ecff; --dim:#8b93b8; --line:#262b45;
+    --accent:#6ea8ff; --warm:#ffb37a;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--accent)}
+  header{max-width:820px;margin:0 auto;padding:28px 20px 6px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:.2px}
+  .sub{color:var(--dim);max-width:760px}
+  main{max-width:820px;margin:0 auto;padding:10px 20px 60px}
+  .checks{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;margin:16px 0;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color:var(--dim);white-space:pre-wrap}
+  .checks .ok{color:#7ee0a6}
+  .checks .bad{color:#ff8b8b}
+  .checks .hd{color:var(--ink)}
+  .stage{display:flex;justify-content:center;margin:14px 0 6px}
+  canvas{display:block;border:1px solid var(--line);border-radius:14px;background:#000;
+    box-shadow:0 12px 40px rgba(0,0,0,.55);max-width:100%;height:auto}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;margin:18px 0 6px}
+  @media(max-width:640px){.controls{grid-template-columns:1fr}}
+  .ctl label{display:flex;justify-content:space-between;font-size:13px;color:var(--dim);margin-bottom:6px}
+  .ctl label b{color:var(--ink);font-weight:600}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  button{background:#1a1e30;color:var(--ink);border:1px solid var(--line);border-radius:9px;
+    padding:9px 14px;font:inherit;font-size:13.5px;cursor:pointer;transition:.15s}
+  button:hover{border-color:var(--accent);color:#fff}
+  button.on{background:var(--accent);color:#04101f;border-color:var(--accent)}
+  .info{margin-top:16px;color:var(--dim);font-size:13px}
+  .info code{color:var(--warm);background:#191d2e;padding:1px 6px;border-radius:5px}
+  footer{max-width:820px;margin:0 auto;padding:0 20px 50px;color:var(--dim);font-size:13px}
+  hr{border:0;border-top:1px solid var(--line);margin:26px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>Interference</h1>
+  <p class="sub">A painting made of waves. Several point sources ripple outward; where their crests
+  meet they add, where a crest meets a trough they cancel. One slider decides how much the sources
+  keep a common phase. Coherent, and the painting is a hard-edged web of fringes; incoherent, and it
+  softens to a flat wash. Nothing is drawn by hand &mdash; every pixel is the sum of the waves.</p>
+</header>
+<main>
+  <div id="checks" class="checks">running self-checks&hellip;</div>
+
+  <div class="stage"><canvas id="art" width="360" height="280"></canvas></div>
+
+  <div class="controls">
+    <div class="ctl">
+      <label>Coherence <b id="cohVal">100%</b></label>
+      <input id="coh" type="range" min="0" max="100" value="100" step="1">
+    </div>
+    <div class="ctl">
+      <label>Wave scale <b id="scaleVal">1.00&times;</b></label>
+      <input id="scale" type="range" min="50" max="200" value="100" step="1">
+    </div>
+  </div>
+  <div class="row">
+    <button id="reseed">Reseed the sources</button>
+    <button id="animate">Animate coherence</button>
+    <button id="save">Save a PNG</button>
+  </div>
+
+  <div class="info" id="info"></div>
+
+  <hr>
+  <footer>
+    One file, no dependencies, no network. The engine is <code>INTERFERENCE_ENGINE</code> in the
+    <code>interference-engine</code> script block; it is run under Node by <code>tests/test_interference.cjs</code>.
+  </footer>
+</main>
+
+<script id="interference-engine">
+// Interference engine: N point emitters, each a flat monochromatic wave a_j e^{i(k r_j + phi_j)}.
+// Coherent intensity |sum|^2. Uniform partial coherence (every pair coherent by factor c,
+// self-coherence 1) gives the exact interpolation
+//   I_c = (1 - c) * sum(a_j^2) + c * |sum a_j e^{i theta_j}|^2 .
+(function (root) {
+  "use strict";
+
+  function mulberry32(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function hashSeed(str) {
+    var h = 2166136261 >>> 0;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+
+  function totalPower(emitters) {
+    var s = 0;
+    for (var j = 0; j < emitters.length; j++) s += emitters[j].a * emitters[j].a;
+    return s;
+  }
+
+  // Complex field at (x, y) for wavenumber k.
+  function fieldAt(emitters, x, y, k) {
+    var re = 0, im = 0;
+    for (var j = 0; j < emitters.length; j++) {
+      var e = emitters[j];
+      var dx = x - e.x, dy = y - e.y;
+      var r = Math.sqrt(dx * dx + dy * dy);
+      var ph = k * r + e.phi;
+      re += e.a * Math.cos(ph);
+      im += e.a * Math.sin(ph);
+    }
+    return { re: re, im: im };
+  }
+
+  // Intensity with uniform partial coherence c in [0, 1].
+  function intensityAt(emitters, x, y, k, c) {
+    var f = fieldAt(emitters, x, y, k);
+    var S = totalPower(emitters);
+    return (1 - c) * S + c * (f.re * f.re + f.im * f.im);
+  }
+
+  // Fringe visibility (Imax - Imin) / (Imax + Imin) along the screen x = L,
+  // sampling y from y0 to y1 in n steps.
+  function visibility(emitters, k, c, L, y0, y1, n) {
+    var mx = -Infinity, mn = Infinity;
+    for (var i = 0; i <= n; i++) {
+      var y = y0 + (y1 - y0) * i / n;
+      var I = intensityAt(emitters, L, y, k, c);
+      if (I > mx) mx = I;
+      if (I < mn) mn = I;
+    }
+    return (mx + mn) > 0 ? (mx - mn) / (mx + mn) : 0;
+  }
+
+  function twoSource(d) {
+    return [{ x: 0, y: d / 2, a: 1, phi: 0 }, { x: 0, y: -d / 2, a: 1, phi: 0 }];
+  }
+
+  // A seeded ring of emitters: 5..9 points on a jittered ring.
+  function makeEmitters(seed) {
+    var rnd = mulberry32(typeof seed === "string" ? hashSeed(seed) : (seed >>> 0));
+    var n = 5 + Math.floor(rnd() * 5);
+    var base = rnd() * Math.PI * 2;
+    var out = [];
+    for (var j = 0; j < n; j++) {
+      var ang = base + (j / n) * Math.PI * 2 + (rnd() - 0.5) * 0.5;
+      var rad = 80 + rnd() * 40;
+      out.push({ x: Math.cos(ang) * rad, y: Math.sin(ang) * rad, a: 1, phi: 0 });
+    }
+    return out;
+  }
+
+  // Ten checks. Far-field geometry (lambda = 5, d = 200, screen at L = 4000).
+  function selfCheck() {
+    var K = 2 * Math.PI / 5, L = 4000, d = 200;
+    var YMIN = (2 * Math.PI / K) * L / (2 * d); // lambda L / (2d) = 50
+    var out = [];
+    function chk(name, ok, got, want) { out.push({ name: name, ok: !!ok, got: got, want: want }); }
+    var rnd = mulberry32(12345);
+
+    var one = [{ x: 0, y: 0, a: 1, phi: 0 }];
+    var v1 = visibility(one, K, 1, L, -200, 200, 800);
+    chk("one emitter gives no fringes (visibility 0)", Math.abs(v1) < 1e-9, v1, 0);
+
+    var two = twoSource(d);
+    var v2 = visibility(two, K, 1, L, -200, 200, 800);
+    chk("two coherent sources give visibility 1", Math.abs(v2 - 1) < 1e-6, v2, 1);
+
+    var v3 = visibility(two, K, 0, L, -200, 200, 800);
+    chk("two incoherent sources give visibility 0", Math.abs(v3) < 1e-9, v3, 0);
+
+    var vs = [1, 0.75, 0.5, 0.25, 0].map(function (c) { return visibility(two, K, c, L, -200, 200, 800); });
+    var mono = vs.every(function (v, i) { return i === 0 || v < vs[i - 1] + 1e-12; });
+    chk("visibility falls as coherence falls", mono, vs.map(function (v) { return +v.toFixed(4); }).join(","), "decreasing");
+
+    var neg = false;
+    for (var i = 0; i < 5000; i++) {
+      var x = (rnd() - 0.5) * 800, y = (rnd() - 0.5) * 800, c = rnd();
+      if (intensityAt(two, x, y, K, c) < -1e-12) neg = true;
+    }
+    chk("intensity is never negative", !neg, neg, false);
+
+    var maxdiff = 0;
+    for (var i = 0; i < 2000; i++) {
+      var x = (rnd() - 0.5) * 600, y = (rnd() - 0.5) * 600;
+      var f = fieldAt(two, x, y, K);
+      maxdiff = Math.max(maxdiff, Math.abs(intensityAt(two, x, y, K, 1) - (f.re * f.re + f.im * f.im)));
+    }
+    chk("coherent intensity equals |E|^2", maxdiff < 1e-9, maxdiff, 0);
+
+    var S = totalPower(two), maxdiff7 = 0;
+    for (var i = 0; i < 2000; i++) {
+      var x = (rnd() - 0.5) * 600, y = (rnd() - 0.5) * 600;
+      maxdiff7 = Math.max(maxdiff7, Math.abs(intensityAt(two, x, y, K, 0) - S));
+    }
+    chk("incoherent intensity equals total power S", maxdiff7 < 1e-12, maxdiff7, 0);
+
+    var I0 = intensityAt(two, L, 0, K, 1);
+    var Iy = intensityAt(two, L, YMIN, K, 1);
+    var Inear = intensityAt(two, L, YMIN * 0.9, K, 1);
+    var I0n = intensityAt(two, L, 5, K, 1);
+    chk("first minimum sits at Y = lambda L / (2d)", (I0 > I0n) && (Iy < Inear) && (Iy < 1e-3), +Iy.toFixed(6), 0);
+
+    var sym = [{ x: 30, y: 20, a: 1, phi: 0 }, { x: -30, y: -20, a: 1, phi: 0 }];
+    var maxdiff9 = 0;
+    for (var i = 0; i < 2000; i++) {
+      var x = (rnd() - 0.5) * 500, y = (rnd() - 0.5) * 500;
+      maxdiff9 = Math.max(maxdiff9, Math.abs(intensityAt(sym, x, y, K, 1) - intensityAt(sym, -x, -y, K, 1)));
+    }
+    chk("a symmetric pair gives a symmetric pattern", maxdiff9 < 1e-9, maxdiff9, 0);
+
+    var e1 = makeEmitters("interference"), e2 = makeEmitters("interference"), e3 = makeEmitters("interference-2");
+    var same = JSON.stringify(e1) === JSON.stringify(e2);
+    var diff = JSON.stringify(e1) !== JSON.stringify(e3);
+    chk("a seed reproduces the layout, a new seed changes it", same && diff, same && diff, true);
+
+    return out;
+  }
+
+  var API = {
+    mulberry32: mulberry32, hashSeed: hashSeed, totalPower: totalPower,
+    fieldAt: fieldAt, intensityAt: intensityAt, visibility: visibility,
+    twoSource: twoSource, makeEmitters: makeEmitters, selfCheck: selfCheck
+  };
+  if (typeof module !== "undefined" && module.exports) module.exports = API;
+  root.INTERFERENCE_ENGINE = API;
+})(typeof window !== "undefined" ? window : this);
+</script>
+
+<script>
+(function () {
+  "use strict";
+  var ENG = window.INTERFERENCE_ENGINE;
+
+  // ---- self-checks on load ----
+  var checksEl = document.getElementById("checks");
+  try {
+    var checks = ENG.selfCheck();
+    var passed = checks.filter(function (c) { return c.ok; }).length;
+    var lines = ["self-checks: " + passed + " / " + checks.length + (passed === checks.length ? "  \u2713 all pass" : "  \u2717")];
+    checks.forEach(function (c) {
+      lines.push((c.ok ? "  ok  " : "  FAIL") + "  " + c.name + "   (got " + c.got + ", want " + c.want + ")");
+    });
+    checksEl.innerHTML = "<span class='hd'>" + lines[0] + "</span>\n" + lines.slice(1).join("\n");
+  } catch (err) {
+    checksEl.innerHTML = "<span class='bad'>self-checks failed to run: " + err + "</span>";
+  }
+
+  // ---- the painting ----
+  var canvas = document.getElementById("art");
+  var ctx = canvas.getContext("2d");
+  var W = canvas.width, H = canvas.height, CX = W / 2, CY = H / 2;
+  var BASE_LAM = [70, 58, 46]; // R, G, B wavelengths in pixels
+
+  var seed = "interference";
+  var emitters = ENG.makeEmitters(seed);
+  var S = ENG.totalPower(emitters);
+  var refSum = (function () { var s = 0; for (var j = 0; j < emitters.length; j++) s += emitters[j].a; return s * s; })();
+
+  var coh = 1.0;      // 0..1
+  var scale = 1.0;    // wave-scale multiplier
+  var animating = false, animT = 0, rafId = 0;
+
+  function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+
+  function render() {
+    var ks = BASE_LAM.map(function (l) { return 2 * Math.PI / (l * scale); });
+    var img = ctx.createImageData(W, H);
+    var data = img.data;
+    var idx = 0;
+    var c = coh, S0 = S, ref = refSum;
+    var n = emitters.length;
+    for (var py = 0; py < H; py++) {
+      var y = py - CY;
+      for (var px = 0; px < W; px++) {
+        var x = px - CX;
+        var rR = 0, iR = 0, rG = 0, iG = 0, rB = 0, iB = 0;
+        for (var j = 0; j < n; j++) {
+          var e = emitters[j];
+          var dx = x - e.x, dy = y - e.y;
+          var r = Math.sqrt(dx * dx + dy * dy);
+          var ph = ks[0] * r + e.phi, a = e.a;
+          rR += a * Math.cos(ph); iR += a * Math.sin(ph);
+          ph = ks[1] * r + e.phi;
+          rG += a * Math.cos(ph); iG += a * Math.sin(ph);
+          ph = ks[2] * r + e.phi;
+          rB += a * Math.cos(ph); iB += a * Math.sin(ph);
+        }
+        var IR = (1 - c) * S0 + c * (rR * rR + iR * iR);
+        var IG = (1 - c) * S0 + c * (rG * rG + iG * iG);
+        var IB = (1 - c) * S0 + c * (rB * rB + iB * iB);
+        data[idx++] = 255 * Math.sqrt(clamp01(IR / ref));
+        data[idx++] = 255 * Math.sqrt(clamp01(IG / ref));
+        data[idx++] = 255 * Math.sqrt(clamp01(IB / ref));
+        data[idx++] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+
+  function updateInfo() {
+    document.getElementById("info").innerHTML =
+      "seed <code>" + seed + "</code> &middot; " + emitters.length + " sources &middot; coherence " +
+      Math.round(coh * 100) + "% &middot; at full coherence the brightest point is " +
+      (emitters.length * emitters.length) + "\u00d7 the incoherent wash (it is the square of the sum, not the sum of squares).";
+  }
+
+  function draw() { render(); updateInfo(); }
+
+  // ---- controls ----
+  var cohEl = document.getElementById("coh");
+  var scaleEl = document.getElementById("scale");
+  var cohVal = document.getElementById("cohVal");
+  var scaleVal = document.getElementById("scaleVal");
+
+  cohEl.addEventListener("input", function () {
+    coh = cohEl.value / 100; cohVal.textContent = Math.round(coh * 100) + "%"; draw();
+  });
+  scaleEl.addEventListener("input", function () {
+    scale = scaleEl.value / 100; scaleVal.textContent = scale.toFixed(2) + "\u00d7"; draw();
+  });
+
+  document.getElementById("reseed").addEventListener("click", function () {
+    seed = "interference-" + Math.floor(Math.random() * 1e9).toString(36);
+    emitters = ENG.makeEmitters(seed);
+    S = ENG.totalPower(emitters);
+    refSum = (function () { var s = 0; for (var j = 0; j < emitters.length; j++) s += emitters[j].a; return s * s; })();
+    draw();
+  });
+
+  var animBtn = document.getElementById("animate");
+  function animLoop() {
+    if (!animating) return;
+    animT += 0.012;
+    coh = 0.5 + 0.5 * Math.sin(animT);          // sweep 0..1..0
+    cohEl.value = Math.round(coh * 100);
+    cohVal.textContent = Math.round(coh * 100) + "%";
+    render(); updateInfo();
+    rafId = requestAnimationFrame(animLoop);
+  }
+  animBtn.addEventListener("click", function () {
+    animating = !animating;
+    animBtn.classList.toggle("on", animating);
+    if (animating) { animT = Math.asin(clamp01(coh) * 2 - 1); animLoop(); }
+    else if (rafId) { cancelAnimationFrame(rafId); rafId = 0; }
+  });
+
+  document.getElementById("save").addEventListener("click", function () {
+    var a = document.createElement("a");
+    a.download = "interference-" + seed + ".png";
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  });
+
+  draw();
+})();
+</script>
+</body>
+</html>

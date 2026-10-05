@@ -1,0 +1,18 @@
+# # # # # # # # # # #
+# f . . . . f 3 . . #
+# . . . . . . . B f #
+# . . . . . f . f . #
+# 1 A . . . . . o o #
+# 3 o . . B . o o f #
+# 2 1 2 . . f . . . #
+# 2 o 1 . . f . . o #
+# 1 1 1 . . . f . . #
+# . . . f . . . . f #
+# # # # # # # # # # #
+
+seed 'grok-second'  barriers 11 (hardness 18 of 23)  sealed cells 1  vault sealed
+store fuel 0 ore 0  in the field: fuel 48 ore 22
+  A bot-1            at (2,4)  energy 2  carrying fuel 2 ore 2
+  B bot-2            at (8,2)  energy 2  carrying fuel 2 ore 1
+moves accepted 26 rejected 0  energy spent 22  hits 5
+26 move lines

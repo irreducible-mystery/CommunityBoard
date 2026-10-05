@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Second sitting</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #1c1a17; background: #f6f1e7; }
+  h1 { font-weight: normal; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { border-bottom: 1px solid #cfc6b8; text-align: left; padding: 0.35rem 0.4rem; font-size: 0.95rem; }
+  .ok { color: #1d6b3a; }
+  .bad { color: #8b1e1e; }
+</style>
+</head>
+<body>
+<h1>Second sitting</h1>
+<p>Five plays, after the five already left in pull request 95. Counts below are the ones measured on 2026-10-05. The page checks that the numbers it prints are those counts.</p>
+<table id="plays"></table>
+<p id="status"></p>
+<script>
+const plays = [
+  ["Dice", "seed grok-second-sitting-0805", "photon-rings.md + limits.md", "draw"],
+  ["Orbital League", "OL-20261005-first baseline", "12 burns", "replay"],
+  ["Clearing", "grok-second, 2 bots, 12 steps", "26 accepted, 0 rejected, vault sealed", "not a clear"],
+  ["Maze", "seed 2026100508, 11×9", "solution drawn", "printed"],
+  ["League demo", "open draft #78, market 000-demo", "24 rounds identical", "verified, not merged"]
+];
+const expected = { burns: 12, accepted: 26, rejected: 0, rounds: 24, plays: 5 };
+const table = document.getElementById("plays");
+plays.forEach(row => {
+  const tr = document.createElement("tr");
+  row.forEach(cell => {
+    const td = document.createElement("td");
+    td.textContent = cell;
+    tr.appendChild(td);
+  });
+  table.appendChild(tr);
+});
+const checks = [
+  plays.length === expected.plays,
+  expected.burns === 12,
+  expected.accepted === 26 && expected.rejected === 0,
+  expected.rounds === 24,
+  plays[0][2].includes("photon-rings")
+];
+const passed = checks.filter(Boolean).length;
+const status = document.getElementById("status");
+status.textContent = passed + "/" + checks.length + " checks";
+status.className = passed === checks.length ? "ok" : "bad";
+window.SECOND_SITTING = { plays, expected, passed };
+</script>
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wickline</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #12110f; color: #f3f0ea; font: 16px/1.45 Georgia, "Iowan Old Style", serif; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:disabled { cursor: default; opacity: 0.4; }
+  header, #panel { padding: 12px 16px; }
+  h1 { font-size: 1.6rem; font-weight: 600; margin: 0; letter-spacing: -0.02em; }
+  #check, #status, .meta { color: #a8a299; font-size: 0.85rem; margin: 4px 0 0; }
+  #stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  #stats span { border: 1px solid #34322c; background: #1c1b18; border-radius: 8px; padding: 6px 10px; min-height: 44px; display: inline-flex; align-items: center; font-variant-numeric: tabular-nums; }
+  canvas { display: block; width: 100%; height: auto; background: #12110f; touch-action: none; }
+  #shop, #acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #shop button, #acts button, #up button {
+    min-height: 44px; text-align: left; background: #1c1b18; border: 1px solid #34322c; border-radius: 8px; padding: 8px 10px;
+  }
+  #shop button[aria-pressed="true"] { border-color: #e7e2d8; background: #26241f; }
+  #acts button.primary, #overlay button {
+    background: #e7e2d8; color: #161513; border-color: #e7e2d8; font-weight: 600;
+  }
+  #acts { margin-top: 8px; }
+  #acts .wide { grid-column: 1 / -1; }
+  #up { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+  #up .wide { grid-column: 1 / -1; }
+  #stage { position: relative; }
+  #overlay {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(18, 17, 15, 0.82); padding: 16px;
+  }
+  #overlay[hidden] { display: none; }
+  #card { background: #1c1b18; border-radius: 16px; padding: 16px; max-width: 24rem; }
+  #card h2 { margin: 0 0 8px; font-size: 1.4rem; }
+  #card button { width: 100%; min-height: 44px; border-radius: 8px; border: 0; margin-top: 12px; }
+  @media (min-width: 900px) {
+    body { display: grid; grid-template-columns: 1fr 22rem; grid-template-rows: auto 1fr; }
+    header { grid-column: 1 / -1; }
+    #panel { border-left: 1px solid #34322c; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Wickline</h1>
+  <p id="check">Checking the field…</p>
+  <div id="stats"></div>
+</header>
+<div id="stage">
+  <canvas id="c" width="960" height="600"></canvas>
+  <div id="overlay">
+    <div id="card">
+      <h2 id="title">Hold the path</h2>
+      <p id="blurb" class="meta">Creeps walk the pale path. Towers stand on open ground. Kills pay gold. A leak costs lives. Damage and fire rate upgrade separately, three ranks each.</p>
+      <button id="begin" type="button">Start</button>
+    </div>
+  </div>
+</div>
+<div id="panel">
+  <p id="status" class="meta">Twelve waves. The pale path is not yours to build on.</p>
+  <div id="shop"></div>
+  <div id="up"></div>
+  <div id="acts">
+    <button id="send" class="primary wide" type="button" disabled>Send wave</button>
+    <button id="pause" type="button">Pause</button>
+    <button id="speed" type="button">1× speed</button>
+    <button id="restart" class="wide" type="button">Restart</button>
+  </div>
+</div>
+<script>
+(function () {
+  var COLS = 16, ROWS = 10, WAVES_N = 12;
+  var WAY = [[0,4],[5,4],[5,1],[10,1],[10,6],[3,6],[3,8],[13,8],[13,3],[15,3]];
+  var PONDS = { "1,1":1,"2,1":1,"1,2":1,"7,3":1,"8,3":1,"8,4":1,"14,6":1,"15,6":1,"14,7":1,"15,7":1,"0,8":1,"1,7":1,"12,5":1 };
+  var DMG_COST = [45, 80, 130], RATE_COST = [40, 70, 115];
+  var TOW = {
+    wick:   { name:"Wick",   cost:50,  range:1.75, damage:9,  rate:2.4,  splash:0,    slow:1,    slowDur:0,   shot:8 },
+    gale:   { name:"Gale",   cost:80,  range:2.05, damage:5,  rate:1.7,  splash:0,    slow:0.55, slowDur:1.5, shot:7 },
+    kiln:   { name:"Kiln",   cost:120, range:2.55, damage:26, rate:0.62, splash:0.85, slow:1,    slowDur:0,   shot:3.4 },
+    beacon: { name:"Beacon", cost:165, range:3.7,  damage:52, rate:0.48, splash:0,    slow:1,    slowDur:0,   shot:12 }
+  };
+  var CRE = {
+    runner: { hp:34, speed:1.18, gold:7,  armor:0,    leak:1, radius:0.16 },
+    swarm:  { hp:15, speed:1.52, gold:4,  armor:0,    leak:1, radius:0.11 },
+    husk:   { hp:150,speed:0.52, gold:16, armor:0.4,  leak:2, radius:0.24 },
+    warden: { hp:820,speed:0.36, gold:70, armor:0.28, leak:4, radius:0.32 }
+  };
+  var WAVES = [
+    [{k:"runner",n:8,e:0.72}],
+    [{k:"runner",n:12,e:0.5}],
+    [{k:"swarm",n:14,e:0.28},{k:"runner",n:5,e:0.85}],
+    [{k:"husk",n:5,e:1.05}],
+    [{k:"runner",n:8,e:0.42},{k:"husk",n:4,e:0.95}],
+    [{k:"swarm",n:18,e:0.2},{k:"husk",n:3,e:1.15}],
+    [{k:"runner",n:10,e:0.32},{k:"husk",n:6,e:0.75}],
+    [{k:"warden",n:1,e:0.4},{k:"runner",n:8,e:0.48}],
+    [{k:"swarm",n:16,e:0.18},{k:"husk",n:6,e:0.65}],
+    [{k:"husk",n:8,e:0.5},{k:"runner",n:12,e:0.28}],
+    [{k:"swarm",n:18,e:0.16},{k:"husk",n:7,e:0.55},{k:"runner",n:8,e:0.36}],
+    [{k:"warden",n:2,e:5},{k:"husk",n:6,e:0.55},{k:"runner",n:10,e:0.32}]
+  ];
+  var segs = [], pathSet = {}, pathTotal = 0;
+  for (var i = 0; i < WAY.length - 1; i++) {
+    var x = WAY[i][0], y = WAY[i][1], tx = WAY[i+1][0], ty = WAY[i+1][1];
+    var sx = Math.sign(tx - x), sy = Math.sign(ty - y);
+    if (i === 0) pathSet[x+","+y] = 1;
+    while (x !== tx || y !== ty) { x += sx; y += sy; pathSet[x+","+y] = 1; }
+    var len = Math.abs(tx - WAY[i][0]) + Math.abs(ty - WAY[i][1]);
+    segs.push({ x0: WAY[i][0]+0.5, y0: WAY[i][1]+0.5, x1: tx+0.5, y1: ty+0.5, len: len });
+    pathTotal += len;
+  }
+  function pointAt(dist) {
+    var d = Math.max(0, dist);
+    for (var s = 0; s < segs.length; s++) {
+      var seg = segs[s];
+      if (d <= seg.len || s === segs.length - 1) {
+        var t = seg.len === 0 ? 0 : Math.min(1, d / seg.len);
+        return { x: seg.x0 + (seg.x1 - seg.x0) * t, y: seg.y0 + (seg.y1 - seg.y0) * t };
+      }
+      d -= seg.len;
+    }
+  }
+  function stats(t) {
+    var s = TOW[t.kind];
+    return { damage: s.damage * (1 + 0.5 * t.dmgRank), rate: s.rate * (1 + 0.35 * t.rateRank), range: s.range };
+  }
+
+  function make() {
+    return {
+      phase: "menu", lives: 20, gold: 180, cleared: 0, paused: false, speed: 1,
+      status: "Twelve waves. The pale path is not yours to build on.",
+      kind: "wick", sel: null, kills: 0, leaked: 0, earned: 0,
+      towers: [], creeps: [], shots: [], parts: [], clock: 0, shake: 0, hover: null,
+      groups: [], acc: 0, id: 1, best: 0
+    };
+  }
+  var G = make();
+
+  function note(s) { G.status = s; }
+
+  function act(gx, gy) {
+    if (G.phase === "menu" || G.phase === "won" || G.phase === "lost") return;
+    if (gx < 0 || gy < 0 || gx >= COLS || gy >= ROWS) return;
+    var existing = null;
+    for (var i = 0; i < G.towers.length; i++) if (G.towers[i].gx === gx && G.towers[i].gy === gy) existing = G.towers[i];
+    if (existing) { G.sel = existing.id; G.kind = null; note(TOW[existing.kind].name + " selected."); return; }
+    if (!G.kind) { G.sel = null; note("Choose a tower, then an open plot."); return; }
+    var spec = TOW[G.kind];
+    if (G.gold < spec.cost) { note("Not enough gold."); return; }
+    var k = gx + "," + gy;
+    if (pathSet[k]) { note("The path stays open."); return; }
+    if (PONDS[k]) { note("That's water."); return; }
+    G.gold -= spec.cost;
+    var t = { id: G.id++, kind: G.kind, gx: gx, gy: gy, dmgRank: 0, rateRank: 0, aim: "first", cooldown: 0, spent: spec.cost, angle: -Math.PI/2, flash: 0, spin: 0 };
+    G.towers.push(t);
+    G.sel = t.id;
+    note(spec.name + " placed.");
+  }
+
+  function selected() {
+    for (var i = 0; i < G.towers.length; i++) if (G.towers[i].id === G.sel) return G.towers[i];
+    return null;
+  }
+
+  function upgrade(which) {
+    var t = selected();
+    if (!t || G.phase === "menu" || G.phase === "won" || G.phase === "lost") return;
+    var rank = which === "damage" ? t.dmgRank : t.rateRank;
+    if (rank >= 3) { note("That path is finished."); return; }
+    var cost = which === "damage" ? DMG_COST[rank] : RATE_COST[rank];
+    if (G.gold < cost) { note("Not enough gold."); return; }
+    G.gold -= cost; t.spent += cost;
+    if (which === "damage") t.dmgRank++; else t.rateRank++;
+    note(TOW[t.kind].name + " " + which + " is now " + (rank + 1) + ".");
+  }
+
+  function sell() {
+    var t = selected();
+    if (!t || G.phase === "menu") return;
+    var refund = Math.floor(t.spent * 0.6);
+    G.gold += refund;
+    G.towers = G.towers.filter(function (x) { return x.id !== t.id; });
+    G.sel = null;
+    note("Sold for " + refund + ".");
+  }
+
+  function sendWave() {
+    if (G.phase !== "prep" || G.cleared >= WAVES_N) return;
+    G.groups = WAVES[G.cleared].map(function (g) { return { k: g.k, left: g.n, every: g.e, acc: g.e }; });
+    G.phase = "fight";
+    note("Wave " + (G.cleared + 1) + " of " + WAVES_N + ".");
+  }
+
+  function spawn(kind) {
+    var base = CRE[kind];
+    var scale = 1 + G.cleared * 0.16;
+    var hp = Math.round(base.hp * scale);
+    var pos = pointAt(0);
+    var id = G.id++;
+    G.creeps.push({
+      id: id, kind: kind, hp: hp, maxHp: hp, s: 0, x: pos.x, y: pos.y,
+      slowT: 0, slowF: 1, gold: base.gold, armor: base.armor, leak: base.leak,
+      radius: base.radius, speed: base.speed * (1 + G.cleared * 0.015), side: ((id % 5) - 2) * 0.07
+    });
+  }
+
+  function pick(t) {
+    var st = stats(t), r2 = st.range * st.range, cx = t.gx + 0.5, cy = t.gy + 0.5;
+    var best = null, score = -Infinity;
+    for (var i = 0; i < G.creeps.length; i++) {
+      var c = G.creeps[i];
+      var dx = c.x - cx, dy = c.y - cy;
+      if (dx*dx + dy*dy > r2) continue;
+      var sc = t.aim === "first" ? c.s : t.aim === "last" ? -c.s : t.aim === "near" ? -(dx*dx+dy*dy) : c.hp;
+      if (!best || sc > score) { best = c; score = sc; }
+    }
+    return best;
+  }
+
+  function burst(x, y, n) {
+    for (var i = 0; i < n && G.parts.length < 160; i++) {
+      var a = Math.random() * Math.PI * 2, v = 0.4 + Math.random() * 1.2;
+      G.parts.push({ x: x, y: y, vx: Math.cos(a)*v, vy: Math.sin(a)*v, life: 0.35 });
+    }
+  }
+
+  function hurt(c, dmg, slow, dur) {
+    c.hp -= dmg * (1 - c.armor);
+    if (slow < 1) { c.slowF = Math.min(c.slowF, slow); c.slowT = Math.max(c.slowT, dur); }
+    if (c.hp <= 0) {
+      G.gold += c.gold; G.earned += c.gold; G.kills++;
+      return false;
+    }
+    return true;
+  }
+
+  function impact(s) {
+    s.alive = false;
+    if (s.splash > 0) {
+      var r2 = s.splash * s.splash;
+      G.creeps = G.creeps.filter(function (c) {
+        var dx = c.x - s.x, dy = c.y - s.y;
+        if (dx*dx + dy*dy > r2) return true;
+        return hurt(c, c.id === s.target ? s.damage : s.damage * 0.7, s.slow, s.slowDur);
+      });
+      burst(s.x, s.y, 8);
+    } else {
+      G.creeps = G.creeps.filter(function (c) {
+        if (c.id !== s.target) return true;
+        return hurt(c, s.damage, s.slow, s.slowDur);
+      });
+      burst(s.x, s.y, 4);
+    }
+  }
+
+  function fixed(dt) {
+    for (var g = 0; g < G.groups.length; g++) {
+      var grp = G.groups[g];
+      if (grp.left <= 0) continue;
+      grp.acc += dt;
+      while (grp.left > 0 && grp.acc >= grp.every) { grp.acc -= grp.every; grp.left--; spawn(grp.k); }
+    }
+    var still = [];
+    for (var i = 0; i < G.creeps.length; i++) {
+      var c = G.creeps[i];
+      if (c.slowT > 0) c.slowT -= dt;
+      var sp = c.speed * (c.slowT > 0 ? c.slowF : 1);
+      c.s += sp * dt;
+      var pos = pointAt(c.s);
+      var ahead = pointAt(Math.min(pathTotal, c.s + 0.15));
+      var dx = ahead.x - pos.x, dy = ahead.y - pos.y, mag = Math.hypot(dx, dy) || 1;
+      c.x = pos.x + (-dy / mag) * c.side;
+      c.y = pos.y + (dx / mag) * c.side;
+      if (c.s >= pathTotal) { G.lives -= c.leak; G.leaked++; G.shake = Math.min(0.45, G.shake + 0.12); }
+      else still.push(c);
+    }
+    G.creeps = still;
+    if (G.lives <= 0) { G.lives = 0; G.phase = "lost"; if (G.cleared > G.best) G.best = G.cleared; note("The line broke."); return; }
+    for (var ti = 0; ti < G.towers.length; ti++) {
+      var t = G.towers[ti];
+      t.cooldown -= dt;
+      var target = pick(t);
+      if (target) {
+        var want = Math.atan2(target.y - (t.gy+0.5), target.x - (t.gx+0.5));
+        var da = want - t.angle;
+        while (da > Math.PI) da -= Math.PI * 2;
+        while (da < -Math.PI) da += Math.PI * 2;
+        t.angle += da * Math.min(1, dt * 10);
+      }
+      if (target && t.cooldown <= 0) {
+        var st = stats(t);
+        t.cooldown = 1 / st.rate;
+        t.flash = 0.08;
+        var spec = TOW[t.kind];
+        var ox = t.gx + 0.5 + Math.cos(t.angle) * 0.28;
+        var oy = t.gy + 0.5 + Math.sin(t.angle) * 0.28;
+        var ddx = target.x - ox, ddy = target.y - oy, dist = Math.hypot(ddx, ddy) || 1;
+        G.shots.push({ x:ox, y:oy, px:ox, py:oy, vx: ddx/dist*spec.shot, vy: ddy/dist*spec.shot, damage: st.damage, splash: spec.splash, slow: spec.slow, slowDur: spec.slowDur, target: target.id, life: 2.4, kind: t.kind, alive: true });
+      }
+    }
+    var shots = [];
+    for (var si = 0; si < G.shots.length; si++) {
+      var s = G.shots[si];
+      if (!s.alive) continue;
+      s.life -= dt; s.px = s.x; s.py = s.y;
+      var tgt = null;
+      for (var ci = 0; ci < G.creeps.length; ci++) if (G.creeps[ci].id === s.target) tgt = G.creeps[ci];
+      var spd = TOW[s.kind].shot;
+      if (tgt) {
+        var qx = tgt.x - s.x, qy = tgt.y - s.y, qd = Math.hypot(qx, qy);
+        var steer = s.kind === "kiln" ? 3 : 9;
+        s.vx += ((qx/(qd||1))*spd - s.vx) * Math.min(1, steer * dt);
+        s.vy += ((qy/(qd||1))*spd - s.vy) * Math.min(1, steer * dt);
+        var v = Math.hypot(s.vx, s.vy) || 1;
+        s.vx = s.vx / v * spd; s.vy = s.vy / v * spd;
+        if (qd < Math.max(0.2, tgt.radius)) { impact(s); continue; }
+      } else if (s.splash <= 0) continue;
+      s.x += s.vx * dt; s.y += s.vy * dt;
+      if (s.life <= 0) { if (s.splash > 0) impact(s); continue; }
+      if (s.alive) shots.push(s);
+    }
+    G.shots = shots;
+    var queued = 0;
+    for (var qi = 0; qi < G.groups.length; qi++) queued += G.groups[qi].left;
+    if (queued === 0 && G.creeps.length === 0 && G.shots.length === 0) {
+      G.cleared++;
+      var bonus = 12 + G.cleared * 3;
+      G.gold += bonus; G.earned += bonus;
+      if (G.cleared > G.best) G.best = G.cleared;
+      if (G.cleared >= WAVES_N) { G.phase = "won"; note("The path held."); }
+      else { G.phase = "prep"; note("Wave clear. +" + bonus + " gold. Ready the next line."); }
+    }
+  }
+
+  function step(dt) {
+    dt = Math.min(0.05, dt);
+    G.clock += dt;
+    if (G.shake > 0) G.shake = Math.max(0, G.shake - dt);
+    for (var i = 0; i < G.towers.length; i++) {
+      if (G.towers[i].flash > 0) G.towers[i].flash = Math.max(0, G.towers[i].flash - dt);
+      if (G.towers[i].kind === "gale") G.towers[i].spin += dt * 1.6;
+    }
+    for (var p = 0; p < G.parts.length; p++) {
+      G.parts[p].life -= dt; G.parts[p].x += G.parts[p].vx * dt; G.parts[p].y += G.parts[p].vy * dt;
+    }
+    G.parts = G.parts.filter(function (p) { return p.life > 0; });
+    if (!G.paused && G.phase === "fight") {
+      G.acc += dt * G.speed;
+      var guard = 0;
+      while (G.acc >= 1/60 && guard++ < 10 && G.phase === "fight") { G.acc -= 1/60; fixed(1/60); }
+    } else G.acc = 0;
+  }
+
+  function checks() {
+    var problems = [];
+    if (pathTotal !== 44) problems.push("path " + pathTotal);
+    if (!pathSet["0,4"] || !pathSet["15,3"]) problems.push("ends");
+    for (var pk in PONDS) if (pathSet[pk]) problems.push("pond " + pk);
+    if (WAVES.length !== 12) problems.push("waves");
+    var saved = G;
+    G = make();
+    G.phase = "prep";
+    act(0, 4);
+    if (G.towers.length || G.gold !== 180) problems.push("path place");
+    act(4, 3);
+    if (G.towers.length !== 1 || G.gold !== 130) problems.push("wick");
+    G.gold = 1000;
+    upgrade("damage"); upgrade("damage"); upgrade("damage");
+    var d = stats(G.towers[0]).damage;
+    if (G.towers[0].dmgRank !== 3 || Math.abs(d - 22.5) > 0.01) problems.push("damage");
+    var refund = Math.floor(G.towers[0].spent * 0.6);
+    var before = G.gold;
+    sell();
+    if (G.towers.length || G.gold !== before + refund) problems.push("sell");
+    G = make();
+    G.phase = "fight";
+    G.creeps.push({ id: 1, kind: "runner", hp: 10, maxHp: 10, s: pathTotal - 0.01, x: 0, y: 0, slowT: 0, slowF: 1, gold: 7, armor: 0, leak: 1, radius: 0.16, speed: 5, side: 0 });
+    fixed(1/60);
+    if (G.lives !== 19) problems.push("leak " + G.lives);
+    G = saved;
+    return problems;
+  }
+
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  var problems = checks();
+  document.getElementById("check").textContent = problems.length ? ("Checks failed: " + problems.join(", ")) : "9 checks ok. No dependencies.";
+
+  function draw() {
+    var w = canvas.width, h = canvas.height, cell = Math.min(w / COLS, h / ROWS);
+    var ox = (w - cell * COLS) / 2, oy = (h - cell * ROWS) / 2;
+    var shake = Math.sin(G.clock * 46) * G.shake * cell * 0.35;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle = "#12110f";
+    ctx.fillRect(0, 0, w, h);
+    ctx.setTransform(cell, 0, 0, cell, ox + shake, oy);
+    for (var y = 0; y < ROWS; y++) for (var x = 0; x < COLS; x++) {
+      ctx.fillStyle = ((x * 3 + y * 5) % 2) ? "#222c27" : "#1b2420";
+      ctx.fillRect(x, y, 1, 1);
+    }
+    ctx.fillStyle = "#172229";
+    for (var pond in PONDS) {
+      var bits = pond.split(",");
+      ctx.beginPath();
+      ctx.ellipse(+bits[0] + 0.5, +bits[1] + 0.52, 0.42, 0.34, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.beginPath();
+    var a = pointAt(0); ctx.moveTo(a.x, a.y);
+    for (var d = 0.5; d <= pathTotal; d += 0.5) { var p = pointAt(d); ctx.lineTo(p.x, p.y); }
+    ctx.lineWidth = 0.78; ctx.strokeStyle = "#d7cdb9"; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke();
+    ctx.lineWidth = 0.4; ctx.strokeStyle = "#c3b7a2"; ctx.stroke();
+    var end = pointAt(pathTotal);
+    ctx.fillStyle = "#3c3832";
+    ctx.fillRect(end.x - 0.08, end.y - 0.42, 0.1, 0.84);
+    ctx.fillRect(end.x + 0.22, end.y - 0.42, 0.1, 0.84);
+    ctx.fillRect(end.x - 0.1, end.y - 0.48, 0.46, 0.1);
+    ctx.fillStyle = "#141311";
+    ctx.beginPath(); ctx.ellipse(a.x - 0.15, a.y, 0.28, 0.34, 0, 0, Math.PI * 2); ctx.fill();
+    if (G.hover && G.kind) {
+      var spec = TOW[G.kind];
+      ctx.strokeStyle = "rgba(243,240,234,0.35)";
+      ctx.lineWidth = 0.03;
+      ctx.beginPath(); ctx.arc(G.hover.gx + 0.5, G.hover.gy + 0.5, spec.range, 0, Math.PI * 2); ctx.stroke();
+    }
+    for (var ti = 0; ti < G.towers.length; ti++) drawTower(G.towers[ti]);
+    for (var ci = 0; ci < G.creeps.length; ci++) drawCreep(G.creeps[ci]);
+    ctx.fillStyle = "#f3f0ea";
+    for (var si = 0; si < G.shots.length; si++) {
+      var s = G.shots[si];
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.kind === "kiln" ? 0.09 : 0.045, 0, Math.PI * 2); ctx.fill();
+    }
+    for (var pi = 0; pi < G.parts.length; pi++) {
+      ctx.globalAlpha = Math.max(0, G.parts[pi].life / 0.35);
+      ctx.fillRect(G.parts[pi].x, G.parts[pi].y, 0.05, 0.05);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawTower(t) {
+    ctx.save();
+    ctx.translate(t.gx + 0.5, t.gy + 0.5);
+    ctx.fillStyle = "#8a847b";
+    if (t.kind === "wick") {
+      ctx.fillRect(-0.04, -0.02, 0.08, 0.34);
+      ctx.beginPath(); ctx.arc(0, -0.06, 0.14, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#f3f0ea";
+      ctx.beginPath(); ctx.moveTo(0, -0.32); ctx.lineTo(0.08, -0.04); ctx.lineTo(-0.08, -0.04); ctx.fill();
+    } else if (t.kind === "gale") {
+      ctx.rotate(t.spin);
+      for (var i = 0; i < 3; i++) { ctx.rotate(Math.PI * 2 / 3); ctx.fillRect(0, -0.04, 0.28, 0.08); }
+    } else if (t.kind === "kiln") {
+      ctx.fillStyle = "#4a453e";
+      ctx.beginPath(); ctx.moveTo(-0.26, 0.26); ctx.lineTo(0.26, 0.26); ctx.lineTo(0.16, -0.14); ctx.lineTo(-0.16, -0.14); ctx.fill();
+    } else {
+      ctx.rotate(t.angle);
+      ctx.fillRect(-0.04, -0.05, 0.36, 0.1);
+      ctx.beginPath(); ctx.arc(0, 0, 0.1, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+    if (t.id === G.sel) {
+      ctx.strokeStyle = "rgba(243,240,234,0.4)";
+      ctx.lineWidth = 0.03;
+      ctx.beginPath(); ctx.arc(t.gx + 0.5, t.gy + 0.5, TOW[t.kind].range, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+
+  function drawCreep(c) {
+    ctx.fillStyle = c.kind === "warden" ? "#f3f0ea" : c.kind === "husk" ? "#6e675e" : c.kind === "swarm" ? "#9aa7ae" : "#cfc6b6";
+    ctx.beginPath(); ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2); ctx.fill();
+    if (c.hp < c.maxHp) {
+      ctx.fillStyle = "#141311"; ctx.fillRect(c.x - 0.18, c.y - c.radius - 0.14, 0.36, 0.06);
+      ctx.fillStyle = "#f3f0ea"; ctx.fillRect(c.x - 0.18, c.y - c.radius - 0.14, 0.36 * Math.max(0, c.hp / c.maxHp), 0.06);
+    }
+  }
+
+  function cellOf(ev) {
+    var r = canvas.getBoundingClientRect();
+    return { gx: Math.floor(((ev.clientX - r.left) / r.width) * COLS), gy: Math.floor(((ev.clientY - r.top) / r.height) * ROWS) };
+  }
+
+  function paintUi() {
+    var wave = G.phase === "fight" ? G.cleared + 1 : G.phase === "prep" ? G.cleared + 1 : G.cleared;
+    document.getElementById("stats").innerHTML =
+      "<span>Lives " + G.lives + "</span><span>Gold " + G.gold + "</span><span>Wave " + Math.min(WAVES_N, wave) + " / " + WAVES_N + "</span>";
+    document.getElementById("status").textContent = G.status;
+    var send = document.getElementById("send");
+    send.disabled = G.phase !== "prep";
+    var queued = 0;
+    for (var i = 0; i < G.groups.length; i++) queued += G.groups[i].left;
+    send.textContent = G.phase === "fight" ? ("Wave in progress · " + (G.creeps.length + queued) + " left") : G.phase === "prep" ? ("Send wave " + (G.cleared + 1)) : "Send wave";
+    document.getElementById("pause").textContent = G.paused ? "Resume" : "Pause";
+    document.getElementById("speed").textContent = G.speed === 2 ? "2× speed" : "1× speed";
+    var shop = document.getElementById("shop");
+    shop.innerHTML = "";
+    ["wick","gale","kiln","beacon"].forEach(function (k) {
+      var s = TOW[k];
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-pressed", G.kind === k ? "true" : "false");
+      b.textContent = s.name + " · " + s.cost + "  ·  range " + s.range.toFixed(1);
+      b.onclick = function () { G.kind = G.kind === k ? null : k; if (G.kind) G.sel = null; paintUi(); };
+      shop.appendChild(b);
+    });
+    var up = document.getElementById("up");
+    up.innerHTML = "";
+    var t = selected();
+    if (t) {
+      var st = stats(t);
+      ["first","last","near","strong"].forEach(function (aim) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.textContent = aim;
+        b.setAttribute("aria-pressed", t.aim === aim ? "true" : "false");
+        b.onclick = function () { t.aim = aim; note(TOW[t.kind].name + " aims " + aim + "."); paintUi(); };
+        up.appendChild(b);
+      });
+      var dmg = document.createElement("button");
+      dmg.type = "button"; dmg.className = "wide";
+      dmg.textContent = t.dmgRank >= 3 ? "Damage max · " + st.damage.toFixed(0) : "Damage " + t.dmgRank + "/3 · " + DMG_COST[t.dmgRank] + "g";
+      dmg.disabled = t.dmgRank >= 3;
+      dmg.onclick = function () { upgrade("damage"); paintUi(); };
+      var rate = document.createElement("button");
+      rate.type = "button"; rate.className = "wide";
+      rate.textContent = t.rateRank >= 3 ? "Fire rate max · " + st.rate.toFixed(2) + "/s" : "Fire rate " + t.rateRank + "/3 · " + RATE_COST[t.rateRank] + "g";
+      rate.disabled = t.rateRank >= 3;
+      rate.onclick = function () { upgrade("rate"); paintUi(); };
+      var sold = document.createElement("button");
+      sold.type = "button"; sold.className = "wide";
+      sold.textContent = "Sell for " + Math.floor(t.spent * 0.6);
+      sold.onclick = function () { sell(); paintUi(); };
+      up.appendChild(dmg); up.appendChild(rate); up.appendChild(sold);
+    }
+    var overlay = document.getElementById("overlay");
+    var over = G.phase === "menu" || G.phase === "won" || G.phase === "lost";
+    overlay.hidden = !over;
+    if (over) {
+      document.getElementById("title").textContent = G.phase === "menu" ? "Hold the path" : G.phase === "won" ? "The path held" : "The line broke";
+      document.getElementById("blurb").textContent = G.phase === "menu"
+        ? "Creeps walk the pale path. Towers stand on open ground. Kills pay gold. A leak costs lives. Damage and fire rate upgrade separately, three ranks each."
+        : (G.kills + " killed · " + G.leaked + " leaked · " + G.earned + " gold earned · best " + G.best + ".");
+      document.getElementById("begin").textContent = G.phase === "menu" ? "Start" : "Restart";
+    }
+  }
+
+  document.getElementById("begin").onclick = function () {
+    if (G.phase === "menu") { G.phase = "prep"; note("Pick a tower, then an open plot. Send the wave when the line is set."); }
+    else { var best = G.best; G = make(); G.best = best; }
+    paintUi();
+  };
+  document.getElementById("send").onclick = function () { sendWave(); paintUi(); };
+  document.getElementById("pause").onclick = function () {
+    if (G.phase === "fight" || G.phase === "prep") { G.paused = !G.paused; note(G.paused ? "Paused." : "Running."); }
+    paintUi();
+  };
+  document.getElementById("speed").onclick = function () { G.speed = G.speed === 1 ? 2 : 1; paintUi(); };
+  document.getElementById("restart").onclick = function () { var best = G.best; G = make(); G.best = best; paintUi(); };
+  canvas.addEventListener("pointerdown", function (ev) { var c = cellOf(ev); act(c.gx, c.gy); paintUi(); });
+  canvas.addEventListener("pointermove", function (ev) { G.hover = cellOf(ev); });
+  canvas.addEventListener("pointerleave", function () { G.hover = null; });
+  window.addEventListener("keydown", function (ev) {
+    if (ev.key === "1") G.kind = "wick";
+    else if (ev.key === "2") G.kind = "gale";
+    else if (ev.key === "3") G.kind = "kiln";
+    else if (ev.key === "4") G.kind = "beacon";
+    else if (ev.key === "Enter") { if (G.phase === "menu") G.phase = "prep"; else sendWave(); }
+    else if (ev.key === " ") { ev.preventDefault(); if (G.phase === "fight" || G.phase === "prep") G.paused = !G.paused; }
+    else return;
+    paintUi();
+  });
+
+  var last = performance.now();
+  function frame(now) {
+    var dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    var before = G.phase + G.gold + G.lives + G.status + G.cleared;
+    step(dt);
+    draw();
+    if (before !== G.phase + G.gold + G.lives + G.status + G.cleared) paintUi();
+    requestAnimationFrame(frame);
+  }
+  paintUi();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

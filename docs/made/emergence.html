@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emergence — simple rules you can rewrite</title>
+<style>
+:root{color-scheme:dark;--bg:#0f141b;--card:#161e28;--line:#2e3b4a;--ink:#eef2f5;--muted:#a9b6c3;--accent:#f2c14e;--good:#8fd694;--bad:#ff8f7a;--blue:#8cc9ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,sans-serif}
+main{max-width:1260px;margin:auto;padding:32px 22px 60px}
+.eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+h1{font:normal clamp(36px,6vw,60px)/1.1 Georgia,serif;margin:8px 0 10px;letter-spacing:-.03em}
+h2{font:normal 22px Georgia,serif;margin:0 0 10px}
+.intro{max-width:760px;color:var(--muted);margin:0 0 22px}
+.layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+canvas#world{display:block;width:100%;image-rendering:pixelated;background:#000;border-radius:8px;cursor:crosshair;touch-action:none}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+button,select,input{font:inherit;color:var(--ink);background:#22303f;border:1px solid var(--line);border-radius:8px;padding:7px 12px;min-height:38px}
+button{cursor:pointer;font-weight:600}button:hover{filter:brightness(1.15)}button.primary{background:var(--accent);color:#1d1600;border-color:var(--accent)}
+input[type=range]{padding:0;accent-color:var(--accent);min-height:0;width:120px}
+input#seed{width:140px}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+textarea{width:100%;min-height:330px;resize:vertical;background:#0b1017;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font:13px/1.5 ui-monospace,Menlo,Consolas,monospace;tab-size:2}
+.err{color:var(--bad);min-height:22px;font-size:14px;white-space:pre-wrap}
+.ok{color:var(--good)}
+.small{font-size:13px;color:var(--muted)}
+.swatches{display:flex;flex-wrap:wrap;gap:6px}
+.sw{display:flex;align-items:center;gap:6px;padding:4px 9px;border:1px solid var(--line);border-radius:20px;cursor:pointer;font-size:13px;background:#101720}
+.sw i{display:inline-block;width:13px;height:13px;border-radius:3px;border:1px solid #fff3}
+.sw[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.readout{font:13px/1.6 ui-monospace,Menlo,Consolas,monospace;color:var(--muted)}
+.readout b{color:var(--ink);font-weight:600}
+.notice{margin-top:6px;padding:8px 10px;border-left:3px solid var(--line);background:#101720;font-size:13px;min-height:20px}
+.notice.cycle{border-color:var(--blue)}.notice.cons{border-color:var(--good)}.notice.broken{border-color:var(--bad)}
+canvas.chart{display:block;width:100%;height:110px;background:#0b1017;border-radius:8px;margin-top:8px}
+.below{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+.pin{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.pin canvas{width:100%;image-rendering:pixelated;border-radius:6px;background:#000}
+.pin pre{white-space:pre-wrap;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;color:var(--muted);margin:6px 0 0;max-height:160px;overflow:auto}
+ul.checks{list-style:none;padding:0;margin:0;font-size:13px}ul.checks li{padding:3px 0}
+details summary{cursor:pointer;color:var(--accent);margin:6px 0}
+.ref code,.ref pre{font:12.5px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#dfe7ee}
+.ref pre{background:#0b1017;border-radius:8px;padding:10px;overflow:auto}
+.ref p{margin:6px 0}
+.foot{color:var(--muted);font-size:13px;margin-top:26px;max-width:900px}
+@media(max-width:900px){.layout,.below{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">CommunityBoard / made</div>
+<h1>Emergence, with the rules showing.</h1>
+<p class="intro">A grid of cells, a handful of states, and a few lines of rules that each cell follows using only its neighbours. Nothing in the rules mentions clusters, gliders, fronts or spirals. Pick a preset, edit any line, press <b>Apply</b>, and watch what the change does. Apply keeps the seed, so the only difference is the one you made.</p>
+
+<div class="layout">
+<section class="card" aria-label="World">
+  <canvas id="world" width="96" height="72" aria-label="The grid. Click or drag to paint cells in the chosen state."></canvas>
+  <div class="row">
+    <button id="run" class="primary">Run</button>
+    <button id="step">Step</button>
+    <label class="small">Speed <input id="speed" type="range" min="1" max="20" value="4"></label>
+    <span class="small" id="speedout">4 steps/frame</span>
+  </div>
+  <div class="row">
+    <label class="small">Seed <input id="seed" maxlength="200"></label>
+    <button id="reseed">Restart with seed</button>
+    <button id="newseed">New seed</button>
+    <button id="clear">Fill with paint state</button>
+  </div>
+  <div class="small">Paint state (click or drag on the grid):</div>
+  <div class="swatches" id="swatches" role="group" aria-label="Paint state"></div>
+  <div class="readout" id="readout" aria-live="polite" style="margin-top:10px"></div>
+  <div class="notice" id="notice"></div>
+  <canvas class="chart" id="chartCounts" aria-label="Share of cells in each state over time"></canvas>
+  <canvas class="chart" id="chartOrder" aria-label="Clumping (yellow) and activity (blue) over time, both 0 to 1"></canvas>
+  <div class="small">Top: share of cells in each state. Bottom: <span style="color:var(--accent)">clumping</span> and <span style="color:var(--blue)">activity</span>, both 0 to 1.</div>
+</section>
+
+<section class="card" aria-label="Rules">
+  <div class="row" style="margin-top:0">
+    <label class="small">Preset <select id="preset"></select></label>
+    <button id="apply" class="primary">Apply rules</button>
+    <button id="share">Copy share link</button>
+  </div>
+  <textarea id="rules" spellcheck="false" aria-label="Rule text"></textarea>
+  <div class="err" id="error" role="alert"></div>
+  <details class="ref"><summary>How to write rules</summary>
+  <p>One instruction per line. <code>#</code> starts a comment, and the first comment line is the title.</p>
+  <pre>states dead alive          2 to 10 names, the first is 0
+colours #000 #fd0          optional
+neighbourhood moore        or vonneumann (4 neighbours)
+edges wrap                 or wall
+update sync                or async (one cell at a time, random order)
+noise 0.001                chance per cell per step of a random state
+size 96 72                 width height, 4 to 400
+start dead 0.7 alive 0.3   initial mix (fractions)
+seed anything</pre>
+  <p><b>Become rules</b>: <code>from -&gt; to if condition</code>. For each cell, the first rule whose <code>from</code> matches and whose condition is true wins. No condition means always.</p>
+  <p><b>Swap rules</b> move things, so counts are conserved: <code>sand swap empty S SE|SW</code> tries to swap with an empty cell to the south, otherwise south-east or south-west at random. Use <code>anywhere</code> to swap with a random cell of that state anywhere on the grid, or <code>nearby</code> for any neighbour.</p>
+  <p><b>Conditions</b>: a state name means how many neighbours are in that state. You also have <code>neighbours</code> (how many there are), <code>random</code> (0 to 1), <code>t</code> (the step), <code>N is alive</code> or <code>SE is wall</code> for one direction (N NE E SE S SW W NW), the operators <code>+ - * / %</code>, <code>== != &lt; &lt;= &gt; &gt;=</code>, and <code>and or not</code> with brackets.</p>
+  <pre>dead -> alive if alive == 3
+alive -> dead if alive &lt; 2 or alive &gt; 3
+tree -> fire if fire &gt; 0 or random &lt; 0.00002
+red swap empty anywhere if red &lt; 0.3 * (red + blue)</pre>
+  <p>Nothing here is ever run as code. The text is parsed into a small fixed set of operations.</p>
+  </details>
+</section>
+</div>
+
+<div class="below">
+<section class="card" aria-label="Pinned comparison">
+  <h2>Pin and compare</h2>
+  <p class="small">Pin the present world, change one rule, Apply, and run to the same step. The pin keeps its picture, its numbers and its rule text.</p>
+  <div class="row"><button id="pin">Pin current world</button><button id="unpin">Unpin</button></div>
+  <div class="pin">
+    <div><div class="small">Pinned</div><canvas id="pinned" width="1" height="1"></canvas><pre id="pinnedText">Nothing pinned yet.</pre></div>
+    <div><div class="small">Now</div><canvas id="nowThumb" width="1" height="1"></canvas><pre id="nowText"></pre></div>
+  </div>
+</section>
+<section class="card" aria-label="Self-checks">
+  <h2>Self-checks</h2>
+  <p class="small">On load the page checks the engine against facts that are known independently: a blinker has period 2, a glider crosses a 16 by 16 torus in 64 steps, swaps conserve counts, a bad rule is refused, and so on.</p>
+  <ul class="checks" id="checks"></ul>
+</section>
+</div>
+
+<p class="foot">Emergence v1 · works offline, no network, no eval. Randomness is seeded (mulberry32), so a seed plus the rule text reproduces a run exactly in the same browser. Clumping measures how much more often neighbouring cells share a state than they would if the same counts were shuffled: 0 means well mixed, 1 means every neighbour matches. Activity is the share of cells that changed in the last step. Cycle detection compares whole-grid hashes and only runs when the rules have no randomness in them.</p>
+</main>
+<script id="emergence-engine">
+'use strict';
+// Emergence engine. Pure: no DOM, no network, no eval. Parsed rules become
+// closures. The same text is embedded in made/emergence.html.
+(function (root) {
+const VERSION = 1;
+const DIRS = {N:[0,-1],S:[0,1],E:[1,0],W:[-1,0],NE:[1,-1],NW:[-1,-1],SE:[1,1],SW:[-1,1]};
+const MOORE = ['N','NE','E','SE','S','SW','W','NW'];
+const VON = ['N','E','S','W'];
+const PALETTE = ['#0b1020','#f2c14e','#e4572e','#4cb5ae','#a1c349','#b07bd1','#f7f7f2','#5b8def','#ff8fab','#8d6e63'];
+
+// ---- seeded randomness -------------------------------------------------------
+function hashString(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return h >>> 0;
+}
+function rng(seed) {
+  let a = (typeof seed === 'number' ? seed : hashString(String(seed))) >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// ---- expressions -------------------------------------------------------------
+class RuleError extends Error {
+  constructor(line, msg) { super(`line ${line}: ${msg}`); this.line = line; }
+}
+function tokenize(src, line) {
+  const out = []; let i = 0;
+  while (i < src.length) {
+    const c = src[i];
+    if (/\s/.test(c)) { i++; continue; }
+    const two = src.slice(i, i + 2);
+    if (['<=', '>=', '==', '!='].includes(two)) { out.push({t: 'op', v: two}); i += 2; continue; }
+    if ('<>+-*/()%'.includes(c)) { out.push({t: 'op', v: c}); i++; continue; }
+    const num = /^(\d+\.?\d*|\.\d+)(e-?\d+)?/i.exec(src.slice(i));
+    if (num) { out.push({t: 'num', v: parseFloat(num[0])}); i += num[0].length; continue; }
+    const id = /^[A-Za-z_][\w]*/.exec(src.slice(i));
+    if (id) { out.push({t: 'id', v: id[0]}); i += id[0].length; continue; }
+    throw new RuleError(line, `unexpected character '${c}'`);
+  }
+  return out;
+}
+// Grammar: or := and ('or' and)* ; and := not ('and' not)* ; not := 'not' not | cmp
+// cmp := sum (cmpop sum)? ; sum := prod (('+'|'-') prod)* ; prod := unary (('*'|'/'|'%') unary)*
+// unary := '-' unary | primary ; primary := num | '(' or ')' | DIR 'is' state | name
+function compileExpr(src, names, line) {
+  const toks = tokenize(src, line); let p = 0;
+  const peek = () => toks[p];
+  const isOp = (v) => toks[p] && toks[p].t === 'op' && toks[p].v === v;
+  const isWord = (v) => toks[p] && toks[p].t === 'id' && toks[p].v === v;
+  const expect = (v) => { if (!isOp(v)) throw new RuleError(line, `expected '${v}'`); p++; };
+  function or() { let a = and(); while (isWord('or')) { p++; const l = a, r = and(); a = (c) => (l(c) || r(c)) ? 1 : 0; } return a; }
+  function and() { let a = not(); while (isWord('and')) { p++; const l = a, r = not(); a = (c) => (l(c) && r(c)) ? 1 : 0; } return a; }
+  function not() { if (isWord('not')) { p++; const a = not(); return (c) => a(c) ? 0 : 1; } return cmp(); }
+  function cmp() {
+    const l = sum();
+    const t = peek();
+    if (t && t.t === 'op' && ['<', '>', '<=', '>=', '==', '!='].includes(t.v)) {
+      p++; const r = sum();
+      switch (t.v) {
+        case '<': return (c) => l(c) < r(c) ? 1 : 0;
+        case '>': return (c) => l(c) > r(c) ? 1 : 0;
+        case '<=': return (c) => l(c) <= r(c) ? 1 : 0;
+        case '>=': return (c) => l(c) >= r(c) ? 1 : 0;
+        case '==': return (c) => Math.abs(l(c) - r(c)) < 1e-9 ? 1 : 0;
+        default: return (c) => Math.abs(l(c) - r(c)) >= 1e-9 ? 1 : 0;
+      }
+    }
+    return l;
+  }
+  function sum() {
+    let a = prod();
+    while (isOp('+') || isOp('-')) { const o = toks[p++].v, l = a, r = prod(); a = o === '+' ? (c) => l(c) + r(c) : (c) => l(c) - r(c); }
+    return a;
+  }
+  function prod() {
+    let a = unary();
+    while (isOp('*') || isOp('/') || isOp('%')) {
+      const o = toks[p++].v, l = a, r = unary();
+      a = o === '*' ? (c) => l(c) * r(c) : o === '/' ? (c) => { const d = r(c); return d === 0 ? 0 : l(c) / d; } : (c) => { const d = r(c); return d === 0 ? 0 : l(c) % d; };
+    }
+    return a;
+  }
+  function unary() { if (isOp('-')) { p++; const a = unary(); return (c) => -a(c); } return primary(); }
+  function primary() {
+    const t = peek();
+    if (!t) throw new RuleError(line, 'condition ends too early');
+    if (t.t === 'num') { p++; const v = t.v; return () => v; }
+    if (t.t === 'op' && t.v === '(') { p++; const a = or(); expect(')'); return a; }
+    if (t.t === 'id') {
+      p++;
+      if (DIRS[t.v] && isWord('is')) {
+        p++;
+        const s = peek();
+        if (!s || s.t !== 'id') throw new RuleError(line, `'${t.v} is' needs a state name`);
+        p++;
+        if (s.v === 'wall') { const d = DIRS[t.v]; return (c) => c.look(d[0], d[1]) < 0 ? 1 : 0; }
+        const k = names.indexOf(s.v);
+        if (k < 0) throw new RuleError(line, `unknown state '${s.v}'`);
+        const d = DIRS[t.v];
+        return (c) => c.look(d[0], d[1]) === k ? 1 : 0;
+      }
+      if (t.v === 'random') return (c) => c.rnd();
+      if (t.v === 'neighbours' || t.v === 'neighbors') return (c) => c.total;
+      if (t.v === 't') return (c) => c.t;
+      const k = names.indexOf(t.v);
+      if (k >= 0) return (c) => c.counts[k];
+      throw new RuleError(line, `unknown name '${t.v}' (states are: ${names.join(', ')})`);
+    }
+    throw new RuleError(line, `unexpected '${t.v}'`);
+  }
+  const f = or();
+  if (p < toks.length) throw new RuleError(line, `unexpected '${toks[p].v}' after the condition`);
+  return f;
+}
+
+// ---- the rule text -----------------------------------------------------------
+const DEFAULTS = {neighbourhood: 'moore', edges: 'wrap', update: 'sync', noise: 0, width: 96, height: 72, seed: 'emergence'};
+
+function parse(text) {
+  const spec = Object.assign({}, DEFAULTS, {states: null, colours: [], start: null, rules: [], name: ''});
+  const lines = String(text).split(/\r?\n/);
+  const pending = [];
+  lines.forEach((raw, i) => {
+    const n = i + 1;
+    const hash = raw.indexOf('#');
+    let line = raw;
+    // '#' starts a comment unless it is a colour like #ff8800
+    if (hash >= 0 && !/^\s*colou?rs\b/.test(raw)) line = raw.slice(0, hash);
+    if (hash >= 0 && !spec.name && /^\s*#/.test(raw)) spec.name = raw.slice(hash + 1).trim();
+    line = line.trim();
+    if (!line) return;
+    const words = line.split(/\s+/);
+    const w0 = words[0].toLowerCase();
+    if (w0 === 'states') {
+      if (words.length < 3) throw new RuleError(n, 'need at least two states');
+      if (words.length > 11) throw new RuleError(n, 'at most ten states');
+      const seen = new Set();
+      for (const s of words.slice(1)) {
+        if (!/^[A-Za-z_]\w*$/.test(s)) throw new RuleError(n, `'${s}' is not a usable state name`);
+        if (DIRS[s] || ['and', 'or', 'not', 'is', 'random', 'neighbours', 'neighbors', 't', 'if', 'swap', 'wall', 'anywhere', 'nearby'].includes(s)) throw new RuleError(n, `'${s}' is a reserved word`);
+        if (seen.has(s)) throw new RuleError(n, `state '${s}' twice`);
+        seen.add(s);
+      }
+      spec.states = words.slice(1);
+    } else if (w0 === 'colours' || w0 === 'colors') {
+      spec.colours = words.slice(1).map((c) => { if (!/^#[0-9a-f]{3,8}$/i.test(c)) throw new RuleError(n, `'${c}' is not a colour like #f2c14e`); return c; });
+    } else if (w0 === 'neighbourhood' || w0 === 'neighborhood') {
+      const v = (words[1] || '').toLowerCase();
+      if (!['moore', 'vonneumann'].includes(v)) throw new RuleError(n, 'neighbourhood is moore or vonneumann');
+      spec.neighbourhood = v;
+    } else if (w0 === 'edges') {
+      const v = (words[1] || '').toLowerCase();
+      if (!['wrap', 'wall'].includes(v)) throw new RuleError(n, 'edges are wrap or wall');
+      spec.edges = v;
+    } else if (w0 === 'update') {
+      const v = (words[1] || '').toLowerCase();
+      if (!['sync', 'async'].includes(v)) throw new RuleError(n, 'update is sync or async');
+      spec.update = v;
+    } else if (w0 === 'noise') {
+      const v = Number(words[1]);
+      if (!(v >= 0 && v <= 1)) throw new RuleError(n, 'noise is a probability between 0 and 1');
+      spec.noise = v;
+    } else if (w0 === 'size') {
+      const w = parseInt(words[1], 10), h = parseInt(words[2], 10);
+      if (!(w >= 4 && w <= 400 && h >= 4 && h <= 400)) throw new RuleError(n, 'size W H, each between 4 and 400');
+      spec.width = w; spec.height = h;
+    } else if (w0 === 'seed') {
+      if (words.length < 2) throw new RuleError(n, 'seed needs a value');
+      spec.seed = words.slice(1).join(' ');
+    } else if (w0 === 'start') {
+      const parts = words.slice(1);
+      if (!parts.length || parts.length % 2) throw new RuleError(n, 'start is pairs: state fraction state fraction ...');
+      const fr = [];
+      for (let k = 0; k < parts.length; k += 2) {
+        const v = Number(parts[k + 1]);
+        if (!(v >= 0)) throw new RuleError(n, `'${parts[k + 1]}' is not a fraction`);
+        fr.push([parts[k], v, n]);
+      }
+      spec.start = fr;
+    } else {
+      pending.push([line, n]);
+    }
+  });
+  if (!spec.states) throw new RuleError(lines.length || 1, "no 'states' line; e.g. states dead alive");
+  const names = spec.states;
+  const idx = (s, n) => { const k = names.indexOf(s); if (k < 0) throw new RuleError(n, `unknown state '${s}' (states are: ${names.join(', ')})`); return k; };
+  for (const [line, n] of pending) {
+    let m = /^([A-Za-z_]\w*)\s*->\s*([A-Za-z_]\w*)\s*(?:if\s+(.+))?$/.exec(line);
+    if (m) {
+      spec.rules.push({kind: 'become', from: idx(m[1], n), to: idx(m[2], n), cond: m[3] ? compileExpr(m[3], names, n) : null, line: n, text: line});
+      continue;
+    }
+    m = /^([A-Za-z_]\w*)\s+swap\s+([A-Za-z_]\w*)\s+(.+?)(?:\s+if\s+(.+))?$/.exec(line);
+    if (m) {
+      const where = m[3].trim().split(/\s+/);
+      let mode, steps = [];
+      if (where.length === 1 && where[0] === 'anywhere') mode = 'anywhere';
+      else if (where.length === 1 && where[0] === 'nearby') mode = 'nearby';
+      else {
+        mode = 'dirs';
+        for (const g of where) {
+          const opts = g.split('|');
+          for (const o of opts) if (!DIRS[o]) throw new RuleError(n, `'${o}' is not a direction (N S E W NE NW SE SW), 'nearby' or 'anywhere'`);
+          steps.push(opts);
+        }
+      }
+      spec.rules.push({kind: 'swap', from: idx(m[1], n), to: idx(m[2], n), mode, steps, cond: m[4] ? compileExpr(m[4], names, n) : null, line: n, text: line});
+      continue;
+    }
+    throw new RuleError(n, `not a rule or setting: '${line}'. Rules look like 'dead -> alive if alive == 3' or 'sand swap empty S'`);
+  }
+  if (!spec.rules.length) throw new RuleError(lines.length || 1, 'no rules; e.g. dead -> alive if alive == 3');
+  if (!spec.start) spec.start = names.map((s, k) => [s, k === 0 ? 1 : 0, 0]);
+  const frac = new Array(names.length).fill(0);
+  for (const [s, v, n] of spec.start) frac[idx(s, n)] += v;
+  const tot = frac.reduce((a, b) => a + b, 0);
+  if (!(tot > 0)) throw new RuleError(1, 'start fractions add to zero');
+  spec.fractions = frac.map((v) => v / tot);
+  spec.colours = names.map((_, k) => spec.colours[k] || PALETTE[k % PALETTE.length]);
+  return spec;
+}
+
+// ---- the world ---------------------------------------------------------------
+class World {
+  constructor(spec, seedOverride) {
+    this.spec = spec;
+    this.W = spec.width; this.H = spec.height; this.N = this.W * this.H;
+    this.K = spec.states.length;
+    this.grid = new Uint8Array(this.N);
+    this.next = new Uint8Array(this.N);
+    this.moved = new Uint8Array(this.N);
+    this.seed = seedOverride !== undefined ? String(seedOverride) : spec.seed;
+    this.rand = rng(this.seed);
+    this.t = 0;
+    this.nb = (spec.neighbourhood === 'vonneumann' ? VON : MOORE).map((d) => DIRS[d]);
+    this.counts = new Int32Array(this.K);
+    this.history = [];
+    this.seen = new Map();
+    this.cycle = null;
+    const cum = []; let acc = 0;
+    for (const f of spec.fractions) { acc += f; cum.push(acc); }
+    for (let i = 0; i < this.N; i++) {
+      const r = this.rand(); let k = 0;
+      while (k < this.K - 1 && r >= cum[k]) k++;
+      this.grid[i] = k;
+    }
+    this.initial = this.stateCounts();
+    this.lastChanged = 0;
+    this.isStochastic = this.stochastic();
+    this.record();
+  }
+  // index of the cell at (x+dx, y+dy), or -1 beyond a wall
+  at(x, y, dx, dy) {
+    let nx = x + dx, ny = y + dy;
+    if (this.spec.edges === 'wrap') { nx = (nx + this.W) % this.W; ny = (ny + this.H) % this.H; }
+    else if (nx < 0 || ny < 0 || nx >= this.W || ny >= this.H) return -1;
+    return ny * this.W + nx;
+  }
+  context(i, g) {
+    const x = i % this.W, y = (i / this.W) | 0, self = this;
+    const counts = this.counts; counts.fill(0);
+    let total = 0;
+    for (const [dx, dy] of this.nb) { const j = this.at(x, y, dx, dy); if (j >= 0) { counts[g[j]]++; total++; } }
+    return {counts, total, t: this.t, rnd: this.rand, look(dx, dy) { const j = self.at(x, y, dx, dy); return j < 0 ? -1 : g[j]; }};
+  }
+  stateCounts() { const c = new Array(this.K).fill(0); for (let i = 0; i < this.N; i++) c[this.grid[i]]++; return c; }
+  hash() { let h = 2166136261 >>> 0; const g = this.grid; for (let i = 0; i < this.N; i++) { h ^= g[i]; h = Math.imul(h, 16777619) >>> 0; } return h >>> 0; }
+
+  step() {
+    const spec = this.spec, rules = spec.rules, g = this.grid, N = this.N;
+    const before = this.grid.slice();
+    const become = rules.filter((r) => r.kind === 'become');
+    const swaps = rules.filter((r) => r.kind === 'swap');
+    if (become.length) {
+      if (spec.update === 'sync') {
+        const nx = this.next;
+        for (let i = 0; i < N; i++) {
+          const s = g[i]; let out = s;
+          for (const r of become) {
+            if (r.from !== s) continue;
+            if (!r.cond || r.cond(this.context(i, g))) { out = r.to; break; }
+          }
+          nx[i] = out;
+        }
+        this.grid.set(nx);
+      } else {
+        for (const i of this.order()) {
+          const s = g[i];
+          for (const r of become) {
+            if (r.from !== s) continue;
+            if (!r.cond || r.cond(this.context(i, g))) { g[i] = r.to; break; }
+          }
+        }
+      }
+    }
+    if (swaps.length) this.doSwaps(swaps);
+    if (spec.noise > 0) {
+      for (let i = 0; i < N; i++) if (this.rand() < spec.noise) g[i] = Math.floor(this.rand() * this.K);
+    }
+    let changed = 0; for (let i = 0; i < N; i++) if (before[i] !== g[i]) changed++;
+    this.lastChanged = changed;
+    this.t++;
+    this.record();
+  }
+  order() {
+    const o = new Int32Array(this.N); for (let i = 0; i < this.N; i++) o[i] = i;
+    for (let i = this.N - 1; i > 0; i--) { const j = Math.floor(this.rand() * (i + 1)); const t = o[i]; o[i] = o[j]; o[j] = t; }
+    return o;
+  }
+  doSwaps(swaps) {
+    const g = this.grid, moved = this.moved; moved.fill(0);
+    // A cell moves at most once a step; swaps run in a random order on the
+    // live grid, so two movers never land in the same place.
+    const pools = {};
+    for (const r of swaps) if (r.mode === 'anywhere' && !pools[r.to]) {
+      const list = []; for (let i = 0; i < this.N; i++) if (g[i] === r.to) list.push(i); pools[r.to] = list;
+    }
+    for (const i of this.order()) {
+      if (moved[i]) continue;
+      const s = g[i];
+      for (const r of swaps) {
+        if (r.from !== s) continue;
+        if (r.cond && !r.cond(this.context(i, g))) continue;
+        const j = this.target(i, r, pools);
+        if (j < 0) continue;
+        g[j] = s; g[i] = r.to; moved[j] = 1; moved[i] = 1;
+        if (r.mode === 'anywhere') { const pool = pools[r.to]; const k = pool.indexOf(j); pool[k] = i; }
+        break;
+      }
+    }
+  }
+  target(i, r, pools) {
+    const g = this.grid, x = i % this.W, y = (i / this.W) | 0;
+    if (r.mode === 'anywhere') {
+      const pool = pools[r.to];
+      for (let tries = 0; tries < 8 && pool.length; tries++) { const j = pool[Math.floor(this.rand() * pool.length)]; if (g[j] === r.to && !this.moved[j]) return j; }
+      return -1;
+    }
+    if (r.mode === 'nearby') {
+      const c = [];
+      for (const [dx, dy] of this.nb) { const j = this.at(x, y, dx, dy); if (j >= 0 && g[j] === r.to && !this.moved[j]) c.push(j); }
+      return c.length ? c[Math.floor(this.rand() * c.length)] : -1;
+    }
+    for (const opts of r.steps) {
+      const c = [];
+      for (const o of opts) { const [dx, dy] = DIRS[o]; const j = this.at(x, y, dx, dy); if (j >= 0 && g[j] === r.to && !this.moved[j]) c.push(j); }
+      if (c.length) return c[Math.floor(this.rand() * c.length)];
+    }
+    return -1;
+  }
+
+  // ---- what emerged ----
+  measure() {
+    const g = this.grid, W = this.W, H = this.H, K = this.K;
+    const counts = new Array(K).fill(0);
+    for (let i = 0; i < this.N; i++) counts[g[i]]++;
+    // Clumping: how much more often orthogonal neighbours match than they
+    // would if the same counts were shuffled. 0 = mixed at random, 1 = every
+    // neighbour pair matches. Negative = more alternating than random.
+    let same = 0, pairs = 0;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      for (const [dx, dy] of [[1, 0], [0, 1]]) { const j = this.at(x, y, dx, dy); if (j < 0) continue; pairs++; if (g[i] === g[j]) same++; }
+    }
+    const sameFrac = pairs ? same / pairs : 0;
+    let expected = 0; for (const c of counts) expected += (c / this.N) ** 2;
+    const clumping = expected < 1 ? (sameFrac - expected) / (1 - expected) : 0;
+    return {t: this.t, counts, activity: this.t ? this.lastChanged / this.N : 0, clumping, same: sameFrac};
+  }
+  record() {
+    const m = this.measure();
+    this.history.push(m);
+    if (this.history.length > 4000) this.history.shift();
+    if (!this.cycle && !this.isStochastic) {
+      const h = this.hash();
+      if (this.seen.has(h)) { const first = this.seen.get(h); this.cycle = {start: first, period: this.t - first}; }
+      else { this.seen.set(h, this.t); if (this.seen.size > 5000) this.seen.delete(this.seen.keys().next().value); }
+    }
+    return m;
+  }
+  // forget remembered states (after the user edits the grid) but remember the present one
+  forget() { this.seen = new Map([[this.hash(), this.t]]); this.cycle = null; }
+  conserved() { const now = this.stateCounts(); return now.every((v, k) => v === this.initial[k]); }
+  stochastic() { return this.spec.update === 'async' || this.spec.noise > 0 || this.spec.rules.some((r) => r.kind === 'swap' || /\brandom\b/.test(r.text)); }
+  paint(x, y, k) { if (x >= 0 && y >= 0 && x < this.W && y < this.H) { this.grid[y * this.W + x] = k; this.forget(); } }
+  clear(k) { this.grid.fill(k); this.forget(); this.initial = this.stateCounts(); }
+  place(x, y, rows, k) { rows.forEach((row, dy) => [...row].forEach((ch, dx) => { if (ch !== '.' && ch !== ' ') this.grid[this.at(x, y, dx, dy)] = k; })); this.forget(); this.initial = this.stateCounts(); }
+}
+
+// ---- presets ------------------------------------------------------------------
+const PRESETS = [
+{id: 'life', text: `# Conway's Game of Life
+# Two rules about counting neighbours. Gliders, oscillators and still lifes are not in them.
+states dead alive
+colours #0b1020 #f2c14e
+neighbourhood moore
+edges wrap
+update sync
+size 96 72
+start dead 0.68 alive 0.32
+seed life
+
+dead -> alive if alive == 3
+alive -> dead if alive < 2 or alive > 3
+`},
+{id: 'life-async', text: `# The same two rules, updated one cell at a time in random order
+# Change only the 'update' line. Gliders and blinkers depend on everyone moving at once.
+states dead alive
+colours #0b1020 #f2c14e
+update async
+size 96 72
+start dead 0.68 alive 0.32
+seed life
+
+dead -> alive if alive == 3
+alive -> dead if alive < 2 or alive > 3
+`},
+{id: 'schelling', text: `# Schelling's segregation
+# Each agent is content if at least 30% of its occupied neighbours are like it,
+# otherwise it moves to an empty cell anywhere. Nobody wants a majority.
+states empty red blue
+colours #10131a #e4572e #4cb5ae
+size 80 60
+start empty 0.1 red 0.45 blue 0.45
+seed schelling
+
+red swap empty anywhere if red < 0.3 * (red + blue)
+blue swap empty anywhere if blue < 0.3 * (red + blue)
+`},
+{id: 'majority', text: `# Twisted majority vote (Vichniac)
+# Take the majority of the 3x3 block, but swap the result at the 4/5 tie.
+# Plain majority freezes into speckle; the twist makes the boundaries anneal.
+states a b
+colours #24304a #f7f7f2
+size 120 90
+start a 0.5 b 0.5
+seed vote
+
+a -> b if b == 4 or b >= 6
+b -> a if a == 4 or a >= 6
+`},
+{id: 'sand', text: `# Falling sand
+# Grains fall straight down if they can, otherwise slide diagonally.
+# Nothing is created or destroyed: the counts are conserved, and the page checks.
+states empty sand rock
+colours #10131a #e9c46a #6c757d
+edges wall
+size 90 70
+start empty 0.82 sand 0.15 rock 0.03
+seed sand
+
+sand swap empty S SE|SW
+`},
+{id: 'forest', text: `# Forest fire (Drossel and Schwabl)
+# Trees grow slowly, lightning is rare, fire spreads to touching trees.
+# The forest organises itself into patches of every size.
+states empty tree fire
+colours #14110f #3a7d44 #ff7b00
+neighbourhood vonneumann
+size 120 90
+start empty 0.5 tree 0.5
+seed forest
+
+fire -> empty
+tree -> fire if fire > 0 or random < 0.00002
+empty -> tree if random < 0.01
+`},
+{id: 'rps', text: `# Rock, paper, scissors
+# Each state is eaten by the next when enough of the next surround it.
+# No state wins; spirals form and keep turning.
+states rock paper scissors
+colours #e4572e #f7f7f2 #4c6ef5
+size 120 90
+start rock 0.34 paper 0.33 scissors 0.33
+seed rps
+
+rock -> paper if paper > 2 + random * 2
+paper -> scissors if scissors > 2 + random * 2
+scissors -> rock if rock > 2 + random * 2
+`},
+{id: 'brain', text: `# Brian's Brain
+# Off cells fire with exactly two firing neighbours; firing cells tire; tired cells rest.
+# Almost everything that moves here is a spaceship.
+states off firing tired
+colours #0b1020 #ffffff #5b8def
+size 120 90
+start off 0.8 firing 0.1 tired 0.1
+seed brain
+
+off -> firing if firing == 2
+firing -> tired
+tired -> off
+`},
+{id: 'voter', text: `# Voter model with a little noise
+# Each cell copies one random neighbour's opinion... approximately: it adopts
+# the other view with probability equal to that view's share around it.
+states left right
+colours #b07bd1 #a1c349
+size 100 75
+start left 0.5 right 0.5
+noise 0.0005
+seed voter
+
+left -> right if random < right / neighbours
+right -> left if random < left / neighbours
+`},
+];
+
+// ---- self-checks ---------------------------------------------------------------
+function runChecks() {
+  const results = [];
+  const check = (name, fn) => { try { const r = fn(); results.push({name, ok: r.ok, detail: r.detail}); } catch (e) { results.push({name, ok: false, detail: String(e.message || e)}); } };
+  const lifeRules = 'states dead alive\nsize 16 16\nstart dead 1\ndead -> alive if alive == 3\nalive -> dead if alive < 2 or alive > 3\n';
+  check('a blinker repeats with period 2', () => {
+    const w = new World(parse(lifeRules)); w.place(6, 7, ['###'], 1);
+    for (let i = 0; i < 6; i++) w.step();
+    return {ok: !!w.cycle && w.cycle.period === 2, detail: w.cycle ? `period ${w.cycle.period} from step ${w.cycle.start}` : 'no cycle found'};
+  });
+  check('a block is a fixed point', () => {
+    const w = new World(parse(lifeRules)); w.place(5, 5, ['##', '##'], 1);
+    w.step(); w.step();
+    return {ok: !!w.cycle && w.cycle.period === 1 && w.lastChanged === 0, detail: w.cycle ? `period ${w.cycle.period}` : 'no cycle'};
+  });
+  check('a glider moves (1, 1) every 4 steps and keeps 5 cells', () => {
+    const w = new World(parse(lifeRules)); w.place(2, 2, ['.#.', '..#', '###'], 1);
+    const cells = () => { const o = []; for (let i = 0; i < w.N; i++) if (w.grid[i]) o.push([i % w.W, (i / w.W) | 0]); return o; };
+    const a = cells(); for (let i = 0; i < 4; i++) w.step(); const b = cells();
+    const shifted = a.map(([x, y]) => `${x + 1},${y + 1}`).sort().join(' ');
+    return {ok: b.length === 5 && shifted === b.map(([x, y]) => `${x},${y}`).sort().join(' '), detail: `${b.length} cells after 4 steps`};
+  });
+  check('on a 16x16 torus the glider is home after 64 steps', () => {
+    const w = new World(parse(lifeRules)); w.place(2, 2, ['.#.', '..#', '###'], 1);
+    const h0 = w.hash(); for (let i = 0; i < 64; i++) w.step();
+    return {ok: w.hash() === h0 && w.cycle && w.cycle.period === 64, detail: w.cycle ? `period ${w.cycle.period}` : 'no cycle'};
+  });
+  check('with async update the same glider does not survive as a glider', () => {
+    const w = new World(parse(lifeRules.replace('size', 'update async\nsize'))); w.place(2, 2, ['.#.', '..#', '###'], 1);
+    const h0 = w.hash(); let home = false; for (let i = 0; i < 64; i++) { w.step(); }
+    home = w.hash() === h0;
+    return {ok: !home, detail: `${w.stateCounts()[1]} live cells after 64 async steps`};
+  });
+  check('falling sand conserves every state over 300 steps', () => {
+    const w = new World(parse(PRESETS.find((p) => p.id === 'sand').text));
+    for (let i = 0; i < 300; i++) w.step();
+    return {ok: w.conserved(), detail: `sand ${w.initial[1]} \u2192 ${w.stateCounts()[1]}`};
+  });
+  check('noise breaks conservation, and the check notices', () => {
+    const w = new World(parse(PRESETS.find((p) => p.id === 'sand').text.replace('seed sand', 'seed sand\nnoise 0.001')));
+    for (let i = 0; i < 50; i++) w.step();
+    return {ok: !w.conserved(), detail: `sand ${w.initial[1]} \u2192 ${w.stateCounts()[1]}`};
+  });
+  check('same seed, same world; another seed, another world', () => {
+    const t = PRESETS.find((p) => p.id === 'rps').text;
+    const a = new World(parse(t)), b = new World(parse(t)), c = new World(parse(t), 'other');
+    for (let i = 0; i < 20; i++) { a.step(); b.step(); c.step(); }
+    return {ok: a.hash() === b.hash() && a.hash() !== c.hash(), detail: `hashes ${a.hash().toString(16)} ${b.hash().toString(16)} ${c.hash().toString(16)}`};
+  });
+  check('Schelling at 30% tolerance sorts itself', () => {
+    const w = new World(parse(PRESETS.find((p) => p.id === 'schelling').text));
+    const c0 = w.measure().clumping; for (let i = 0; i < 60; i++) w.step(); const c1 = w.measure().clumping;
+    return {ok: Math.abs(c0) < 0.05 && c1 > 0.3 && w.conserved(), detail: `clumping ${c0.toFixed(3)} \u2192 ${c1.toFixed(3)}, counts conserved`};
+  });
+  check('a broken rule is refused with its line number', () => {
+    try { parse('states a b\na -> b if c > 2\n'); return {ok: false, detail: 'accepted'}; }
+    catch (e) { return {ok: e.line === 2 && /unknown name 'c'/.test(e.message), detail: e.message}; }
+  });
+  return results;
+}
+
+// ---- share codes ---------------------------------------------------------------
+function encode(text) {
+  const bytes = new TextEncoder().encode(text); let s = '';
+  for (const b of bytes) s += String.fromCharCode(b);
+  return (typeof btoa === 'function' ? btoa(s) : Buffer.from(s, 'binary').toString('base64')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function decode(code) {
+  const b64 = code.replace(/-/g, '+').replace(/_/g, '/');
+  const s = typeof atob === 'function' ? atob(b64) : Buffer.from(b64, 'base64').toString('binary');
+  return new TextDecoder().decode(Uint8Array.from(s, (c) => c.charCodeAt(0)));
+}
+
+const api = {VERSION, parse, World, PRESETS, runChecks, encode, decode, rng, hashString, RuleError, DIRS};
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
+root.Emergence = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+</script>
+<script>
+(function () {
+'use strict';
+const E = globalThis.Emergence;
+const $ = (id) => document.getElementById(id);
+const el = {world: $('world'), run: $('run'), step: $('step'), speed: $('speed'), speedout: $('speedout'), seed: $('seed'), reseed: $('reseed'), newseed: $('newseed'), clear: $('clear'), swatches: $('swatches'), readout: $('readout'), notice: $('notice'), chartCounts: $('chartCounts'), chartOrder: $('chartOrder'), preset: $('preset'), apply: $('apply'), share: $('share'), rules: $('rules'), error: $('error'), pin: $('pin'), unpin: $('unpin'), pinned: $('pinned'), pinnedText: $('pinnedText'), nowThumb: $('nowThumb'), nowText: $('nowText'), checks: $('checks')};
+let world = null, spec = null, running = false, paintState = 1, rgb = [], img = null, ctx = el.world.getContext('2d');
+let pinnedData = null;
+
+function hexToRgb(h) {
+  let s = h.replace('#', ''); if (s.length === 3) s = s.split('').map((c) => c + c).join('');
+  const n = parseInt(s, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function title(text) { const m = text.match(/^\s*#\s*(.+)$/m); return m ? m[1].trim() : 'Untitled rules'; }
+
+function load(text, seed) {
+  let s;
+  try { s = E.parse(text); }
+  catch (e) {
+    el.error.textContent = e.message;
+    if (e.line) highlightLine(e.line);
+    return false;
+  }
+  el.error.textContent = '';
+  spec = s;
+  world = new E.World(spec, seed !== undefined && seed !== '' ? seed : spec.seed);
+  el.seed.value = world.seed;
+  el.world.width = world.W; el.world.height = world.H;
+  img = ctx.createImageData(world.W, world.H);
+  rgb = spec.colours.map(hexToRgb);
+  if (paintState >= world.K) paintState = Math.min(1, world.K - 1);
+  buildSwatches();
+  draw();
+  return true;
+}
+function highlightLine(n) {
+  const lines = el.rules.value.split('\n'); let a = 0;
+  for (let i = 0; i < n - 1 && i < lines.length; i++) a += lines[i].length + 1;
+  const b = a + (lines[n - 1] || '').length;
+  el.rules.focus(); el.rules.setSelectionRange(a, b);
+}
+function buildSwatches() {
+  el.swatches.textContent = '';
+  spec.states.forEach((name, k) => {
+    const b = document.createElement('button'); b.className = 'sw'; b.type = 'button';
+    b.setAttribute('aria-pressed', String(k === paintState));
+    const i = document.createElement('i'); i.style.background = spec.colours[k];
+    b.append(i, document.createTextNode(name));
+    b.addEventListener('click', () => { paintState = k; buildSwatches(); });
+    el.swatches.append(b);
+  });
+}
+function render(target, grid, W, H, colours) {
+  const c = target.getContext('2d'); target.width = W; target.height = H;
+  const im = c.createImageData(W, H), d = im.data;
+  for (let i = 0; i < W * H; i++) { const col = colours[grid[i]]; d[4 * i] = col[0]; d[4 * i + 1] = col[1]; d[4 * i + 2] = col[2]; d[4 * i + 3] = 255; }
+  c.putImageData(im, 0, 0);
+}
+function draw() {
+  const d = img.data, g = world.grid;
+  for (let i = 0; i < world.N; i++) { const c = rgb[g[i]]; d[4 * i] = c[0]; d[4 * i + 1] = c[1]; d[4 * i + 2] = c[2]; d[4 * i + 3] = 255; }
+  ctx.putImageData(img, 0, 0);
+  readouts();
+  charts();
+  render(el.nowThumb, world.grid, world.W, world.H, rgb);
+  el.nowText.textContent = summary();
+}
+function pct(x) { return (100 * x).toFixed(1) + '%'; }
+function summary() {
+  const m = world.history[world.history.length - 1];
+  return `${title(el.rules.value)}\nstep ${m.t} · seed ${world.seed}\n` + spec.states.map((s, k) => `${s} ${pct(m.counts[k] / world.N)}`).join(' · ') + `\nclumping ${m.clumping.toFixed(3)} · activity ${m.activity.toFixed(3)}`;
+}
+function readouts() {
+  const m = world.history[world.history.length - 1];
+  const parts = spec.states.map((s, k) => `<span style="color:${spec.colours[k]}">■</span> ${esc(s)} <b>${m.counts[k]}</b>`);
+  el.readout.innerHTML = `step <b>${m.t}</b> · ${world.W}×${world.H} · ${spec.update} · ${spec.neighbourhood} · ${spec.edges}<br>${parts.join(' &nbsp; ')}<br>clumping <b>${m.clumping.toFixed(3)}</b> · activity <b>${m.activity.toFixed(4)}</b>`;
+  const notes = []; let cls = '';
+  if (world.cycle) {
+    const c = world.cycle;
+    notes.push(c.period === 1 ? `Frozen: nothing has changed since step ${c.start}.` : `Repeating: the whole grid returns every ${c.period} steps (since step ${c.start}).`);
+    cls = 'cycle';
+  } else if (world.isStochastic) notes.push('These rules use chance, so cycles are not looked for.');
+  if (world.t > 0 && world.conserved()) { notes.push('Every state count is the same as at the start (conserved).'); cls = cls || 'cons'; }
+  else if (!spec.rules.some((r) => r.kind === 'become') && spec.noise === 0) { notes.push('Counts changed, which only swaps cannot do. The grid was painted.'); }
+  el.notice.className = 'notice ' + cls;
+  el.notice.textContent = notes.join(' ');
+}
+function esc(s) { return s.replace(/[&<>"]/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c])); }
+function sizeChart(c) { const r = c.getBoundingClientRect(); const w = Math.max(100, Math.round(r.width)), h = Math.round(r.height || 110); if (c.width !== w) c.width = w; if (c.height !== h) c.height = h; return c.getContext('2d'); }
+function line(cx, pts, colour, w, h) {
+  cx.strokeStyle = colour; cx.lineWidth = 1.5; cx.beginPath();
+  pts.forEach((v, i) => { const x = pts.length > 1 ? (i / (pts.length - 1)) * (w - 4) + 2 : 2, y = h - 3 - v * (h - 6); i ? cx.lineTo(x, y) : cx.moveTo(x, y); });
+  cx.stroke();
+}
+function charts() {
+  const hist = world.history.slice(-600);
+  let cx = sizeChart(el.chartCounts), w = el.chartCounts.width, h = el.chartCounts.height;
+  cx.clearRect(0, 0, w, h);
+  for (let k = 0; k < world.K; k++) line(cx, hist.map((m) => m.counts[k] / world.N), spec.colours[k] === '#000' || spec.colours[k] === '#000000' ? '#666' : spec.colours[k], w, h);
+  cx = sizeChart(el.chartOrder); w = el.chartOrder.width; h = el.chartOrder.height;
+  cx.clearRect(0, 0, w, h);
+  line(cx, hist.map((m) => Math.max(0, Math.min(1, m.clumping))), '#f2c14e', w, h);
+  line(cx, hist.map((m) => Math.min(1, m.activity)), '#8cc9ff', w, h);
+}
+
+// ---- running ----
+let last = 0;
+function frame(ts) {
+  if (!running) return;
+  if (ts - last > 30) {
+    last = ts;
+    const n = +el.speed.value;
+    for (let i = 0; i < n; i++) world.step();
+    draw();
+  }
+  requestAnimationFrame(frame);
+}
+function setRunning(on) { running = on; el.run.textContent = on ? 'Pause' : 'Run'; if (on) requestAnimationFrame(frame); }
+el.run.addEventListener('click', () => setRunning(!running));
+el.step.addEventListener('click', () => { setRunning(false); world.step(); draw(); });
+el.speed.addEventListener('input', () => { el.speedout.textContent = el.speed.value + (el.speed.value === '1' ? ' step/frame' : ' steps/frame'); });
+el.apply.addEventListener('click', () => { const was = running; setRunning(false); if (load(el.rules.value, el.seed.value)) { if (was) setRunning(true); } });
+el.reseed.addEventListener('click', () => { const was = running; setRunning(false); if (load(el.rules.value, el.seed.value) && was) setRunning(true); });
+el.newseed.addEventListener('click', () => { const a = new Uint32Array(1); crypto.getRandomValues(a); el.seed.value = a[0].toString(36); el.reseed.click(); });
+el.clear.addEventListener('click', () => { world.clear(paintState); draw(); });
+el.preset.addEventListener('change', () => { const p = E.PRESETS.find((q) => q.id === el.preset.value); el.rules.value = p.text; setRunning(false); load(p.text); });
+el.rules.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); el.apply.click(); } });
+
+// painting
+let painting = false;
+function paintAt(e) {
+  const r = el.world.getBoundingClientRect();
+  const x = Math.floor((e.clientX - r.left) / r.width * world.W), y = Math.floor((e.clientY - r.top) / r.height * world.H);
+  world.paint(x, y, paintState);
+}
+el.world.addEventListener('pointerdown', (e) => { painting = true; el.world.setPointerCapture(e.pointerId); paintAt(e); draw(); });
+el.world.addEventListener('pointermove', (e) => { if (painting) { paintAt(e); if (!running) draw(); } });
+el.world.addEventListener('pointerup', () => { painting = false; });
+
+// pin
+el.pin.addEventListener('click', () => {
+  pinnedData = {grid: world.grid.slice(), W: world.W, H: world.H, rgb: rgb.slice(), text: summary() + '\n\n' + el.rules.value.split('\n').filter((l) => /->|swap/.test(l)).join('\n')};
+  render(el.pinned, pinnedData.grid, pinnedData.W, pinnedData.H, pinnedData.rgb);
+  el.pinnedText.textContent = pinnedData.text;
+});
+el.unpin.addEventListener('click', () => { pinnedData = null; el.pinned.width = 1; el.pinned.height = 1; el.pinnedText.textContent = 'Nothing pinned yet.'; });
+
+// share
+function shareURL() { return location.href.split('#')[0] + '#r=' + E.encode(el.rules.value) + '&s=' + encodeURIComponent(el.seed.value); }
+el.share.addEventListener('click', async () => {
+  const url = shareURL();
+  history.replaceState(null, '', url);
+  try { await navigator.clipboard.writeText(url); el.error.innerHTML = '<span class="ok">Link copied. It holds the full rule text and the seed.</span>'; }
+  catch (e) { el.error.innerHTML = '<span class="ok">The address bar now holds the share link.</span>'; }
+});
+function fromHash() {
+  const h = location.hash.slice(1); if (!h) return null;
+  const q = new URLSearchParams(h); const r = q.get('r'); if (!r) return null;
+  try { return {text: E.decode(r).slice(0, 20000), seed: q.get('s') || undefined}; } catch (e) { return null; }
+}
+
+// checks
+function showChecks() {
+  el.checks.textContent = '';
+  const res = E.runChecks(); let ok = 0;
+  for (const c of res) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="${c.ok ? 'ok' : 'err'}">${c.ok ? '✓' : '✗'}</span> ${esc(c.name)} <span class="small">(${esc(String(c.detail))})</span>`;
+    el.checks.append(li); if (c.ok) ok++;
+  }
+  const li = document.createElement('li'); li.innerHTML = `<b class="${ok === res.length ? 'ok' : 'err'}">${ok} of ${res.length} checks pass.</b>`; el.checks.prepend(li);
+}
+
+// boot
+for (const p of E.PRESETS) { const o = document.createElement('option'); o.value = p.id; o.textContent = title(p.text); el.preset.append(o); }
+const shared = fromHash();
+if (shared) {
+  const o = document.createElement('option'); o.value = ''; o.textContent = 'From a share link'; el.preset.prepend(o); el.preset.value = '';
+  el.rules.value = shared.text;
+  if (!load(shared.text, shared.seed)) { el.preset.value = 'life'; }
+}
+if (!world) {
+  if (shared) {
+    // keep the broken shared text and its error visible; run Life underneath
+    const msg = el.error.textContent; const text = el.rules.value;
+    load(E.PRESETS[0].text); el.rules.value = text; el.error.textContent = msg + '  (showing Life until the rules parse)';
+  } else { el.rules.value = E.PRESETS[0].text; load(el.rules.value); }
+}
+window.addEventListener('resize', () => charts());
+setTimeout(showChecks, 0);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evolution: you change the world, the world chooses</title>
+<style>
+  :root { --bg:#0f1115; --panel:#161a21; --line:#232934; --fg:#e6e6e6; --dim:#8a8f98; --ok:#9cff8a; --bad:#ff6b6b; --acc:#ffcf5f;
+          --size:#ff9f5f; --speed:#5fb3ff; --sense:#c88cff; --color:#e8d9a8; --fur:#7fe0c0; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; }
+  main { max-width: 1320px; margin: 0 auto; padding: 18px 16px 60px; }
+  h1 { font-weight: 600; margin: 0 0 2px; font-size: 24px; }
+  h2 { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--dim); margin: 0 0 8px; font-weight: 600; }
+  .sub { color: var(--dim); margin: 0 0 14px; max-width: 900px; }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom: 12px; }
+  #world { display:block; width:100%; height:auto; border-radius:8px; cursor: crosshair; touch-action: none; background:#000; }
+  .bar { display:flex; flex-wrap: wrap; gap:6px; align-items:center; margin: 8px 0 0; }
+  button, select, input[type=text] { background:#232934; color:var(--fg); border:1px solid #333b48; border-radius:6px; padding:5px 9px; font:inherit; }
+  button { cursor:pointer; }
+  button:hover { background:#2c3440; }
+  button.on { background:#3a3420; border-color: var(--acc); color: var(--acc); }
+  button:disabled { opacity: .45; cursor: default; }
+  .tool kbd { font-size: 11px; color: var(--dim); margin-left: 3px; }
+  .sl { display:grid; grid-template-columns: 92px 1fr 46px; gap: 6px; align-items:center; margin: 4px 0; }
+  .sl label { color: var(--dim); font-size: 13px; }
+  .sl output { font: 12px ui-monospace, Menlo, monospace; text-align: right; }
+  .sl.locked label::after { content: " 🔒"; }
+  input[type=range] { width: 100%; accent-color: var(--acc); }
+  .stats { display:grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 8px; }
+  @media (max-width: 700px) { .stats { grid-template-columns: repeat(3, 1fr); } }
+  .stat { background:#11151b; border:1px solid var(--line); border-radius:8px; padding: 5px 8px; }
+  .stat b { display:block; font: 600 17px ui-monospace, Menlo, monospace; }
+  .stat span { color: var(--dim); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+  .charts { display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 1000px) { .charts { grid-template-columns: 1fr; } }
+  .charts canvas { width: 100%; height: auto; display:block; background:#11151b; border-radius: 6px; }
+  .legend { font-size: 12px; color: var(--dim); margin-top: 4px; }
+  .legend i { display:inline-block; width: 10px; height: 3px; margin: 0 4px 2px 8px; vertical-align: middle; }
+  .gene { display:grid; grid-template-columns: 52px 1fr 40px; gap: 6px; align-items: center; font-size: 12px; margin: 2px 0; }
+  .gene .track { height: 7px; background:#0f1218; border-radius: 4px; overflow: hidden; }
+  .gene .fill { height: 100%; }
+  .mono { font: 12px/1.6 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+  .dim { color: var(--dim); }
+  .ch { border:1px solid var(--line); border-radius:8px; padding: 7px 9px; margin: 6px 0; cursor: pointer; }
+  .ch:hover { border-color:#3a4252; }
+  .ch.active { border-color: var(--acc); }
+  .ch .t { font-weight: 600; }
+  .ch .best { float:right; font-size: 12px; color: var(--ok); }
+  .progress { height: 8px; background:#0f1218; border-radius: 4px; overflow: hidden; margin: 6px 0 2px; }
+  .progress div { height:100%; background: var(--acc); transition: width .2s; }
+  .hold div { background: var(--ok); }
+  #events { max-height: 170px; overflow-y: auto; font-size: 12px; }
+  #events div { padding: 1px 0; border-bottom: 1px dashed #1e232c; }
+  #events .tm { color: var(--dim); font-family: ui-monospace, Menlo, monospace; margin-right: 6px; }
+  .banner { padding: 8px 10px; border-radius: 8px; margin-top: 8px; display: none; }
+  .banner.win { display:block; background:#1d2a1a; border:1px solid #3c6b33; color: var(--ok); }
+  .banner.lose { display:block; background:#2a1a1a; border:1px solid #6b3333; color: var(--bad); }
+  details summary { cursor: pointer; color: var(--dim); }
+  .checks div { font: 12px/1.6 ui-monospace, Menlo, monospace; }
+  .pass { color: var(--ok); } .fail { color: var(--bad); }
+  textarea { width: 100%; min-height: 64px; background:#0f1218; color: var(--fg); border:1px solid #333b48; border-radius:6px; font: 11px ui-monospace, Menlo, monospace; }
+  p { margin: 6px 0; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 12px; background:#1d222b; padding: 1px 4px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Evolution</h1>
+<p class="sub">Small creatures eat, move, keep warm, hide from hawks and have children who are almost, but not quite,
+like them. You cannot touch their genes. You can only change the world they live in, and the world decides
+who has children. Every creature carries five genes: <b style="color:var(--size)">size</b>,
+<b style="color:var(--speed)">speed</b>, <b style="color:var(--sense)">sense</b>, <b style="color:var(--color)">colour</b>
+and <b style="color:var(--fur)">fur</b>. Each one helps with something and costs something.</p>
+
+<div class="layout">
+<div>
+  <div class="panel">
+    <canvas id="world" width="900" height="560"></canvas>
+    <div class="bar" id="tools">
+      <button class="tool on" data-tool="inspect">Inspect<kbd>1</kbd></button>
+      <button class="tool" data-tool="sow">Sow food<kbd>2</kbd></button>
+      <button class="tool" data-tool="dark">Paint dark soil<kbd>3</kbd></button>
+      <button class="tool" data-tool="light">Paint pale sand<kbd>4</kbd></button>
+      <button class="tool" data-tool="meteor">Meteor<kbd>5</kbd></button>
+      <button class="tool" data-tool="release">Release founders<kbd>6</kbd></button>
+      <span style="flex:1"></span>
+      <button id="pause">Pause<kbd>space</kbd></button>
+      <select id="speed" title="Simulation speed">
+        <option value="1">1×</option><option value="3" selected>3×</option><option value="10">10×</option>
+        <option value="40">40×</option><option value="150">150×</option>
+      </select>
+      <select id="view" title="Colour creatures by">
+        <option value="genes">look: genes</option><option value="lineage">look: family</option>
+        <option value="energy">look: energy</option><option value="hawk">look: hawk's eye</option>
+      </select>
+    </div>
+    <div class="stats">
+      <div class="stat"><span>tick</span><b id="sTick">0</b></div>
+      <div class="stat"><span>alive</span><b id="sPop">0</b></div>
+      <div class="stat"><span>generations</span><b id="sGen">0</b></div>
+      <div class="stat"><span>families left</span><b id="sLin">0</b></div>
+      <div class="stat"><span>plants</span><b id="sFood">0</b></div>
+      <div class="stat"><span>births</span><b id="sBirths">0</b></div>
+    </div>
+    <div class="banner" id="banner"></div>
+  </div>
+
+  <div class="panel">
+    <div class="charts">
+      <div><h2>Population</h2><canvas id="cPop" width="380" height="160"></canvas>
+        <div class="legend"><i style="background:#e6e6e6"></i>creatures<i style="background:#6fbf5f"></i>plants<i style="background:#ff6b6b"></i>hawks ×20</div></div>
+      <div><h2>Average genes over time</h2><canvas id="cGenes" width="380" height="160"></canvas>
+        <div class="legend"><i style="background:var(--size)"></i>size<i style="background:var(--speed)"></i>speed<i style="background:var(--sense)"></i>sense<i style="background:var(--color)"></i>colour<i style="background:var(--fur)"></i>fur</div></div>
+      <div><h2>Spread now: <select id="histGene"></select></h2><canvas id="cHist" width="380" height="160"></canvas>
+        <div class="legend" id="histNote">each bar counts creatures with that value</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>How the world works</h2>
+    <p><b style="color:var(--size)">Size</b> gives a bigger bite from every plant and a longer life, but moving a heavy
+    body costs more energy and a large animal needs more stored energy before it can breed. Big bodies also hold heat
+    better, so they suffer less from the wrong climate.
+    <b style="color:var(--speed)">Speed</b> reaches food first and outruns hawks; its energy cost rises with the
+    square of the speed. <b style="color:var(--sense)">Sense</b> is how far a creature can see food. It costs a little every
+    tick, and pays off most when plants are scarce and far apart.
+    <b style="color:var(--color)">Colour</b> costs nothing. It only matters when hawks are flying: a hawk spots creatures that
+    stand out against the ground under them, and almost never sees one that matches.
+    <b style="color:var(--fur)">Fur</b> has an ideal thickness for each temperature. Too little in the cold or too much in
+    the heat burns energy every tick.</p>
+    <p>A creature that runs out of energy dies. One that stores enough splits in two. The child gets half the
+    energy and a copy of every gene, nudged by a small random <i>mutation</i>. Nothing in the program aims at a goal.
+    The average genes drift because some variants leave more children than others, and that is the whole of natural
+    selection. Run it for a while, then change one thing and watch the charts.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Share or replay this world</h2>
+    <p class="dim">A world is just a seed plus the list of everything you did and when. Copy the code to share it.
+    Pasting it back rebuilds the same world, creature for creature, up to the same tick.</p>
+    <div class="bar"><button id="exportBtn">Copy world code</button><button id="importBtn">Load code below</button>
+      <span class="dim" id="codeMsg"></span></div>
+    <textarea id="code" spellcheck="false" placeholder="world code"></textarea>
+  </div>
+
+  <div class="panel">
+    <details><summary>What the page checks about itself</summary>
+      <div class="checks" id="checks" style="margin-top:6px"></div></details>
+  </div>
+</div>
+
+<div>
+  <div class="panel">
+    <h2>Climate and world</h2>
+    <div class="sl" id="sl-food"><label>Plant growth</label><input type="range" min="0" max="6" step="0.1"><output></output></div>
+    <div class="sl" id="sl-temp"><label>Temperature</label><input type="range" min="-1" max="1" step="0.05"><output></output></div>
+    <div class="sl" id="sl-gradient"><label>Pole to equator</label><input type="range" min="0" max="1" step="0.05"><output></output></div>
+    <div class="sl" id="sl-hawks"><label>Hawks</label><input type="range" min="0" max="12" step="1"><output></output></div>
+    <div class="sl" id="sl-mutation"><label>Mutation</label><input type="range" min="0" max="0.2" step="0.005"><output></output></div>
+    <div class="bar">
+      <input type="text" id="seed" value="evolution" style="width:120px" title="seed">
+      <button id="newWorld">New sandbox</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Challenges</h2>
+    <div id="challenges"></div>
+    <div id="chStatus" class="dim" style="font-size:12px"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Selected creature</h2>
+    <div id="inspector" class="dim">Use the Inspect tool and click on a creature.</div>
+  </div>
+
+  <div class="panel">
+    <h2>What happened</h2>
+    <div id="events"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Deaths so far</h2>
+    <div id="deaths" class="mono"></div>
+  </div>
+</div>
+</div>
+</main>
+
+<script id="evo-engine">
+var EVO = (function () {
+  'use strict';
+  var W = 900, H = 560, CELL = 20, GW = 45, GH = 28, FC = 60, FGW = 15, FGH = 10;
+  var GENES = ['size', 'speed', 'sense', 'color', 'fur'];
+  var FOOD_E = 10, MAX_FOOD = 500, MAX_POP = 700, HISTORY_EVERY = 30;
+
+  function hashStr(s) {
+    var h = 2166136261 >>> 0;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h >>> 0;
+  }
+  function makeRng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function clamp(x, lo, hi) { return x < lo ? lo : x > hi ? hi : x; }
+  function gauss(w) {
+    var u = w.r() || 1e-12, v = w.r();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  // ---- derived traits: every gene is in [0,1]; these say what it does ----
+  function radius(g) { return 3 + 5 * g.size; }
+  function velocity(g) { return 0.5 + 2.5 * g.speed; }
+  function senseR(g) { return 15 + 110 * g.sense; }
+  function reproE(g) { return 30 + 40 * g.size; }
+  function idealFur(t) { return (1 - t) / 2; }
+  function moveCost(g) { var v = velocity(g) / 2, m = 0.55 + 0.9 * g.size; return 0.045 * (0.6 + m * m) * v * v; }
+  // a big mouth gets more from each plant
+  function bite(g) { return FOOD_E * (0.8 + 0.6 * g.size); }
+  function senseCost(g) { return 0.035 * g.sense; }
+  // big bodies keep their temperature better (less surface per volume): Bergmann's rule
+  function heatCost(g, t) { var d = g.fur - idealFur(t); return 0.4 * d * d * (1.5 - g.size); }
+  var BASE_COST = 0.03;
+  function costs(g, t) {
+    var m = moveCost(g), s = senseCost(g), h = heatCost(g, t);
+    return { base: BASE_COST, move: m, sense: s, heat: h, total: BASE_COST + m + s + h };
+  }
+  function catchChance(g) { return 0.95 * (1 - 0.3 * g.size) * (1 - 0.75 * g.speed); }
+
+  function ground(w, x, y) {
+    var cx = clamp((x / CELL) | 0, 0, GW - 1), cy = clamp((y / CELL) | 0, 0, GH - 1);
+    return w.ground[cy * GW + cx];
+  }
+  function tempAt(w, y) { return clamp(w.settings.temp + w.settings.gradient * (y / H - 0.5) * 2, -1, 1); }
+  function visibility(w, c) { return 0.03 + 0.97 * Math.min(1, 1.2 * Math.abs(c.g.color - ground(w, c.x, c.y))); }
+
+  var DEFAULTS = { food: 2.0, temp: 0, gradient: 0, hawks: 0, mutation: 0.05 };
+
+  function create(opts) {
+    opts = opts || {};
+    var seedStr = String(opts.seed == null ? 'evolution' : opts.seed);
+    var w = {
+      W: W, H: H, seed: seedStr, r: makeRng(hashStr(seedStr)), t: 0, nextId: 1,
+      settings: {}, ground: new Float32Array(GW * GH), creatures: [], food: [], hawks: [],
+      craters: [], history: [], log: [], events: [],
+      deaths: { starved: 0, froze: 0, overheated: 0, eaten: 0, old: 0, meteor: 0 },
+      births: 0, maxGen: 0, founders: 0, records: {}, challenge: null
+    };
+    for (var k in DEFAULTS) w.settings[k] = DEFAULTS[k];
+    if (opts.settings) for (var k2 in opts.settings) w.settings[k2] = opts.settings[k2];
+    // ground: smooth value noise in the middle tones, unless told otherwise
+    var gmode = opts.ground || 'noise';
+    var lat = [], LX = 7, LY = 5, i, x, y;
+    for (i = 0; i < (LX + 1) * (LY + 1); i++) lat.push(w.r());
+    for (y = 0; y < GH; y++) for (x = 0; x < GW; x++) {
+      var v;
+      if (typeof gmode === 'number') v = gmode;
+      else if (gmode === 'split') v = x < GW / 2 ? 0.12 : 0.88;
+      else {
+        var fx = x / (GW - 1) * LX, fy = y / (GH - 1) * LY, ix = Math.min(LX - 1, fx | 0), iy = Math.min(LY - 1, fy | 0);
+        var ax = fx - ix, ay = fy - iy; ax = ax * ax * (3 - 2 * ax); ay = ay * ay * (3 - 2 * ay);
+        var a = lat[iy * (LX + 1) + ix], b = lat[iy * (LX + 1) + ix + 1], c = lat[(iy + 1) * (LX + 1) + ix], d = lat[(iy + 1) * (LX + 1) + ix + 1];
+        v = 0.3 + 0.4 * ((a * (1 - ax) + b * ax) * (1 - ay) + (c * (1 - ax) + d * ax) * ay);
+      }
+      w.ground[y * GW + x] = v;
+    }
+    var n = opts.founders == null ? 30 : opts.founders;
+    var base = { size: 0.5, speed: 0.5, sense: 0.5, color: 0.5, fur: 0.5 };
+    if (opts.genes) for (var gk in opts.genes) base[gk] = opts.genes[gk];
+    for (i = 0; i < n; i++) {
+      var g = {};
+      for (var j = 0; j < GENES.length; j++) g[GENES[j]] = clamp(base[GENES[j]] + gauss(w) * 0.04, 0, 1);
+      var fx0 = opts.region ? opts.region[0] + w.r() * (opts.region[2] - opts.region[0]) : 30 + w.r() * (W - 60);
+      var fy0 = opts.region ? opts.region[1] + w.r() * (opts.region[3] - opts.region[1]) : 30 + w.r() * (H - 60);
+      spawn(w, fx0, fy0, g, 30, 0, i, 0);
+    }
+    w.founders = n;
+    for (i = 0; i < 160; i++) w.food.push({ x: 10 + w.r() * (W - 20), y: 10 + w.r() * (H - 20), gone: false });
+    syncHawks(w);
+    record(w);
+    return w;
+  }
+
+  function spawn(w, x, y, g, e, gen, lineage, parent) {
+    var c = { id: w.nextId++, x: x, y: y, h: w.r() * Math.PI * 2, e: e, age: 0, g: g, gen: gen,
+      lineage: lineage, parent: parent, kids: 0, maxAge: (2200 + 1600 * g.size) * (0.85 + 0.3 * w.r()), target: null, alive: true, born: w.t };
+    w.creatures.push(c);
+    if (gen > w.maxGen) w.maxGen = gen;
+    return c;
+  }
+
+  function syncHawks(w) {
+    var n = Math.round(w.settings.hawks);
+    while (w.hawks.length < n) w.hawks.push({ x: w.r() * W, y: w.r() * H, h: w.r() * 6.283, mode: 'soar', target: null, rest: 120 + (w.r() * 120 | 0), kills: 0 });
+    while (w.hawks.length > n) w.hawks.pop();
+  }
+
+  // ---- actions: the only way the player touches the world. Logged for replay. ----
+  function apply(w, a) {
+    w.log.push(a.t == null ? Object.assign({ t: w.t }, a) : a);
+    var i, x, y;
+    if (a.k === 'set') {
+      w.settings[a.key] = a.v;
+      if (a.key === 'hawks') syncHawks(w);
+    } else if (a.k === 'paint') {
+      var cx = a.x / CELL, cy = a.y / CELL, rr = a.r || 2.2;
+      for (y = Math.max(0, Math.floor(cy - rr)); y <= Math.min(GH - 1, Math.ceil(cy + rr)); y++)
+        for (x = Math.max(0, Math.floor(cx - rr)); x <= Math.min(GW - 1, Math.ceil(cx + rr)); x++)
+          if ((x + 0.5 - cx) * (x + 0.5 - cx) + (y + 0.5 - cy) * (y + 0.5 - cy) <= rr * rr) w.ground[y * GW + x] = a.v;
+    } else if (a.k === 'sow') {
+      for (i = 0; i < 30 && w.food.length < MAX_FOOD + 200; i++) {
+        var ang = w.r() * 6.283, d = Math.sqrt(w.r()) * 45;
+        w.food.push({ x: clamp(a.x + Math.cos(ang) * d, 4, W - 4), y: clamp(a.y + Math.sin(ang) * d, 4, H - 4), gone: false });
+      }
+    } else if (a.k === 'meteor') {
+      var R = 75;
+      for (i = 0; i < w.creatures.length; i++) {
+        var c = w.creatures[i];
+        if (c.alive && (c.x - a.x) * (c.x - a.x) + (c.y - a.y) * (c.y - a.y) < R * R) kill(w, c, 'meteor');
+      }
+      for (i = 0; i < w.food.length; i++) {
+        var f = w.food[i];
+        if ((f.x - a.x) * (f.x - a.x) + (f.y - a.y) * (f.y - a.y) < R * R) f.gone = true;
+      }
+      w.craters.push({ x: a.x, y: a.y, r: R, t: w.t });
+      cleanup(w);
+    } else if (a.k === 'release') {
+      // drop a handful of fresh founders (a new lineage) at a point
+      var lin = w.founders++;
+      for (i = 0; i < 6; i++) {
+        var g = {};
+        for (var j = 0; j < GENES.length; j++) g[GENES[j]] = clamp((a.genes ? a.genes[GENES[j]] : 0.5) + gauss(w) * 0.04, 0, 1);
+        spawn(w, clamp(a.x + gauss(w) * 12, 5, W - 5), clamp(a.y + gauss(w) * 12, 5, H - 5), g, 45, 0, lin, 0);
+      }
+    }
+  }
+
+  function kill(w, c, cause) {
+    if (!c.alive) return;
+    c.alive = false; c.cause = cause; c.died = w.t;
+    w.deaths[cause]++;
+  }
+  function cleanup(w) {
+    var keep = [];
+    for (var i = 0; i < w.creatures.length; i++) if (w.creatures[i].alive) keep.push(w.creatures[i]);
+    w.creatures = keep;
+    var fk = [];
+    for (i = 0; i < w.food.length; i++) if (!w.food[i].gone) fk.push(w.food[i]);
+    w.food = fk;
+  }
+
+  function buildFoodGrid(w) {
+    var grid = new Array(FGW * FGH);
+    for (var i = 0; i < grid.length; i++) grid[i] = [];
+    for (i = 0; i < w.food.length; i++) {
+      var f = w.food[i];
+      grid[clamp((f.y / FC) | 0, 0, FGH - 1) * FGW + clamp((f.x / FC) | 0, 0, FGW - 1)].push(f);
+    }
+    return grid;
+  }
+  function nearestFood(grid, c, R) {
+    var best = null, bd = R * R;
+    var x0 = clamp(((c.x - R) / FC) | 0, 0, FGW - 1), x1 = clamp(((c.x + R) / FC) | 0, 0, FGW - 1);
+    var y0 = clamp(((c.y - R) / FC) | 0, 0, FGH - 1), y1 = clamp(((c.y + R) / FC) | 0, 0, FGH - 1);
+    for (var gy = y0; gy <= y1; gy++) for (var gx = x0; gx <= x1; gx++) {
+      var b = grid[gy * FGW + gx];
+      for (var i = 0; i < b.length; i++) {
+        var f = b[i];
+        if (f.gone) continue;
+        var dx = f.x - c.x, dy = f.y - c.y, d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; best = f; }
+      }
+    }
+    return best;
+  }
+
+  function step(w) {
+    var s = w.settings, i, c;
+    w.t++;
+    // food grows
+    var rate = s.food, n = Math.floor(rate) + (w.r() < rate - Math.floor(rate) ? 1 : 0);
+    for (i = 0; i < n && w.food.length < MAX_FOOD; i++) w.food.push({ x: 6 + w.r() * (W - 12), y: 6 + w.r() * (H - 12), gone: false });
+    var grid = buildFoodGrid(w);
+    var births = [];
+    var len = w.creatures.length;
+    for (i = 0; i < len; i++) {
+      c = w.creatures[i];
+      if (!c.alive) continue;
+      var g = c.g, v = velocity(g), rad = radius(g);
+      if (c.target && c.target.gone) c.target = null;
+      if (!c.target && ((w.t + c.id) & 3) === 0) c.target = nearestFood(grid, c, senseR(g));
+      if (c.target) {
+        var want = Math.atan2(c.target.y - c.y, c.target.x - c.x), dh = want - c.h;
+        while (dh > Math.PI) dh -= 2 * Math.PI;
+        while (dh < -Math.PI) dh += 2 * Math.PI;
+        c.h += clamp(dh, -0.5, 0.5);
+      } else c.h += gauss(w) * 0.25;
+      c.x += Math.cos(c.h) * v; c.y += Math.sin(c.h) * v;
+      if (c.x < rad) { c.x = rad; c.h = Math.PI - c.h; } else if (c.x > W - rad) { c.x = W - rad; c.h = Math.PI - c.h; }
+      if (c.y < rad) { c.y = rad; c.h = -c.h; } else if (c.y > H - rad) { c.y = H - rad; c.h = -c.h; }
+      if (c.target) {
+        var dx = c.target.x - c.x, dy = c.target.y - c.y;
+        if (dx * dx + dy * dy < (rad + 2) * (rad + 2)) { c.target.gone = true; c.target = null; c.e += bite(g); }
+      }
+      var t = tempAt(w, c.y), k = costs(g, t);
+      c.e -= k.total; c.age++;
+      if (c.e <= 0) { kill(w, c, k.heat > k.move + k.sense ? (g.fur < idealFur(t) ? 'froze' : 'overheated') : 'starved'); continue; }
+      if (c.age > c.maxAge) { kill(w, c, 'old'); continue; }
+      if (c.e >= reproE(g) && len + births.length < MAX_POP) {
+        var cg = {};
+        for (var j = 0; j < GENES.length; j++) cg[GENES[j]] = clamp(g[GENES[j]] + gauss(w) * s.mutation, 0, 1);
+        c.e *= 0.5; c.kids++;
+        births.push([c.x + gauss(w) * 3, c.y + gauss(w) * 3, cg, c.e, c.gen + 1, c.lineage, c.id]);
+      }
+    }
+    for (i = 0; i < births.length; i++) {
+      var b = births[i];
+      spawn(w, clamp(b[0], 4, W - 4), clamp(b[1], 4, H - 4), b[2], b[3], b[4], b[5], b[6]);
+      w.births++;
+    }
+    stepHawks(w);
+    cleanup(w);
+    if (w.t % HISTORY_EVERY === 0) record(w);
+    if (w.challenge && w.t % 10 === 0) checkChallenge(w);
+  }
+
+  function stepHawks(w) {
+    for (var i = 0; i < w.hawks.length; i++) {
+      var hk = w.hawks[i];
+      if (hk.mode === 'dive') {
+        var tg = hk.target;
+        if (!tg || !tg.alive) { hk.mode = 'soar'; hk.target = null; continue; }
+        var dx = tg.x - hk.x, dy = tg.y - hk.y, d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 6) {
+          if (w.r() < catchChance(tg.g)) { kill(w, tg, 'eaten'); hk.kills++; hk.rest = 30; }
+          else hk.rest = 10;
+          hk.mode = 'soar'; hk.target = null;
+        } else { hk.h = Math.atan2(dy, dx); hk.x += dx / d * 7; hk.y += dy / d * 7; }
+        continue;
+      }
+      hk.h += gauss(w) * 0.12;
+      hk.x += Math.cos(hk.h) * 2.2; hk.y += Math.sin(hk.h) * 2.2;
+      if (hk.x < 0 || hk.x > W) { hk.h = Math.PI - hk.h; hk.x = clamp(hk.x, 0, W); }
+      if (hk.y < 0 || hk.y > H) { hk.h = -hk.h; hk.y = clamp(hk.y, 0, H); }
+      if (hk.rest > 0) { hk.rest--; continue; }
+      // glance at one creature below; spotting it depends on how well it matches the ground
+      for (var gl = 0; gl < 4 && w.creatures.length && hk.mode === 'soar'; gl++) {
+        var c = w.creatures[(w.r() * w.creatures.length) | 0];
+        var ddx = c.x - hk.x, ddy = c.y - hk.y, vis = visibility(w, c);
+        if (c.alive && ddx * ddx + ddy * ddy < 170 * 170 && w.r() < vis * vis) { hk.mode = 'dive'; hk.target = c; }
+      }
+    }
+  }
+
+  function stats(w) {
+    var n = w.creatures.length, m = {}, sd = {}, j, i;
+    for (j = 0; j < GENES.length; j++) { m[GENES[j]] = 0; sd[GENES[j]] = 0; }
+    for (i = 0; i < n; i++) for (j = 0; j < GENES.length; j++) m[GENES[j]] += w.creatures[i].g[GENES[j]];
+    for (j = 0; j < GENES.length; j++) m[GENES[j]] = n ? m[GENES[j]] / n : NaN;
+    for (i = 0; i < n; i++) for (j = 0; j < GENES.length; j++) { var d = w.creatures[i].g[GENES[j]] - m[GENES[j]]; sd[GENES[j]] += d * d; }
+    for (j = 0; j < GENES.length; j++) sd[GENES[j]] = n ? Math.sqrt(sd[GENES[j]] / n) : NaN;
+    var lin = {}, nl = 0, gsum = 0;
+    for (i = 0; i < n; i++) { if (!lin[w.creatures[i].lineage]) { lin[w.creatures[i].lineage] = 1; nl++; } else lin[w.creatures[i].lineage]++; gsum += w.creatures[i].gen; }
+    var gm = 0;
+    for (i = 0; i < w.ground.length; i++) gm += w.ground[i];
+    return { t: w.t, pop: n, food: w.food.length, mean: m, sd: sd, lineages: nl, lineageCounts: lin, meanGen: n ? gsum / n : 0, groundMean: gm / w.ground.length };
+  }
+  function record(w) {
+    var st = stats(w);
+    w.history.push({ t: w.t, pop: st.pop, food: st.food, hawks: w.hawks.length, lineages: st.lineages, mean: st.mean, meanGen: st.meanGen });
+    if (w.history.length > 1200) { var h = []; for (var i = 0; i < w.history.length; i += 2) h.push(w.history[i]); w.history = h; }
+  }
+
+  // mean |color - ground underfoot|: how well the population hides
+  function camouflage(w) {
+    if (!w.creatures.length) return NaN;
+    var s = 0;
+    for (var i = 0; i < w.creatures.length; i++) s += Math.abs(w.creatures[i].g.color - ground(w, w.creatures[i].x, w.creatures[i].y));
+    return s / w.creatures.length;
+  }
+
+  // ---- challenges ----
+  var CHALLENGES = [
+    { id: 'bloom', name: 'First bloom', brief: 'Grow twenty founders into a population of 250.',
+      hint: 'Food is the only limit at first. Sow it by hand, or turn up the growth rate.',
+      world: { founders: 20 }, lock: [], hold: 300,
+      goal: function (w, st) { return [st.pop, 250, st.pop >= 250]; } },
+    { id: 'hide', name: 'Hide in plain sight', brief: 'Dark founders on pale sand, six hawks overhead. Make the average creature blend in (within 0.12 of the ground) with at least 40 alive.',
+      hint: 'You cannot paint the colour into them. Keep them alive long enough for the hawks to do the choosing.',
+      world: { ground: 0.86, genes: { color: 0.14 }, settings: { hawks: 6 } }, lock: ['hawks'], hold: 600,
+      goal: function (w, st) { var cm = camouflage(w); return [isNaN(cm) ? 1 : cm, 0.12, st.pop >= 40 && cm <= 0.12, 'lower']; } },
+    { id: 'ice', name: 'Ice age', brief: 'The world is freezing (temperature −1). Keep 60 alive with mean fur above 0.85.',
+      hint: 'Thin fur costs energy every tick in the cold. More food buys time for the fur to grow.',
+      world: { genes: { fur: 0.2 }, settings: { temp: -1, food: 0.7 } }, lock: ['temp', 'gradient'], hold: 600,
+      goal: function (w, st) { return [st.mean.fur || 0, 0.85, st.pop >= 60 && st.mean.fur >= 0.85]; } },
+    { id: 'giants', name: 'Giants', brief: 'Small founders. Raise the mean size above 0.8 with at least 50 alive.',
+      hint: 'Size is expensive to move. What makes it worth carrying?',
+      world: { genes: { size: 0.2 } }, lock: [], hold: 600,
+      goal: function (w, st) { return [st.mean.size || 0, 0.8, st.pop >= 50 && st.mean.size >= 0.8]; } },
+    { id: 'sprint', name: 'Sprinters', brief: 'Raise the mean speed above 0.8 with at least 50 alive.',
+      hint: 'Speed pays when something is chasing you, and when the food is far apart.',
+      world: {}, lock: [], hold: 600,
+      goal: function (w, st) { return [st.mean.speed || 0, 0.8, st.pop >= 50 && st.mean.speed >= 0.8]; } },
+    { id: 'shores', name: 'Two shores', brief: 'One population, two grounds: dark on the left, pale on the right. Split it into two colours: 40 creatures darker than 0.3 and 40 paler than 0.7, at the same time.',
+      hint: 'Hawks punish whoever stands out where they stand. Mixing blurs the split; geography keeps it.',
+      world: { ground: 'split', settings: { hawks: 3 } }, lock: [], hold: 900,
+      goal: function (w, st) {
+        var dk = 0, pl = 0;
+        for (var i = 0; i < w.creatures.length; i++) { var c = w.creatures[i].g.color; if (c < 0.3) dk++; else if (c > 0.7) pl++; }
+        return [Math.min(dk, pl), 40, dk >= 40 && pl >= 40];
+      } }
+  ];
+  function challengeById(id) { for (var i = 0; i < CHALLENGES.length; i++) if (CHALLENGES[i].id === id) return CHALLENGES[i]; return null; }
+  function createChallenge(id, seed) {
+    var ch = challengeById(id), o = {}, k;
+    for (k in ch.world) o[k] = ch.world[k];
+    o.seed = seed == null ? id : seed;
+    var w = create(o);
+    w.challenge = { id: id, held: 0, won: null, lost: null, progress: 0 };
+    return w;
+  }
+  function checkChallenge(w) {
+    var cs = w.challenge, ch = challengeById(cs.id);
+    if (cs.won != null) return;
+    if (!w.creatures.length) { if (cs.lost == null) cs.lost = w.t; return; }
+    var r = ch.goal(w, stats(w));
+    cs.value = r[0]; cs.target = r[1]; cs.dir = r[3] || 'higher';
+    if (r[2]) { cs.held += 10; if (cs.held >= ch.hold) cs.won = w.t; } else cs.held = 0;
+  }
+  // challenge check reads stats every tick: cheap enough below MAX_POP
+
+  function run(w, n) { for (var i = 0; i < n; i++) step(w); return w; }
+
+  // replay: a world is a seed, a starting setup, and a list of timed actions
+  function replay(rec, ticks) {
+    var w = rec.challenge ? createChallenge(rec.challenge, rec.seed) : create({ seed: rec.seed });
+    var log = rec.log || [], li = 0;
+    while (w.t < ticks) {
+      while (li < log.length && log[li].t === w.t) apply(w, log[li++]);
+      step(w);
+    }
+    while (li < log.length && log[li].t === w.t) apply(w, log[li++]);
+    return w;
+  }
+  function fingerprint(w) {
+    var s = w.t + ':' + w.creatures.length + ':' + w.food.length;
+    for (var i = 0; i < w.creatures.length; i++) {
+      var c = w.creatures[i];
+      s += '|' + c.id + ',' + Math.round(c.x * 100) + ',' + Math.round(c.y * 100) + ',' + Math.round(c.e * 100);
+      for (var j = 0; j < GENES.length; j++) s += ',' + Math.round(c.g[GENES[j]] * 1e6);
+    }
+    return hashStr(s).toString(16);
+  }
+
+  return { W: W, H: H, CELL: CELL, GW: GW, GH: GH, GENES: GENES, DEFAULTS: DEFAULTS, CHALLENGES: CHALLENGES,
+    create: create, createChallenge: createChallenge, challengeById: challengeById, step: step, run: run, apply: apply,
+    stats: stats, camouflage: camouflage, replay: replay, fingerprint: fingerprint, ground: ground, tempAt: tempAt,
+    visibility: visibility, costs: costs, catchChance: catchChance, idealFur: idealFur, radius: radius, velocity: velocity,
+    senseR: senseR, bite: bite, moveCost: moveCost, reproE: reproE, hashStr: hashStr, makeRng: makeRng };
+})();
+if (typeof module !== 'undefined') module.exports = EVO;
+</script>
+
+<script id="evo-checks">
+function evoSelfCheck(E) {
+  var out = [];
+  function ok(cond, msg) { out.push({ ok: !!cond, msg: msg }); }
+  // 1. determinism
+  var a = E.run(E.create({ seed: 'check' }), 400), b = E.run(E.create({ seed: 'check' }), 400);
+  ok(E.fingerprint(a) === E.fingerprint(b), 'same seed, same world after 400 ticks (' + E.fingerprint(a) + ')');
+  var c = E.run(E.create({ seed: 'check2' }), 400);
+  ok(E.fingerprint(a) !== E.fingerprint(c), 'a different seed gives a different world');
+  // 2. replay of a world with actions in it
+  var w = E.create({ seed: 'replay' });
+  E.run(w, 50); E.apply(w, { k: 'set', key: 'temp', v: -0.6 });
+  E.run(w, 40); E.apply(w, { k: 'sow', x: 300, y: 200 });
+  E.run(w, 30); E.apply(w, { k: 'meteor', x: 450, y: 280 });
+  E.run(w, 30); E.apply(w, { k: 'paint', x: 100, y: 100, v: 0.1 });
+  E.apply(w, { k: 'set', key: 'hawks', v: 3 }); E.run(w, 100);
+  var r = E.replay({ seed: 'replay', log: w.log }, w.t);
+  ok(E.fingerprint(r) === E.fingerprint(w), 'a seed plus the action log rebuilds the world exactly (' + w.log.length + ' actions, ' + w.t + ' ticks)');
+  var shifted = w.log.map(function (a, i) { var o = {}; for (var k in a) o[k] = a[k]; if (i === 1) o.t = a.t + 1; return o; });
+  ok(E.fingerprint(E.replay({ seed: 'replay', log: shifted }, w.t)) !== E.fingerprint(w), 'and the replay check can fail: moving one action by one tick changes the world');
+  // 3. each gene's trade-off points the way the page says it does
+  var g0 = { size: 0.5, speed: 0.5, sense: 0.5, color: 0.5, fur: 0.5 };
+  function g(k, v) { var o = {}; for (var x in g0) o[x] = g0[x]; o[k] = v; return o; }
+  ok(E.costs(g('size', 0.9), 0).move > E.costs(g('size', 0.1), 0).move && E.bite(g('size', 0.9)) > E.bite(g('size', 0.1)),
+     'size: bigger bites, dearer to move');
+  ok(E.costs(g('speed', 0.9), 0).move > E.costs(g('speed', 0.1), 0).move && E.catchChance(g('speed', 0.9)) < E.catchChance(g('speed', 0.1)),
+     'speed: harder to catch, dearer to move');
+  ok(E.costs(g('sense', 0.9), 0).sense > E.costs(g('sense', 0.1), 0).sense && E.senseR(g('sense', 0.9)) > E.senseR(g('sense', 0.1)),
+     'sense: sees further, costs more');
+  ok(E.costs(g('fur', E.idealFur(-1)), -1).heat === 0 && E.costs(g('fur', 0.2), -1).heat > 0 && E.costs(g('fur', 0.8), 1).heat > 0,
+     'fur: free at the ideal thickness, costly in the wrong climate');
+  ok(E.costs(g('color', 0.05), 0).total === E.costs(g('color', 0.95), 0).total, 'colour: costs nothing');
+  var v = E.create({ seed: 'vis', ground: 0.8, founders: 2, genes: { color: 0.8 } });
+  v.creatures[1].g.color = 0.1;
+  ok(E.visibility(v, v.creatures[0]) < 0.1 && E.visibility(v, v.creatures[1]) > 0.8, 'hawks barely see a creature that matches the ground');
+  return out;
+}
+if (typeof module !== 'undefined') module.exports.evoSelfCheck = evoSelfCheck;
+</script>
+
+<script>
+(function () {
+  'use strict';
+  var E = EVO;
+  var cv = document.getElementById('world'), cx = cv.getContext('2d');
+  var groundCv = document.createElement('canvas'); groundCv.width = E.GW; groundCv.height = E.GH;
+  var gx = groundCv.getContext('2d');
+  var w, tool = 'inspect', paused = false, selected = null, events = [], lastStat = null, groundSig = '';
+  var seenLineages = {}, nextGenMark = 10, extinctSaid = {}, popPeak = 0, wonSaid = false, lostSaid = false;
+  var GENE_COL = { size: '#ff9f5f', speed: '#5fb3ff', sense: '#c88cff', color: '#e8d9a8', fur: '#7fe0c0' };
+  var LOCK = [];
+
+  function earth(v) { // same palette for ground and creature colour, so matching is visible
+    var r = Math.round(54 + (234 - 54) * v), g = Math.round(40 + (220 - 40) * v), b = Math.round(30 + (186 - 30) * v);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+  function lineageCol(n) { var h = (n * 137.508) % 360; return 'hsl(' + h + ',70%,60%)'; }
+
+  function log(msg) {
+    events.unshift({ t: w.t, msg: msg });
+    if (events.length > 80) events.pop();
+    var box = document.getElementById('events'); box.innerHTML = '';
+    for (var i = 0; i < events.length; i++) {
+      var d = document.createElement('div'), s = document.createElement('span');
+      s.className = 'tm'; s.textContent = events[i].t; d.appendChild(s); d.appendChild(document.createTextNode(events[i].msg)); box.appendChild(d);
+    }
+  }
+
+  // ---------- setup ----------
+  function begin(world, msg) {
+    w = world; selected = null; events = []; lastStat = null; nextGenMark = 10;
+    while (nextGenMark <= w.maxGen) nextGenMark = nextGenMark < 50 ? nextGenMark + 10 : nextGenMark + 50;
+    extinctSaid = {}; popPeak = 0; wonSaid = false; lostSaid = false;
+    groundSig = '';
+    LOCK = w.challenge ? E.challengeById(w.challenge.id).lock : [];
+    syncSliders();
+    document.getElementById('banner').className = 'banner';
+    renderChallenges();
+    log(msg);
+    updateInspector();
+  }
+  function sandbox(seed) { begin(E.create({ seed: seed }), 'A new sandbox, seed "' + seed + '": 30 founders, every gene near the middle.'); }
+
+  // ---------- sliders ----------
+  var KEYS = ['food', 'temp', 'gradient', 'hawks', 'mutation'];
+  function fmt(k, v) {
+    if (k === 'temp') return (v > 0 ? '+' : '') + v.toFixed(2);
+    if (k === 'hawks') return String(v);
+    if (k === 'mutation') return v.toFixed(3);
+    return v.toFixed(2);
+  }
+  function syncSliders() {
+    KEYS.forEach(function (k) {
+      var row = document.getElementById('sl-' + k), inp = row.querySelector('input'), out = row.querySelector('output');
+      inp.value = w.settings[k]; out.textContent = fmt(k, +w.settings[k]);
+      var locked = LOCK.indexOf(k) >= 0; inp.disabled = locked; row.classList.toggle('locked', locked);
+    });
+  }
+  KEYS.forEach(function (k) {
+    var row = document.getElementById('sl-' + k), inp = row.querySelector('input'), out = row.querySelector('output'), timer = null;
+    inp.addEventListener('input', function () {
+      var v = k === 'hawks' ? parseInt(inp.value, 10) : parseFloat(inp.value);
+      out.textContent = fmt(k, v);
+      clearTimeout(timer);
+      timer = setTimeout(function () { // one logged action per drag, not one per pixel
+        if (w.settings[k] === v) return;
+        E.apply(w, { k: 'set', key: k, v: v });
+        var names = { food: 'Plant growth', temp: 'Temperature', gradient: 'Pole-to-equator gradient', hawks: 'Hawks', mutation: 'Mutation' };
+        log(names[k] + ' set to ' + fmt(k, v) + '.');
+      }, 180);
+    });
+  });
+
+  // ---------- tools ----------
+  var toolBtns = document.querySelectorAll('.tool');
+  function setTool(t) { tool = t; toolBtns.forEach(function (b) { b.classList.toggle('on', b.dataset.tool === t); }); }
+  toolBtns.forEach(function (b) { b.addEventListener('click', function () { setTool(b.dataset.tool); }); });
+  function pos(ev) {
+    var r = cv.getBoundingClientRect();
+    return { x: (ev.clientX - r.left) / r.width * E.W, y: (ev.clientY - r.top) / r.height * E.H };
+  }
+  var painting = false, lastPaint = null, hover = null;
+  function paintAt(p) {
+    if (lastPaint && Math.hypot(p.x - lastPaint.x, p.y - lastPaint.y) < 10) return;
+    lastPaint = p;
+    E.apply(w, { k: 'paint', x: Math.round(p.x), y: Math.round(p.y), v: tool === 'dark' ? 0.1 : 0.9, r: 2.2 });
+  }
+  cv.addEventListener('pointerdown', function (ev) {
+    var p = pos(ev);
+    if (tool === 'inspect') {
+      var best = null, bd = 400;
+      for (var i = 0; i < w.creatures.length; i++) {
+        var c = w.creatures[i], d = (c.x - p.x) * (c.x - p.x) + (c.y - p.y) * (c.y - p.y);
+        if (d < bd) { bd = d; best = c; }
+      }
+      selected = best; updateInspector();
+    } else if (tool === 'sow') {
+      E.apply(w, { k: 'sow', x: Math.round(p.x), y: Math.round(p.y) });
+    } else if (tool === 'meteor') {
+      var before = w.creatures.length;
+      E.apply(w, { k: 'meteor', x: Math.round(p.x), y: Math.round(p.y) });
+      log('Meteor strike: ' + (before - w.creatures.length) + ' creatures gone.');
+    } else if (tool === 'release') {
+      E.apply(w, { k: 'release', x: Math.round(p.x), y: Math.round(p.y) });
+      log('Released six new founders (family #' + (w.founders - 1) + ') with middling genes.');
+    } else {
+      painting = true; lastPaint = null; cv.setPointerCapture(ev.pointerId); paintAt(p);
+    }
+  });
+  cv.addEventListener('pointermove', function (ev) { hover = pos(ev); if (painting) paintAt(hover); });
+  cv.addEventListener('pointerleave', function () { hover = null; });
+  cv.addEventListener('pointerup', function () { if (painting) { painting = false; log('Repainted the ground ' + (tool === 'dark' ? 'dark' : 'pale') + '.'); } });
+
+  document.getElementById('pause').addEventListener('click', togglePause);
+  function togglePause() { paused = !paused; document.getElementById('pause').textContent = paused ? 'Play' : 'Pause'; }
+  document.addEventListener('keydown', function (ev) {
+    if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA') return;
+    if (ev.code === 'Space') { ev.preventDefault(); togglePause(); }
+    var n = parseInt(ev.key, 10);
+    if (n >= 1 && n <= 6) setTool(toolBtns[n - 1].dataset.tool);
+  });
+  document.getElementById('newWorld').addEventListener('click', function () { sandbox(document.getElementById('seed').value || 'evolution'); });
+
+  // ---------- challenges ----------
+  function best(id) { try { return localStorage.getItem('evo-best-' + id); } catch (e) { return null; } }
+  function setBest(id, t) { try { var b = best(id); if (!b || t < +b) localStorage.setItem('evo-best-' + id, t); } catch (e) {} }
+  function renderChallenges() {
+    var box = document.getElementById('challenges'); box.innerHTML = '';
+    E.CHALLENGES.forEach(function (ch) {
+      var d = document.createElement('div'); d.className = 'ch' + (w.challenge && w.challenge.id === ch.id ? ' active' : '');
+      var b = best(ch.id);
+      d.innerHTML = '<span class="best"></span><div class="t"></div><div class="dim" style="font-size:12px"></div>';
+      d.querySelector('.t').textContent = ch.name;
+      d.querySelector('.dim').textContent = ch.brief;
+      if (b) d.querySelector('.best').textContent = '✓ best ' + b + ' ticks';
+      d.addEventListener('click', function () {
+        begin(E.createChallenge(ch.id, document.getElementById('seed').value || ch.id), 'Challenge: ' + ch.name + '. ' + ch.brief);
+        log('Hint: ' + ch.hint);
+      });
+      box.appendChild(d);
+    });
+  }
+  function updateChallenge() {
+    var st = document.getElementById('chStatus'), cs = w.challenge;
+    if (!cs) { st.innerHTML = 'Sandbox. Pick a challenge to play for a goal.'; return; }
+    var ch = E.challengeById(cs.id), v = cs.value, tg = cs.target, frac = 0;
+    if (v != null) frac = cs.dir === 'lower' ? Math.max(0, Math.min(1, (1 - v) / (1 - tg))) : Math.max(0, Math.min(1, v / tg));
+    var vs = v == null ? '…' : (Math.abs(tg) >= 2 ? Math.round(v) : v.toFixed(2));
+    var ts = Math.abs(tg) >= 2 ? tg : tg.toFixed(2);
+    st.innerHTML = '<div><b></b></div><div class="progress"><div style="width:' + (frac * 100).toFixed(1) + '%"></div></div>' +
+      '<div class="dim"></div><div class="progress hold"><div style="width:' + (Math.min(1, cs.held / ch.hold) * 100).toFixed(1) + '%"></div></div>' +
+      '<div class="dim">hold it for ' + ch.hold + ' ticks (' + cs.held + ' so far)</div>';
+    st.querySelector('b').textContent = ch.name;
+    st.querySelectorAll('.dim')[0].textContent = (cs.dir === 'lower' ? 'now ' + vs + ', get it down to ' + ts : 'now ' + vs + ' of ' + ts) + (ch.id === 'hide' ? ' (colour mismatch)' : '');
+    var ban = document.getElementById('banner');
+    if (cs.won != null && !wonSaid) {
+      wonSaid = true; setBest(cs.id, cs.won); renderChallenges();
+      ban.className = 'banner win'; ban.textContent = '★ ' + ch.name + ' done at tick ' + cs.won + ' (' + Math.round(E.stats(w).meanGen) + ' generations on average). Nobody designed them. The world chose them.';
+      log('Challenge complete at tick ' + cs.won + '.');
+    }
+    if (cs.lost != null && !lostSaid) {
+      lostSaid = true; ban.className = 'banner lose'; ban.textContent = 'Everyone died at tick ' + cs.lost + '. Click the challenge to try again, or Release founders to start a new family.';
+      log('Extinction.');
+    }
+    if (cs.lost != null && w.creatures.length && lostSaid) { lostSaid = false; cs.lost = null; ban.className = 'banner'; }
+  }
+
+  // ---------- inspector ----------
+  function geneRows(g) {
+    return E.GENES.map(function (k) {
+      return '<div class="gene"><span style="color:' + GENE_COL[k] + '">' + k + '</span><div class="track"><div class="fill" style="width:' +
+        (g[k] * 100).toFixed(1) + '%;background:' + GENE_COL[k] + '"></div></div><span class="mono">' + g[k].toFixed(2) + '</span></div>';
+    }).join('');
+  }
+  function updateInspector() {
+    var box = document.getElementById('inspector');
+    if (!selected) { box.className = 'dim'; box.textContent = 'Use the Inspect tool and click on a creature.'; return; }
+    var c = selected, t = E.tempAt(w, c.y), k = E.costs(c.g, t);
+    box.className = '';
+    var status = c.alive ? 'alive, age ' + c.age : 'died at tick ' + c.died + ': ' + c.cause;
+    box.innerHTML = '<div class="mono"></div>' + geneRows(c.g) +
+      '<div class="mono" style="margin-top:6px"></div>';
+    box.querySelector('.mono').textContent = '#' + c.id + ' · family #' + c.lineage + ' · generation ' + c.gen + '\n' + status + ' · ' + c.kids + ' children';
+    box.querySelectorAll('.mono')[1].textContent =
+      'energy  ' + c.e.toFixed(1) + ' / ' + E.reproE(c.g).toFixed(0) + ' to breed\n' +
+      'bite    +' + E.bite(c.g).toFixed(1) + ' per plant\n' +
+      'burns   ' + k.total.toFixed(3) + ' per tick\n' +
+      '  body ' + k.base.toFixed(3) + '  moving ' + k.move.toFixed(3) + '\n' +
+      '  eyes ' + k.sense.toFixed(3) + '  climate ' + k.heat.toFixed(3) + '\n' +
+      'ground ' + E.ground(w, c.x, c.y).toFixed(2) + ' · temp ' + t.toFixed(2) + ' · ideal fur ' + E.idealFur(t).toFixed(2) + '\n' +
+      'a hawk sees it ' + Math.round(Math.pow(E.visibility(w, c), 2) * 100) + '% of glances, catches it ' + Math.round(E.catchChance(c.g) * 100) + '% of dives';
+  }
+
+  // ---------- drawing ----------
+  function drawGround() {
+    var i, full = '';
+    for (i = 0; i < w.ground.length; i++) full += (w.ground[i] * 100 | 0);
+    if (full === groundSig) return;
+    groundSig = full;
+    var img = gx.createImageData(E.GW, E.GH);
+    for (i = 0; i < w.ground.length; i++) {
+      var v = w.ground[i];
+      img.data[i * 4] = 54 + 180 * v; img.data[i * 4 + 1] = 40 + 180 * v; img.data[i * 4 + 2] = 30 + 156 * v; img.data[i * 4 + 3] = 255;
+    }
+    gx.putImageData(img, 0, 0);
+  }
+  function draw() {
+    drawGround();
+    var view = document.getElementById('view').value, hawkEye = view === 'hawk';
+    cx.imageSmoothingEnabled = true;
+    cx.drawImage(groundCv, 0, 0, E.W, E.H);
+    // climate tint, row by row
+    var rows = 14;
+    for (var r = 0; r < rows; r++) {
+      var y0 = r * E.H / rows, t = E.tempAt(w, y0 + E.H / rows / 2);
+      if (Math.abs(t) < 0.02) continue;
+      cx.fillStyle = t < 0 ? 'rgba(120,180,255,' + (-t * 0.22).toFixed(3) + ')' : 'rgba(255,120,40,' + (t * 0.18).toFixed(3) + ')';
+      cx.fillRect(0, y0, E.W, E.H / rows + 1);
+    }
+    // craters fade
+    for (var q = 0; q < w.craters.length; q++) {
+      var cr = w.craters[q], age = w.t - cr.t;
+      if (age > 600) continue;
+      cx.strokeStyle = 'rgba(255,90,40,' + (0.6 * (1 - age / 600)).toFixed(3) + ')'; cx.lineWidth = 2;
+      cx.beginPath(); cx.arc(cr.x, cr.y, cr.r, 0, 6.283); cx.stroke();
+    }
+    // plants
+    cx.fillStyle = '#6fbf5f';
+    for (var f = 0; f < w.food.length; f++) { cx.fillRect(w.food[f].x - 1.5, w.food[f].y - 1.5, 3, 3); }
+    // creatures
+    for (var i = 0; i < w.creatures.length; i++) {
+      var c = w.creatures[i], rad = E.radius(c.g);
+      if (!hawkEye && c.g.fur > 0.05) {
+        cx.strokeStyle = 'rgba(200,235,225,' + (0.15 + 0.5 * c.g.fur).toFixed(2) + ')';
+        cx.lineWidth = 0.6 + 2.4 * c.g.fur; cx.setLineDash([1.5, 1.5]);
+        cx.beginPath(); cx.arc(c.x, c.y, rad + 0.5 + 1.5 * c.g.fur, 0, 6.283); cx.stroke(); cx.setLineDash([]);
+      }
+      cx.fillStyle = view === 'lineage' ? lineageCol(c.lineage) :
+        view === 'energy' ? 'hsl(' + Math.round(Math.max(0, Math.min(1, c.e / E.reproE(c.g))) * 120) + ',80%,55%)' : earth(c.g.color);
+      cx.beginPath(); cx.arc(c.x, c.y, rad, 0, 6.283); cx.fill();
+      if (!hawkEye) {
+        cx.strokeStyle = 'rgba(0,0,0,.45)'; cx.lineWidth = 0.8; cx.stroke();
+        var ex = c.x + Math.cos(c.h) * rad * 0.6, ey = c.y + Math.sin(c.h) * rad * 0.6;
+        cx.fillStyle = '#111'; cx.beginPath(); cx.arc(ex, ey, 1 + c.g.sense, 0, 6.283); cx.fill();
+      }
+    }
+    // selected
+    if (selected && selected.alive) {
+      cx.strokeStyle = '#ffcf5f'; cx.lineWidth = 1.5;
+      cx.beginPath(); cx.arc(selected.x, selected.y, E.radius(selected.g) + 5, 0, 6.283); cx.stroke();
+      cx.setLineDash([4, 4]); cx.strokeStyle = 'rgba(200,140,255,.6)';
+      cx.beginPath(); cx.arc(selected.x, selected.y, E.senseR(selected.g), 0, 6.283); cx.stroke(); cx.setLineDash([]);
+      if (selected.target) { cx.beginPath(); cx.moveTo(selected.x, selected.y); cx.lineTo(selected.target.x, selected.target.y); cx.stroke(); }
+    }
+    // hawks: shadow + bird
+    for (var h = 0; h < w.hawks.length; h++) {
+      var hk = w.hawks[h];
+      if (hk.mode === 'dive' && hk.target) {
+        cx.strokeStyle = 'rgba(255,80,80,.35)'; cx.lineWidth = 1;
+        cx.beginPath(); cx.moveTo(hk.x, hk.y); cx.lineTo(hk.target.x, hk.target.y); cx.stroke();
+      }
+      cx.save(); cx.translate(hk.x, hk.y); cx.rotate(hk.h);
+      var s = hk.mode === 'dive' ? 0.8 : 1.3;
+      cx.fillStyle = 'rgba(0,0,0,.25)'; cx.beginPath(); cx.ellipse(6, 8, 9 * s, 4 * s, 0, 0, 6.283); cx.fill();
+      cx.fillStyle = hk.rest > 0 ? '#a05050' : '#ff6b6b';
+      cx.beginPath(); cx.moveTo(10 * s, 0); cx.lineTo(-6 * s, -11 * s); cx.lineTo(-2 * s, 0); cx.lineTo(-6 * s, 11 * s); cx.closePath(); cx.fill();
+      cx.restore();
+    }
+    // tool cursor
+    if (hover && tool !== 'inspect') {
+      var rr = tool === 'meteor' ? 75 : tool === 'sow' ? 45 : tool === 'release' ? 20 : 2.2 * E.CELL;
+      cx.strokeStyle = tool === 'meteor' ? 'rgba(255,90,40,.8)' : 'rgba(255,255,255,.6)'; cx.lineWidth = 1;
+      cx.beginPath(); cx.arc(hover.x, hover.y, rr, 0, 6.283); cx.stroke();
+    }
+    if (!w.creatures.length) {
+      cx.fillStyle = 'rgba(0,0,0,.5)'; cx.fillRect(0, E.H / 2 - 30, E.W, 60);
+      cx.fillStyle = '#fff'; cx.font = '20px system-ui'; cx.textAlign = 'center';
+      cx.fillText('Extinct. Release founders, or start again.', E.W / 2, E.H / 2 + 7); cx.textAlign = 'start';
+    }
+  }
+
+  function line(ctx, pts, col, W2, H2, ymax) {
+    ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.beginPath();
+    for (var i = 0; i < pts.length; i++) { var x = i / Math.max(1, pts.length - 1) * W2, y = H2 - pts[i] / ymax * (H2 - 6) - 3; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
+    ctx.stroke();
+  }
+  function drawCharts() {
+    var hs = w.history, c1 = document.getElementById('cPop'), x1 = c1.getContext('2d');
+    x1.clearRect(0, 0, c1.width, c1.height);
+    var ymax = 50;
+    hs.forEach(function (h) { ymax = Math.max(ymax, h.pop, h.food, h.hawks * 20); });
+    x1.fillStyle = '#5a606a'; x1.font = '10px ui-monospace, monospace'; x1.fillText(String(Math.round(ymax)), 3, 11);
+    line(x1, hs.map(function (h) { return h.food; }), '#6fbf5f', c1.width, c1.height, ymax);
+    line(x1, hs.map(function (h) { return h.hawks * 20; }), '#ff6b6b', c1.width, c1.height, ymax);
+    line(x1, hs.map(function (h) { return h.pop; }), '#e6e6e6', c1.width, c1.height, ymax);
+    var c2 = document.getElementById('cGenes'), x2 = c2.getContext('2d');
+    x2.clearRect(0, 0, c2.width, c2.height);
+    x2.strokeStyle = '#232934'; x2.beginPath(); x2.moveTo(0, c2.height / 2); x2.lineTo(c2.width, c2.height / 2); x2.stroke();
+    E.GENES.forEach(function (k) { line(x2, hs.map(function (h) { return isNaN(h.mean[k]) ? 0 : h.mean[k]; }), GENE_COL[k], c2.width, c2.height, 1); });
+    x2.fillStyle = '#5a606a'; x2.fillText('1', 3, 11); x2.fillText('0', 3, c2.height - 4);
+    var c3 = document.getElementById('cHist'), x3 = c3.getContext('2d'), gk = document.getElementById('histGene').value;
+    x3.clearRect(0, 0, c3.width, c3.height);
+    var bins = new Array(25).fill(0), mx = 1;
+    w.creatures.forEach(function (c) { bins[Math.min(24, (c.g[gk] * 25) | 0)]++; });
+    bins.forEach(function (b) { mx = Math.max(mx, b); });
+    var bw = c3.width / 25;
+    for (var i = 0; i < 25; i++) {
+      x3.fillStyle = gk === 'color' ? earth((i + 0.5) / 25) : GENE_COL[gk];
+      var hh = bins[i] / mx * (c3.height - 16); x3.fillRect(i * bw + 1, c3.height - 12 - hh, bw - 2, hh);
+    }
+    x3.fillStyle = '#5a606a'; x3.fillText('0', 2, c3.height - 1); x3.fillText('1', c3.width - 8, c3.height - 1);
+    if (gk === 'color') { // where the ground sits
+      var gm = E.stats(w).groundMean; x3.strokeStyle = '#ffcf5f'; x3.beginPath(); x3.moveTo(gm * c3.width, 0); x3.lineTo(gm * c3.width, c3.height - 12); x3.stroke();
+      document.getElementById('histNote').textContent = 'yellow line: average ground colour';
+    } else if (gk === 'fur') {
+      var it = E.idealFur(w.settings.temp); x3.strokeStyle = '#ffcf5f'; x3.beginPath(); x3.moveTo(it * c3.width, 0); x3.lineTo(it * c3.width, c3.height - 12); x3.stroke();
+      document.getElementById('histNote').textContent = 'yellow line: ideal fur at the average temperature';
+    } else document.getElementById('histNote').textContent = 'each bar counts creatures with that value';
+  }
+  var hg = document.getElementById('histGene');
+  E.GENES.forEach(function (k) { var o = document.createElement('option'); o.value = k; o.textContent = k; hg.appendChild(o); });
+  hg.value = 'color';
+
+  function updateStats() {
+    var st = E.stats(w);
+    document.getElementById('sTick').textContent = w.t;
+    document.getElementById('sPop').textContent = st.pop;
+    document.getElementById('sGen').textContent = w.maxGen;
+    document.getElementById('sLin').textContent = st.lineages;
+    document.getElementById('sFood').textContent = st.food;
+    document.getElementById('sBirths').textContent = w.births;
+    var d = w.deaths, tot = 0; for (var k in d) tot += d[k];
+    document.getElementById('deaths').textContent =
+      'starved      ' + d.starved + '\nfroze        ' + d.froze + '\noverheated   ' + d.overheated + '\neaten        ' + d.eaten +
+      '\nold age      ' + d.old + '\nmeteor       ' + d.meteor + '\n' + '—'.repeat(14) + '\ntotal        ' + tot;
+    // narrate
+    if (w.maxGen >= nextGenMark) {
+      var m = st.mean, notes = [];
+      E.GENES.forEach(function (g) { var dlt = m[g] - 0.5; if (Math.abs(dlt) > 0.12) notes.push((g === 'color' ? 'colour' : g) + (dlt > 0 ? ' up' : ' down') + ' to ' + m[g].toFixed(2)); });
+      log('Generation ' + nextGenMark + ' born.' + (notes.length ? ' Averages: ' + notes.join(', ') + '.' : ''));
+      nextGenMark = nextGenMark < 50 ? nextGenMark + 10 : nextGenMark + 50;
+    }
+    if (lastStat) for (var L in lastStat.lineageCounts) if (!st.lineageCounts[L] && !extinctSaid[L]) {
+      extinctSaid[L] = 1;
+      if (st.lineages === 1 && st.pop) { var only; for (only in st.lineageCounts); log('Family #' + L + ' died out. Every creature alive now descends from founder #' + only + '.'); }
+      else if (st.lineages > 0) log('Family #' + L + ' died out. ' + st.lineages + ' left.');
+    }
+    lastStat = st;
+  }
+
+  // ---------- world codes ----------
+  function exportCode() {
+    var rec = { v: 1, seed: w.seed, challenge: w.challenge ? w.challenge.id : null, t: w.t, log: w.log };
+    return btoa(unescape(encodeURIComponent(JSON.stringify(rec))));
+  }
+  document.getElementById('exportBtn').addEventListener('click', function () {
+    var code = exportCode(), ta = document.getElementById('code'); ta.value = code; ta.select();
+    try { navigator.clipboard.writeText(code); document.getElementById('codeMsg').textContent = 'copied (' + w.log.length + ' actions, tick ' + w.t + ')'; }
+    catch (e) { document.getElementById('codeMsg').textContent = 'select and copy the text below'; }
+  });
+  document.getElementById('importBtn').addEventListener('click', function () {
+    var msg = document.getElementById('codeMsg');
+    try {
+      var rec = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('code').value.trim()))));
+      if (rec.challenge && !E.challengeById(rec.challenge)) throw new Error('unknown challenge');
+      msg.textContent = 'rebuilding ' + rec.t + ' ticks…';
+      setTimeout(function () {
+        var world = E.replay(rec, rec.t);
+        begin(world, 'Loaded a world code: seed "' + rec.seed + '"' + (rec.challenge ? ', challenge ' + rec.challenge : '') + ', ' + rec.log.length + ' actions, replayed to tick ' + rec.t + '.');
+        msg.textContent = 'loaded, fingerprint ' + E.fingerprint(world);
+      }, 20);
+    } catch (e) { msg.textContent = 'that is not a world code (' + e.message + ')'; }
+  });
+
+  // ---------- loop ----------
+  var frame = 0;
+  function tick() {
+    if (!paused) {
+      var n = +document.getElementById('speed').value, t0 = performance.now();
+      for (var i = 0; i < n; i++) { E.step(w); if (performance.now() - t0 > 30) break; }
+    }
+    draw();
+    if (frame++ % 6 === 0) { updateStats(); drawCharts(); updateChallenge(); if (selected) updateInspector(); }
+    requestAnimationFrame(tick);
+  }
+
+  // self-checks
+  var box = document.getElementById('checks'), res = evoSelfCheck(E), bad = 0;
+  res.forEach(function (r) { var d = document.createElement('div'); d.className = r.ok ? 'pass' : 'fail'; d.textContent = (r.ok ? '✓ ' : '✗ ') + r.msg; if (!r.ok) bad++; box.appendChild(d); });
+  var s = document.createElement('div'); s.textContent = res.length + ' checks, ' + bad + ' failed.'; box.appendChild(s);
+  if (bad) box.parentNode.open = true;
+
+  sandbox('evolution');
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
