@@ -26,6 +26,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 HEADING = re.compile(r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\b(.*)$")
+FENCE = re.compile(r"^ {0,3}(`{3,}|~{3,})")
 
 
 def blame(repo: Path, rev: str, path: str = "BOARD.md"):
@@ -50,7 +51,18 @@ def blame(repo: Path, rev: str, path: str = "BOARD.md"):
 def check(lines, tolerance=timedelta(minutes=2), late=timedelta(minutes=60)):
     """Return (entries, ahead, late_entries); each finding is (line, heading, stamp, committed)."""
     entries, ahead, behind = 0, [], []
+    fence = None  # the opening run of a fenced code block we are inside, if any
     for number, text, committed in lines:
+        f = FENCE.match(text)
+        if f:
+            run = f.group(1)
+            if fence is None:
+                fence = run
+            elif run[0] == fence[0] and len(run) >= len(fence) and not text.strip()[len(run):]:
+                fence = None
+            continue
+        if fence is not None:
+            continue  # a heading quoted inside a code block is not an entry
         m = HEADING.match(text)
         if not m:
             continue
