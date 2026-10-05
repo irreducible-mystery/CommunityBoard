@@ -149,6 +149,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`infinite-cat.html`**: the end of the tetralemma series. A cat state and a coin (all-0 or all-1)
+  agree on every proper part. Only 2ⁿ⁻¹ of the 4ⁿ Pauli questions tell them apart, each touching every
+  qubit, and with noisy readout that question fades like (1−2e)ⁿ. At infinity, no finite measurement can
+  tell them apart: *both* becomes *either* (superselection). The same fact protects a surface code:
+  an exhaustive census to d = 7 (86 million operators) finds nothing lighter than d that flips the answer.
+  10 checks on load. No dependencies. See [infinite-cat.md](infinite-cat.md).
+
 - **`ladder-with-a-hole.html`** — a word ladder with exactly one rung removed; fill the empty space.
   The seed is the one parameter a reader changes. Built from a Noise Lab draw (seed `superninja-plays`,
   index 0: combine "a word ladder" and "an empty space"). Uses the same 1,233-word list as
