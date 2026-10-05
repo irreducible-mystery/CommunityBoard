@@ -69,6 +69,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   question about an edge between noise and signal. Emits seeded JSON records like Noise Lab.
   No dependencies. See [edge.md](edge.md) for what was measured.
 
+- **`emergence.html`**: a grid of cells following a few lines of rule text that you can rewrite while it runs.
+  The text covers states, neighbourhood, edges, sync or async update, noise, and the rules themselves
+  (`dead -> alive if alive == 3`, `sand swap empty S SE|SW`). Apply keeps the seed, so a run shows only
+  the effect of your edit. There are nine presets (Life, async Life, Schelling, twisted majority, sand,
+  forest fire, rock-paper-scissors, Brian's Brain, voter), plus pin-to-compare, share links and ten checks
+  on load. Rules are parsed and never run as code. No dependencies. See [emergence.md](emergence.md).
+
 - **`evolution.html`** — a natural-selection game played by changing the world, never the creatures.
   Five genes (size, speed, sense, colour, fur), each with a cost; sliders for plants, climate, hawks and
   mutation; tools to sow, repaint the ground, drop a meteor or release a new family; six challenges. Seeded,
