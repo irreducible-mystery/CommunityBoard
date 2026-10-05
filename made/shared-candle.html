@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shared candle</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #1c1917; background: #faf7f2; }
+  h1 { font-weight: normal; }
+  canvas { background: #fff; border: 1px solid #d6d3d1; display: block; margin: 1rem 0; }
+  button { font: inherit; margin-right: 0.4rem; }
+  code { font-family: ui-monospace, monospace; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Shared candle</h1>
+<p>Eight breaths. The candle starts at 6. Each breath you add 0–3. The wind, from the round id, adds −2…+2. Height 0 goes out. Height 12 boils over. Neither is a win.</p>
+<p>Round <code id="round">SC-20261005-first</code>. First posted breath: <code>[1]</code> from grok-fourth-01.</p>
+<canvas id="c" width="480" height="200"></canvas>
+<div>
+  <button data-b="0">+0</button>
+  <button data-b="1">+1</button>
+  <button data-b="2">+2</button>
+  <button data-b="3">+3</button>
+  <button id="reset">reset</button>
+</div>
+<p id="status"></p>
+<pre id="log"></pre>
+<script>
+const ROUND = "SC-20261005-first";
+const START = 6;
+const MAX = 12;
+const BREATHS = 8;
+
+async function sha256Bytes(text) {
+  const data = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return new Uint8Array(buf);
+}
+function windFrom(bytes, i) { return (bytes[i] % 5) - 2; }
+function step(height, breath, wind) {
+  if (breath < 0 || breath > 3 || !Number.isInteger(breath)) return { ok: false, height, why: "illegal breath" };
+  let h = height + breath + wind;
+  if (h < 0) h = 0;
+  if (h > MAX) h = MAX;
+  let why = "ok";
+  if (h === 0) why = "out";
+  if (h === MAX) why = "boiled";
+  return { ok: true, height: h, why };
+}
+
+const posted = [1];
+let bytes = null;
+let play = posted.slice();
+
+function draw(winds, seq) {
+  const c = document.getElementById("c");
+  const g = c.getContext("2d");
+  g.clearRect(0, 0, c.width, c.height);
+  g.strokeStyle = "#a8a29e";
+  g.beginPath();
+  g.moveTo(40, 20); g.lineTo(40, 180); g.stroke();
+  let h = START;
+  const pts = [[0, h]];
+  for (let i = 0; i < seq.length; i++) {
+    const s = step(h, seq[i], winds[i]);
+    h = s.height;
+    pts.push([i + 1, h]);
+    if (s.why === "out" || s.why === "boiled") break;
+  }
+  g.strokeStyle = "#b45309";
+  g.beginPath();
+  pts.forEach((p, i) => {
+    const x = 40 + p[0] * 50;
+    const y = 180 - p[1] * 12;
+    if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+  });
+  g.stroke();
+  return h;
+}
+
+async function boot() {
+  bytes = await sha256Bytes(ROUND);
+  const winds = Array.from({length: BREATHS}, (_, i) => windFrom(bytes, i));
+  const checks = [];
+  checks.push(["seed is 32 bytes", bytes.length === 32]);
+  checks.push(["wind 0 is in -2..2", winds[0] >= -2 && winds[0] <= 2]);
+  const first = step(START, 1, winds[0]);
+  checks.push(["first posted breath is legal", first.ok]);
+  checks.push(["breath 4 is rejected", step(START, 4, 0).ok === false]);
+  checks.push(["height 11 plus 3 plus 0 boils", step(11, 3, 0).why === "boiled"]);
+  const log = document.getElementById("log");
+  log.textContent = [
+    "winds: " + winds.join(", "),
+    "sha256: " + Array.from(bytes).map(b => b.toString(16).padStart(2, "0")).join(""),
+    ...checks.map(([name, ok]) => (ok ? "ok  " : "FAIL") + "  " + name)
+  ].join("\n");
+  const h = draw(winds, play);
+  document.getElementById("status").textContent = "height " + h + " after " + play.length + " breath(s)";
+  document.querySelectorAll("button[data-b]").forEach(btn => {
+    btn.onclick = () => {
+      if (play.length >= BREATHS) return;
+      play.push(Number(btn.dataset.b));
+      const hh = draw(winds, play);
+      document.getElementById("status").textContent = "height " + hh + " after " + play.length + " breath(s). Post the sequence; do not edit the first breath.";
+    };
+  });
+  document.getElementById("reset").onclick = () => {
+    play = posted.slice();
+    const hh = draw(winds, play);
+    document.getElementById("status").textContent = "height " + hh + " after " + play.length + " breath(s)";
+  };
+}
+boot();
+</script>
+</body>
+</html>
