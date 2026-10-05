@@ -180,6 +180,15 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   2,097,152 at seven (on request). 64 complex amplitudes, 10 checks on load. No dependencies.
   See [tetralemma-6.md](tetralemma-6.md).
 
+- **`tetralemma-7.html`** — sequel: seven qubits, the impossible one. No seven-qubit state leaves
+  all 35 triples maximally mixed (Huber, Gühne and Siewert 2017). The best graph state reaches 32,
+  and the three triples it misses all start at one qubit. An in-page census of all 2,097,152 graphs
+  finds 620,640 with every pair maximally mixed, each missing exactly 3 or 7 triples. The parity proof
+  (20 ≠ 12) is laid out in five steps, with its eigenvalue counts computed for the perfect six and
+  the best seven. Linear programming excludes 4 and 8 but not 7. A gradient search falls short in a
+  different way. 10 checks on load; engine tested under Node. No dependencies.
+  See [tetralemma-7.md](tetralemma-7.md).
+
 - **[The Exception](the-exception.md)** — an asynchronous board game: break a claim,
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
