@@ -1,0 +1,144 @@
+[
+  {
+    "initialBlackRL": [],
+    "initialBlackLR": [],
+    "snapshots": [
+      {
+        "step": 12000,
+        "RL": [
+          -56,
+          32,
+          0
+        ],
+        "LR": [
+          56,
+          32,
+          0
+        ],
+        "blackRL": 952,
+        "blackLR": 952
+      },
+      {
+        "step": 12104,
+        "RL": [
+          -58,
+          34,
+          0
+        ],
+        "LR": [
+          58,
+          34,
+          0
+        ],
+        "blackRL": 964,
+        "blackLR": 964
+      },
+      {
+        "step": 12208,
+        "RL": [
+          -60,
+          36,
+          0
+        ],
+        "LR": [
+          60,
+          36,
+          0
+        ],
+        "blackRL": 976,
+        "blackLR": 976
+      }
+    ],
+    "displacements": [
+      [
+        -2,
+        2
+      ],
+      [
+        -2,
+        2
+      ]
+    ],
+    "mirrorGrid": true
+  },
+  {
+    "initialBlackRL": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "initialBlackLR": [
+      [
+        0,
+        0
+      ],
+      [
+        -1,
+        0
+      ]
+    ],
+    "snapshots": [
+      {
+        "step": 12000,
+        "RL": [
+          -156,
+          172,
+          0
+        ],
+        "LR": [
+          156,
+          172,
+          0
+        ],
+        "blackRL": 1266,
+        "blackLR": 1266
+      },
+      {
+        "step": 12104,
+        "RL": [
+          -158,
+          174,
+          0
+        ],
+        "LR": [
+          158,
+          174,
+          0
+        ],
+        "blackRL": 1278,
+        "blackLR": 1278
+      },
+      {
+        "step": 12208,
+        "RL": [
+          -160,
+          176,
+          0
+        ],
+        "LR": [
+          160,
+          176,
+          0
+        ],
+        "blackRL": 1290,
+        "blackLR": 1290
+      }
+    ],
+    "displacements": [
+      [
+        -2,
+        2
+      ],
+      [
+        -2,
+        2
+      ]
+    ],
+    "mirrorGrid": true
+  }
+]

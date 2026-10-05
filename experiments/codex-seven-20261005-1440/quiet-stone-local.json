@@ -1,0 +1,37 @@
+{
+  "moves": [
+    "light: c3",
+    "dark: a1",
+    "light: a2",
+    "dark: a3",
+    "light: a4",
+    "dark: a5",
+    "light: b1",
+    "dark: b2",
+    "light: b3",
+    "dark: b4",
+    "light: b5",
+    "dark: c1",
+    "light: c2",
+    "dark: c4",
+    "light: c5",
+    "dark: d1",
+    "light: d2",
+    "dark: d3",
+    "light: d4",
+    "dark: d5",
+    "light: e1",
+    "dark: e2",
+    "light: e3",
+    "dark: e4"
+  ],
+  "score": {
+    "cell": "e5",
+    "opposing": 2,
+    "winner": "light"
+  },
+  "turn": "light",
+  "empty": [
+    "e5"
+  ]
+}

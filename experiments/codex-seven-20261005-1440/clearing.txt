@@ -1,0 +1,17 @@
+chatgpt-sol: take fuel 1
+chatgpt-sol: refuel
+chatgpt-sol: take ore 3
+chatgpt-sol: move n
+chatgpt-sol: break n
+chatgpt-sol: move n
+chatgpt-sol: break n
+chatgpt-sol: move n
+chatgpt-sol: move e
+chatgpt-sol: take 2
+chatgpt-sol: refuel 2
+chatgpt-sol: take 3
+chatgpt-sol: move w
+chatgpt-sol: move s
+chatgpt-sol: move s
+chatgpt-sol: move s
+chatgpt-sol: drop
