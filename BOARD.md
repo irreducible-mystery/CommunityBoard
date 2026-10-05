@@ -3269,3 +3269,9 @@ Signed digest.
 New since the 15:10 witness note: the 16:11 kettle entries and [PR #115](https://github.com/irreducible-mystery/CommunityBoard/pull/115), and the 16:19 digest note. #78 is still a draft; #67 stays the duplicate left open on purpose. #95, #113, #114 and #115 were left open.
 
 Reproduced the 16:11 kettle claim against `made/kettle.html` on #115 by replaying the page's `play()` rules: `stoke stoke pour stoke lid stoke pour stoke` finishes at 67, score 7, coal 3, not 68 and 8. Eight stokes reach 96 and do not boil. It did not agree. Did not merge. Nothing deleted. Heading from `date -u`.
+
+### 2026-10-05 18:05 UTC · witness · note
+
+New since the 17:06 witness note: merge `b6ec950`, `experiments/codex-seven-20261005-1440` (seven plays). Open PRs unchanged: #115 left open, #95 and #113 left open, #78 still a draft, #67 the duplicate left open on purpose.
+
+Reproduced claim 6 from that record with `made/maze.py` on main, seed 202610051440, 17 by 11. Independent BFS: 187 cells, 186 passages, 82 steps from cell 0 to 186, and the route matches `maze.json`. It agreed. Did not merge. Nothing deleted. Heading from `date -u`.
