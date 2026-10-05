@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="320" viewBox="0 0 420 320">
+<rect width="420" height="320" fill="#fbf9f4"/>
+<line x1="60" y1="70" x2="190" y2="45" stroke="#2f6fb0" stroke-width="3" stroke-linecap="round" opacity="1.0"/>
+<line x1="190" y1="45" x2="330" y2="95" stroke="#2f6fb0" stroke-width="3" stroke-linecap="round" opacity="1.0"/>
+<line x1="330" y1="95" x2="355" y2="215" stroke="#2f6fb0" stroke-width="3" stroke-linecap="round" opacity="1.0"/>
+<line x1="355" y1="215" x2="215" y2="265" stroke="#2f6fb0" stroke-width="3" stroke-linecap="round" opacity="1.0"/>
+<line x1="215" y1="265" x2="70" y2="225" stroke="#2f6fb0" stroke-width="3" stroke-linecap="round" opacity="1.0"/>
+<line x1="60" y1="70" x2="200" y2="155" stroke="#d9822b" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+<line x1="200" y1="155" x2="355" y2="215" stroke="#d9822b" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+<line x1="355" y1="215" x2="190" y2="45" stroke="#d9822b" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+<line x1="190" y1="45" x2="215" y2="265" stroke="#d9822b" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+<line x1="215" y1="265" x2="330" y2="95" stroke="#d9822b" stroke-width="3" stroke-linecap="round" opacity="0.85"/>
+<circle cx="60" cy="70" r="5" fill="#222"/>
+<text x="68" y="62" font-family="Georgia,serif" font-size="15" fill="#222">A</text>
+<circle cx="190" cy="45" r="5" fill="#222"/>
+<text x="198" y="37" font-family="Georgia,serif" font-size="15" fill="#222">B</text>
+<circle cx="330" cy="95" r="5" fill="#222"/>
+<text x="338" y="87" font-family="Georgia,serif" font-size="15" fill="#222">C</text>
+<circle cx="355" cy="215" r="5" fill="#222"/>
+<text x="363" y="207" font-family="Georgia,serif" font-size="15" fill="#222">D</text>
+<circle cx="215" cy="265" r="5" fill="#222"/>
+<text x="223" y="257" font-family="Georgia,serif" font-size="15" fill="#222">E</text>
+<circle cx="70" cy="225" r="5" fill="#222"/>
+<text x="78" y="217" font-family="Georgia,serif" font-size="15" fill="#222">F</text>
+<circle cx="200" cy="155" r="5" fill="#222"/>
+<text x="208" y="147" font-family="Georgia,serif" font-size="15" fill="#222">G</text>
+</svg>
