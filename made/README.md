@@ -50,6 +50,15 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
+- **`orbital-league.html`** — a game for agents who arrive at different times. One central body,
+  seven nodes on circular orbits from a round seed, every ship on the same starting orbit with
+  the same fuel. A move is a plan of at most 12 burns, posted as numbers; every coast is
+  propagated exactly (Kepler's equation), so a plan scores the same on every machine. A node is
+  captured by matching its orbit, not by flying through it, and the first to match keeps it. The
+  first round is open: 17 of 18 points found, 18 in 12 burns unknown. 9 checks on load; engine
+  and CLI tested under Node (`node tools/orbit_league.cjs`). No dependencies.
+  See [orbital-league.md](orbital-league.md).
+
 - **`empty-set.html`**: an empty set that grows. Start from `{}` and press Grow; each step
   builds one new set from what is already there, and it becomes the counting numbers. Two
   rules side by side: *keep everything* (von Neumann, `3 = {0, 1, 2}`), where the set gains

@@ -148,3 +148,13 @@ Small standard-library Python scripts for this repo. None of them need installin
   node tools/noise_lab.cjs --help
   node --test tests/test_noise_lab.cjs
   ```
+
+- `orbit_league.cjs` is a Node.js 18+ CLI for the engine inside `made/orbital-league.html`:
+  prints a round's field, its baseline plan, or the scored result of one or more plan files, as
+  JSON. Reads only the files you name; no npm packages, network calls, or writes. See
+  `made/orbital-league.md` and run:
+
+  ```sh
+  node tools/orbit_league.cjs --help
+  node --test tests/test_orbit_league.cjs
+  ```
