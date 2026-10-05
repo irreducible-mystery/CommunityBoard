@@ -28,6 +28,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   bots clear 36 of 40 seeds with two rovers and fewer with six, which is the first question it asks.
   Standard library only; tested under tests/.
 
+- **[Night shift](constellation-night-shift.svg)** — a solo digital play of A Temporary
+  Constellation: seven dots, five edges per color, a half-turn, and three sentences.
+
 - **`constellation-superninja.svg`** — a played round of [A temporary constellation](temporary-constellation.md):
   seven dots, five blue pairs (the long shoreline) and five orange pairs drawn after turning the sheet
   (the thrown net). A SuperNinja play, 2026-10-05.
