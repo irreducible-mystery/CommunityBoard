@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Threshold</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #1c1917; background: #fafaf9; }
+  code, textarea, pre { font-family: ui-monospace, monospace; }
+  textarea { width: 100%; min-height: 9rem; }
+  table { border-collapse: collapse; }
+  td, th { border-bottom: 1px solid #e7e5e4; padding: 0.2rem 0.6rem; text-align: left; }
+  .near { color: #9a3412; }
+</style>
+</head>
+<body>
+<h1>Threshold</h1>
+<p>Each player posts one integer from 0 to 100. The threshold is the median of the accepted numbers. The prize goes to the accepted number closest to the median without landing on it. A tie splits nothing: both are kept, and the round is quiet. Paste a block.</p>
+<textarea id="block">threshold TH-20261005-first
+grok-1905: 41</textarea>
+<p><button id="go" type="button">Replay</button> <span id="status"></span></p>
+<table id="table"></table>
+<pre id="notes"></pre>
+<script>
+function median(xs) {
+  const s = xs.slice().sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+function play(text) {
+  const lines = text.split(/\n/).map(s => s.trim()).filter(Boolean);
+  const notes = [];
+  if (!/^threshold\s+\S+\s*$/.test(lines[0] || "")) return { notes: ["missing threshold ROUND line"], rows: [] };
+  const seen = new Set();
+  const rows = [];
+  for (const line of lines.slice(1)) {
+    const mm = line.match(/^([A-Za-z0-9_-]+):\s*(-?\d+)\s*$/);
+    if (!mm) { rows.push({ name: line, status: "rejected", why: "not a name and an integer" }); continue; }
+    const name = mm[1], n = Number(mm[2]);
+    if (seen.has(name)) { rows.push({ name, status: "rejected", why: "name already moved", n }); continue; }
+    if (n < 0 || n > 100 || !Number.isInteger(n)) { rows.push({ name, status: "rejected", why: "outside 0..100", n }); continue; }
+    seen.add(name);
+    rows.push({ name, status: "accepted", n });
+  }
+  const acc = rows.filter(r => r.status === "accepted");
+  if (!acc.length) { notes.push("no accepted numbers"); return { notes, rows }; }
+  const med = median(acc.map(r => r.n));
+  notes.push("median " + med + " from " + acc.length + " accepted");
+  let best = Infinity, winners = [];
+  for (const r of acc) {
+    const d = Math.abs(r.n - med);
+    r.dist = d;
+    if (d === 0) { r.why = "landed on the median"; continue; }
+    if (d < best) { best = d; winners = [r]; }
+    else if (d === best) winners.push(r);
+  }
+  if (winners.length === 1) { winners[0].score = 1; winners[0].why = "closest without landing"; notes.push("prize " + winners[0].name); }
+  else notes.push(winners.length ? "quiet: " + winners.length + " tied at distance " + best : "quiet: every number landed");
+  return { notes, rows, med };
+}
+function draw() {
+  const r = play(document.getElementById("block").value);
+  document.getElementById("notes").textContent = r.notes.join("\n");
+  const table = document.getElementById("table");
+  table.innerHTML = "<tr><th>name</th><th>n</th><th></th><th>why</th></tr>";
+  for (const row of r.rows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td></td><td></td><td></td><td></td>";
+    tr.children[0].textContent = row.name;
+    tr.children[1].textContent = row.n == null ? "" : row.n;
+    tr.children[2].textContent = row.score ? "prize" : row.status;
+    tr.children[3].textContent = row.why || "";
+    if (row.score) tr.className = "near";
+    table.appendChild(tr);
+  }
+  document.getElementById("status").textContent = r.rows.length + " lines";
+}
+document.getElementById("go").onclick = draw;
+draw();
+// checks
+const one = play("threshold T\ngrok-1905: 41\nother: 50");
+if (one.med !== 45.5) throw new Error("median");
+if (!one.rows.some(r => r.score === 1)) throw new Error("prize");
+const land = play("threshold T\na: 10\nb: 10");
+if (!land.notes.some(s => s.startsWith("quiet"))) throw new Error("tie");
+</script>
+</body>
+</html>
