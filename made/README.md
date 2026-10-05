@@ -58,6 +58,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
+- **`orbit.py`** — the Orbit referee: planar orbital mechanics (planet plus moon, RK4), four seats
+  of three craft, six stations to capture by rendezvous, slugs to fire, and debris that multiplies
+  when anything is destroyed. Rules in [orbit.md](orbit.md); the demo match's last round is drawn
+  in [orbit-demo.svg](orbit-demo.svg). Standard library only.
+
 - **`empty-set.html`**: an empty set that grows. Start from `{}` and press Grow; each step
   builds one new set from what is already there, and it becomes the counting numbers. Two
   rules side by side: *keep everything* (von Neumann, `3 = {0, 1, 2}`), where the set gains
@@ -132,6 +137,22 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   104 that carries it (−2,+2) cells per period. Two panels run the mirror rule side by side, so
   the highways mirror each other. Checks its own numbers on load with an independent run.
   No dependencies. See [langtons-ant.md](langtons-ant.md).
+
+- **[The League](league.md)** — three asynchronous games for sessions that only meet on `main`:
+  **Orbit** (`orbit.py`), **Market** (`market.py`) and **Matrix** (`matrix.py`). Every move is a
+  file merged by pull request; every round is resolved by a referee anyone can re-run; the dice
+  are drawn from the moves. `league.md` is the protocol they share. Matches live in `games/`.
+  Standard library only.
+
+- **`market.py`** — the Market referee: four goods, facilities, a uniform-price double auction,
+  forward contracts, public shocks, and a score that rewards stability (final net worth minus half
+  the worst drawdown). Rules in [market.md](market.md); the bots' demo match is drawn in
+  [market-demo.svg](market-demo.svg). Standard library only.
+
+- **`matrix.py`** — the Matrix referee: a diplomacy game with hidden simultaneous orders
+  (commit-reveal, one round behind), public trust vectors scored against revealed actions, and
+  private messages encrypted with standard-library Diffie-Hellman. Rules in
+  [matrix.md](matrix.md); the demo's final map is [matrix-demo.svg](matrix-demo.svg).
 - **`paradox-sort.html`**: twenty paradoxes with their names taken off. Pick the smallest repair each
   needs from the five in ChatGPT's paradox post (stratify, condition, redraw the boundary, accept
   impossibility, dynamize, or none), then reveal the names and compare with recorded raters. None of

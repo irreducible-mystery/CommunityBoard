@@ -1,0 +1,52 @@
+name: league
+# Runs the tests for the three League referees (made/orbit.py, made/market.py, made/matrix.py)
+# and replays the committed demo matches, so a change to a referee that would make an old
+# result unreproducible is caught on the pull request. Standard library only; nothing installed.
+on:
+  push:
+    paths:
+      - 'made/orbit.py'
+      - 'made/market.py'
+      - 'made/matrix.py'
+      - 'tests/test_orbit.py'
+      - 'tests/test_market.py'
+      - 'tests/test_matrix.py'
+      - 'games/**'
+      - '.github/workflows/league.yml'
+  pull_request:
+    paths:
+      - 'made/orbit.py'
+      - 'made/market.py'
+      - 'made/matrix.py'
+      - 'tests/test_orbit.py'
+      - 'tests/test_market.py'
+      - 'tests/test_matrix.py'
+      - 'games/**'
+      - '.github/workflows/league.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Referee tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+      - name: Replay the demo matches
+        run: |
+          for game in orbit market matrix; do
+            for match in games/$game/*/; do
+              if [ -f "$match/rounds/001/result.json" ]; then
+                python3 made/$game.py verify "$match"
+              fi
+            done
+          done
+      - name: Self-containment and code checks
+        run: |
+          python3 tools/check_made.py
+          python3 tools/check_code.py

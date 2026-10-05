@@ -1,0 +1,256 @@
+{
+  "absent": [],
+  "battles": 0,
+  "commits": {
+    "a": "bc8184a938896d1df90ba40b7d39e38cea2a2fa236226dbe86e1188d6fa8f59c",
+    "b": "af6f11a6f01d53a287d71f778817f33a55501fd3e72ee759712651fd4e3e7cb9",
+    "c": "81dc290c7b8d96136efd15dc29af481ba45eb71045881658910e31583c9f1148",
+    "d": "023ae445c36eb872fa5cb0d879c9ba49d1e6259b0fd190126f468a26119b2994"
+  },
+  "events": [
+    {
+      "amount": 1,
+      "from": "a",
+      "kind": "give",
+      "to": "b"
+    },
+    {
+      "amount": 1,
+      "from": "c",
+      "kind": "give",
+      "to": "d"
+    },
+    {
+      "kind": "recruit",
+      "seat": "a",
+      "territory": "t10",
+      "units": 8
+    },
+    {
+      "kind": "recruit",
+      "seat": "b",
+      "territory": "t04",
+      "units": 2
+    },
+    {
+      "kind": "recruit",
+      "seat": "c",
+      "territory": "t05",
+      "units": 4
+    },
+    {
+      "kind": "recruit",
+      "seat": "d",
+      "territory": "t12",
+      "units": 4
+    },
+    {
+      "from": "t10",
+      "kind": "move",
+      "seat": "a",
+      "to": "t09",
+      "units": 2
+    },
+    {
+      "from": "t12",
+      "kind": "move",
+      "seat": "d",
+      "to": "t01",
+      "units": 12
+    }
+  ],
+  "game": "matrix/1",
+  "income": {
+    "a": 8,
+    "b": 4,
+    "c": 9,
+    "d": 7
+  },
+  "inconsistency": {
+    "a": {
+      "b": 0.7125,
+      "c": 0.45,
+      "d": 0.25
+    },
+    "b": {
+      "a": 0.8375,
+      "c": 0.7125,
+      "d": null
+    },
+    "c": {
+      "a": 0.383333333,
+      "b": 0.433333333,
+      "d": 0.275
+    },
+    "d": {
+      "a": 0.792857143,
+      "b": null,
+      "c": 0.65
+    }
+  },
+  "invalid": {},
+  "match": "000-demo",
+  "message_bytes": 0,
+  "messages": {},
+  "moved": [
+    "honest-a",
+    "honest-c",
+    "liar-b",
+    "liar-d"
+  ],
+  "next_state_sha256": "f7ab51cc078fbd283f01b84d0622c36e6a1a129183047bdf5e6b20710967bb34",
+  "observed": {
+    "a": {
+      "b": 1.0,
+      "c": 0.25,
+      "d": 0.25
+    },
+    "c": {
+      "d": 1.0
+    },
+    "d": {
+      "a": 0.25
+    }
+  },
+  "pacts_active": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "d"
+    ],
+    [
+      "c",
+      "d"
+    ]
+  ],
+  "pacts_active_next": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "d"
+    ],
+    [
+      "c",
+      "d"
+    ]
+  ],
+  "player_file_problems": [],
+  "reputation": {
+    "a": 1.0,
+    "b": 1.0,
+    "c": 1.0,
+    "d": 1.0
+  },
+  "reveals": {
+    "a": {
+      "commit": "3336ff1a2e5a67fb36ca977ee749ba2a9f35a4d4736ed7bedb7b0cdf7ca0f1f7",
+      "orders": {
+        "give": [
+          {
+            "amount": 1,
+            "to": "liar-b"
+          }
+        ],
+        "moves": [
+          {
+            "from": "t10",
+            "to": "t09",
+            "units": 2
+          }
+        ],
+        "recruit": {
+          "t10": 8
+        }
+      },
+      "status": "applied"
+    },
+    "b": {
+      "commit": "a702d1fc8716caf5ecc0c6fd1698cb4b1ea5eb3109518d1b4fa15203df1eafca",
+      "orders": {
+        "give": [],
+        "moves": [],
+        "recruit": {
+          "t04": 2
+        }
+      },
+      "status": "applied"
+    },
+    "c": {
+      "commit": "e0436dccb7d944eb77bf0e8f8d7e704888ec8aa1a40023fec0bccfa915eee543",
+      "orders": {
+        "give": [
+          {
+            "amount": 1,
+            "to": "liar-d"
+          }
+        ],
+        "moves": [],
+        "recruit": {
+          "t05": 4
+        }
+      },
+      "status": "applied"
+    },
+    "d": {
+      "commit": "a432f583cda9268ad12210fc3121b4bd85693c74457b6f470ddc94711d6cf024",
+      "orders": {
+        "give": [],
+        "moves": [
+          {
+            "from": "t12",
+            "to": "t01",
+            "units": 12
+          }
+        ],
+        "recruit": {
+          "t12": 4
+        }
+      },
+      "status": "applied"
+    }
+  },
+  "round": 8,
+  "says": {},
+  "scores": {
+    "a": 36,
+    "b": 19,
+    "c": 57,
+    "d": 42
+  },
+  "seats": {
+    "a": "honest-a",
+    "b": "liar-b",
+    "c": "honest-c",
+    "d": "liar-d"
+  },
+  "seed": "d82194e0c2aedfd55e578db080ba75bb5023c6eb8f9b93635fe1c2af13a6c9e0",
+  "skipped": [],
+  "stances": {
+    "a": {
+      "b": 0.3,
+      "c": 0.0,
+      "d": 0.0
+    },
+    "b": {
+      "a": 0.9,
+      "c": 0.9,
+      "d": 0.9
+    },
+    "c": {
+      "a": 0.8,
+      "b": 0.8,
+      "d": 1.0
+    },
+    "d": {
+      "a": 0.9,
+      "b": 0.9,
+      "c": 0.9
+    }
+  }
+}

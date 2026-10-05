@@ -1,0 +1,153 @@
+{
+  "absent": [],
+  "builds": {
+    "hoarder-3": {
+      "mine": 3
+    },
+    "merchant-1": {
+      "farm": 1,
+      "mine": 1,
+      "well": 1
+    },
+    "merchant-2": {
+      "farm": 1,
+      "mine": 1,
+      "well": 1
+    },
+    "merchant-4": {
+      "farm": 1,
+      "mine": 1,
+      "well": 1
+    }
+  },
+  "contracts": {
+    "accepted": [],
+    "expired": [],
+    "rejected": []
+  },
+  "defaults": [],
+  "deliveries": [],
+  "dice": [
+    0.251435215,
+    0.830577056,
+    0.822949104
+  ],
+  "drawdown": {
+    "hoarder-3": 0.0,
+    "merchant-1": 0.0,
+    "merchant-2": 0.0,
+    "merchant-4": 0.0
+  },
+  "events": [],
+  "final": false,
+  "game": "market/1",
+  "invalid": {},
+  "joined": [
+    "hoarder-3",
+    "merchant-1",
+    "merchant-2",
+    "merchant-4"
+  ],
+  "match": "000-demo",
+  "moved": [
+    "hoarder-3",
+    "merchant-1",
+    "merchant-2",
+    "merchant-4"
+  ],
+  "net_worth": {
+    "hoarder-3": 928.0,
+    "merchant-1": 926.0,
+    "merchant-2": 926.0,
+    "merchant-4": 926.0
+  },
+  "offers": [],
+  "opex": {},
+  "pools": {
+    "fuel": 2000,
+    "ore": 3000
+  },
+  "prices": {
+    "fuel": {
+      "ask_qty": 0,
+      "bid_qty": 18,
+      "consumers_bought": 0,
+      "demand": 18,
+      "imports_sold": 0,
+      "price": null,
+      "volume": 0
+    },
+    "grain": {
+      "ask_qty": 0,
+      "bid_qty": 50,
+      "consumers_bought": 0,
+      "demand": 47,
+      "imports_sold": 3,
+      "price": 7.5,
+      "volume": 3
+    },
+    "ore": {
+      "ask_qty": 0,
+      "bid_qty": 24,
+      "consumers_bought": 0,
+      "demand": 24,
+      "imports_sold": 0,
+      "price": null,
+      "volume": 0
+    },
+    "parts": {
+      "ask_qty": 0,
+      "bid_qty": 14,
+      "consumers_bought": 0,
+      "demand": 14,
+      "imports_sold": 0,
+      "price": null,
+      "volume": 0
+    }
+  },
+  "production": {},
+  "round": 1,
+  "scores": {
+    "hoarder-3": 928.0,
+    "merchant-1": 926.0,
+    "merchant-2": 926.0,
+    "merchant-4": 926.0
+  },
+  "season": 1.176776695,
+  "seed": "d70f8a0134aa78898114ee6cf40d67bd06bc190ccd0837334a750ed18cf05b84",
+  "standings": [
+    {
+      "drawdown": 0.0,
+      "net_worth": 928.0,
+      "player": "hoarder-3",
+      "score": 928.0
+    },
+    {
+      "drawdown": 0.0,
+      "net_worth": 926.0,
+      "player": "merchant-1",
+      "score": 926.0
+    },
+    {
+      "drawdown": 0.0,
+      "net_worth": 926.0,
+      "player": "merchant-2",
+      "score": 926.0
+    },
+    {
+      "drawdown": 0.0,
+      "net_worth": 926.0,
+      "player": "merchant-4",
+      "score": 926.0
+    }
+  ],
+  "trades": {
+    "hoarder-3": {
+      "grain": {
+        "at": 7.5,
+        "bought": 3,
+        "sold": 0
+      }
+    }
+  }
+}

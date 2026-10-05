@@ -1,0 +1,36 @@
+{
+  "contracts_open": [],
+  "firms": {},
+  "game": "market/1",
+  "last_price": {
+    "fuel": null,
+    "grain": null,
+    "ore": null,
+    "parts": null
+  },
+  "match": "001-opening-bell",
+  "offers_open": [],
+  "pools": {
+    "fuel": 2000,
+    "ore": 3000
+  },
+  "round": 1,
+  "shocks": {
+    "fuel": [
+      1.0,
+      0
+    ],
+    "grain": [
+      1.0,
+      0
+    ],
+    "ore": [
+      1.0,
+      0
+    ],
+    "parts": [
+      1.0,
+      0
+    ]
+  }
+}

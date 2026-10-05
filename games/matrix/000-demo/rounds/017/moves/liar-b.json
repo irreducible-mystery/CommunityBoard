@@ -1,0 +1,24 @@
+{
+  "game": "matrix/1",
+  "match": "000-demo",
+  "pacts": [
+    "honest-a",
+    "honest-c",
+    "liar-d"
+  ],
+  "player": "liar-b",
+  "reveal": {
+    "nonce": "24b2f268f805c9c916f07ac6e7a7946f",
+    "orders": {
+      "give": [],
+      "moves": [],
+      "recruit": {}
+    }
+  },
+  "round": 17,
+  "stance": {
+    "honest-a": 0.9,
+    "honest-c": 0.9,
+    "liar-d": 0.9
+  }
+}

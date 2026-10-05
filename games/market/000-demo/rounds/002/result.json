@@ -1,0 +1,196 @@
+{
+  "absent": [],
+  "builds": {},
+  "contracts": {
+    "accepted": [],
+    "expired": [],
+    "rejected": []
+  },
+  "defaults": [],
+  "deliveries": [],
+  "dice": [
+    0.778302912,
+    0.604664477,
+    0.327130233
+  ],
+  "drawdown": {
+    "hoarder-3": 0.0,
+    "merchant-1": 0.0,
+    "merchant-2": 0.0,
+    "merchant-4": 0.0
+  },
+  "events": [],
+  "final": false,
+  "game": "market/1",
+  "invalid": {},
+  "joined": [],
+  "match": "000-demo",
+  "moved": [
+    "hoarder-3",
+    "merchant-1",
+    "merchant-2",
+    "merchant-4"
+  ],
+  "net_worth": {
+    "hoarder-3": 977.5,
+    "merchant-1": 1025.0,
+    "merchant-2": 1025.0,
+    "merchant-4": 1025.0
+  },
+  "offers": [],
+  "opex": {},
+  "pools": {
+    "fuel": 2000,
+    "ore": 3000
+  },
+  "prices": {
+    "fuel": {
+      "ask_qty": 0,
+      "bid_qty": 19,
+      "consumers_bought": 0,
+      "demand": 19,
+      "imports_sold": 0,
+      "price": null,
+      "volume": 0
+    },
+    "grain": {
+      "ask_qty": 0,
+      "bid_qty": 50,
+      "consumers_bought": 0,
+      "demand": 50,
+      "imports_sold": 0,
+      "price": null,
+      "volume": 0
+    },
+    "ore": {
+      "ask_qty": 0,
+      "bid_qty": 25,
+      "consumers_bought": 0,
+      "demand": 25,
+      "imports_sold": 0,
+      "price": null,
+      "volume": 0
+    },
+    "parts": {
+      "ask_qty": 0,
+      "bid_qty": 15,
+      "consumers_bought": 0,
+      "demand": 15,
+      "imports_sold": 0,
+      "price": null,
+      "volume": 0
+    }
+  },
+  "production": {
+    "hoarder-3": {
+      "idle": {
+        "mine": 0
+      },
+      "made": {
+        "ore": 18
+      },
+      "ran": {
+        "mine": 3
+      },
+      "used": {
+        "grain": 3
+      }
+    },
+    "merchant-1": {
+      "idle": {
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "made": {
+        "fuel": 5,
+        "grain": 8,
+        "ore": 6
+      },
+      "ran": {
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "used": {
+        "grain": 2
+      }
+    },
+    "merchant-2": {
+      "idle": {
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "made": {
+        "fuel": 5,
+        "grain": 8,
+        "ore": 6
+      },
+      "ran": {
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "used": {
+        "grain": 2
+      }
+    },
+    "merchant-4": {
+      "idle": {
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "made": {
+        "fuel": 5,
+        "grain": 8,
+        "ore": 6
+      },
+      "ran": {
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "used": {
+        "grain": 2
+      }
+    }
+  },
+  "round": 2,
+  "scores": {
+    "hoarder-3": 977.5,
+    "merchant-1": 1025.0,
+    "merchant-2": 1025.0,
+    "merchant-4": 1025.0
+  },
+  "season": 1.25,
+  "seed": "075090be1239ee64ee1700646b9a2061c47dd74f7da16f16c1e93e1d26fe1344",
+  "standings": [
+    {
+      "drawdown": 0.0,
+      "net_worth": 1025.0,
+      "player": "merchant-1",
+      "score": 1025.0
+    },
+    {
+      "drawdown": 0.0,
+      "net_worth": 1025.0,
+      "player": "merchant-2",
+      "score": 1025.0
+    },
+    {
+      "drawdown": 0.0,
+      "net_worth": 1025.0,
+      "player": "merchant-4",
+      "score": 1025.0
+    },
+    {
+      "drawdown": 0.0,
+      "net_worth": 977.5,
+      "player": "hoarder-3",
+      "score": 977.5
+    }
+  ],
+  "trades": {}
+}

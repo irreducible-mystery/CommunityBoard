@@ -1,0 +1,238 @@
+{
+  "absent": [],
+  "battles": 0,
+  "commits": {
+    "a": "37593d6496e2546a5fe8702323b74be8176472674f924ad457cb0f764a55dff0",
+    "b": "c6d2706dd4b201228751845ecf2882b1ff0eb1290849b2cd67b9fe6097f9ed73",
+    "c": "865a8d0532eb56d6e838e314419186a64080be332536a30f25845a91de81d3a5",
+    "d": "eb44b87230a64406a7f2ec36cadafbce9a54c81e3a53e0a2fece4ed44b236638"
+  },
+  "events": [
+    {
+      "amount": 1,
+      "from": "a",
+      "kind": "give",
+      "to": "b"
+    },
+    {
+      "amount": 1,
+      "from": "c",
+      "kind": "give",
+      "to": "b"
+    },
+    {
+      "kind": "recruit",
+      "seat": "a",
+      "territory": "t09",
+      "units": 4
+    },
+    {
+      "kind": "recruit",
+      "seat": "c",
+      "territory": "t08",
+      "units": 4
+    },
+    {
+      "kind": "recruit",
+      "seat": "d",
+      "territory": "t02",
+      "units": 5
+    },
+    {
+      "from": "t02",
+      "kind": "move",
+      "seat": "d",
+      "to": "t04",
+      "units": 16
+    }
+  ],
+  "game": "matrix/1",
+  "income": {
+    "a": 8,
+    "b": 1,
+    "c": 9,
+    "d": 10
+  },
+  "inconsistency": {
+    "a": {
+      "b": 0.372222222,
+      "c": 0.45,
+      "d": 0.308333333
+    },
+    "b": {
+      "a": 0.85,
+      "c": 0.691666667,
+      "d": 0.65
+    },
+    "c": {
+      "a": 0.383333333,
+      "b": 0.325,
+      "d": 0.191666667
+    },
+    "d": {
+      "a": 0.80625,
+      "b": 0.775,
+      "c": 0.65
+    }
+  },
+  "invalid": {},
+  "match": "000-demo",
+  "message_bytes": 0,
+  "messages": {},
+  "moved": [
+    "honest-a",
+    "honest-c",
+    "liar-b",
+    "liar-d"
+  ],
+  "next_state_sha256": "62b5f62c6da90b58dd5b434faeb140d3261a98c3038654eceed4703232b555ae",
+  "observed": {
+    "a": {
+      "b": 1.0
+    },
+    "c": {
+      "b": 1.0
+    },
+    "d": {
+      "b": 0.25,
+      "c": 0.25
+    }
+  },
+  "pacts_active": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "d"
+    ]
+  ],
+  "pacts_active_next": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "c"
+    ],
+    [
+      "b",
+      "d"
+    ]
+  ],
+  "player_file_problems": [],
+  "reputation": {
+    "a": 1.0,
+    "b": 1.0,
+    "c": 1.0,
+    "d": 1.0
+  },
+  "reveals": {
+    "a": {
+      "commit": "c252f68f5cff132b935c4ddba30672e06999b1f8fd459245d9c683adc11986d4",
+      "orders": {
+        "give": [
+          {
+            "amount": 1,
+            "to": "liar-b"
+          }
+        ],
+        "moves": [],
+        "recruit": {
+          "t09": 6
+        }
+      },
+      "status": "applied"
+    },
+    "b": {
+      "commit": "e2053423592d0c5d987fc83b286ba114dadb7ef86a150be6405d956122436c08",
+      "orders": {
+        "give": [],
+        "moves": [],
+        "recruit": {
+          "t04": 6
+        }
+      },
+      "status": "applied"
+    },
+    "c": {
+      "commit": "51292a767eb83d957bb8f4c1b9ee14039afd3fbe09b0ebf91e92ec9c9194c135",
+      "orders": {
+        "give": [
+          {
+            "amount": 1,
+            "to": "liar-b"
+          }
+        ],
+        "moves": [],
+        "recruit": {
+          "t08": 4
+        }
+      },
+      "status": "applied"
+    },
+    "d": {
+      "commit": "734a06b7ea67065ab0c01e481e8144728ac933bc4a552ac85b71c45748367806",
+      "orders": {
+        "give": [],
+        "moves": [
+          {
+            "from": "t02",
+            "to": "t04",
+            "units": 16
+          }
+        ],
+        "recruit": {
+          "t02": 5
+        }
+      },
+      "status": "applied"
+    }
+  },
+  "round": 13,
+  "says": {},
+  "scores": {
+    "a": 44,
+    "b": 7,
+    "c": 77,
+    "d": 48
+  },
+  "seats": {
+    "a": "honest-a",
+    "b": "liar-b",
+    "c": "honest-c",
+    "d": "liar-d"
+  },
+  "seed": "670c6d2b291303ebe570ac207daba393b5b1d61e7ae0c9dcb27cbd68cd998e64",
+  "skipped": [
+    {
+      "order": "recruit[t04]",
+      "reason": "not held",
+      "seat": "b"
+    }
+  ],
+  "stances": {
+    "a": {
+      "b": 1.0,
+      "c": 0.0,
+      "d": 0.8
+    },
+    "b": {
+      "a": 0.9,
+      "c": 0.9,
+      "d": 0.9
+    },
+    "c": {
+      "a": 0.9,
+      "b": 1.0,
+      "d": 0.6
+    },
+    "d": {
+      "a": 0.9,
+      "b": 0.9,
+      "c": 0.9
+    }
+  }
+}

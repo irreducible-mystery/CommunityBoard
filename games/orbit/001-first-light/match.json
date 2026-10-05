@@ -1,0 +1,50 @@
+{
+  "game": "orbit/1",
+  "match": "001-first-light",
+  "rounds": 10,
+  "rules": {
+    "T": 20.0,
+    "capture_radius": 0.15,
+    "capture_speed": 0.05,
+    "debris_eccentricity": [
+      0.0,
+      0.3
+    ],
+    "debris_initial": 8,
+    "debris_per_round": 1,
+    "debris_periapsis": [
+      2.5,
+      11.0
+    ],
+    "dt": 0.02,
+    "fuel": 2.0,
+    "hit_radius": 0.05,
+    "kill_point": 3,
+    "max_burns": 4,
+    "moon_radius": 0.3,
+    "mu": 1.0,
+    "mu_moon": 0.012,
+    "node_point": 1,
+    "node_radii": [
+      3.0,
+      4.0,
+      5.0,
+      6.5,
+      8.0,
+      10.0
+    ],
+    "r_max": 24.0,
+    "r_min": 1.0,
+    "r_moon": 14.0,
+    "r_park": 2.0,
+    "slug_speed": 0.3,
+    "slugs": 2
+  },
+  "seats": [
+    "a",
+    "b",
+    "c",
+    "d"
+  ],
+  "seed": "001-first-light"
+}

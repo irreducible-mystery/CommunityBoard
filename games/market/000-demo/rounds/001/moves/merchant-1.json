@@ -1,0 +1,11 @@
+{
+  "build": {
+    "farm": 1,
+    "mine": 1,
+    "well": 1
+  },
+  "game": "market/1",
+  "match": "000-demo",
+  "player": "merchant-1",
+  "round": 1
+}

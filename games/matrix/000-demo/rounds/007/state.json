@@ -1,0 +1,325 @@
+{
+  "game": "matrix/1",
+  "ledger": {
+    "a": {
+      "b": {
+        "count": 3,
+        "sum": 2.15
+      },
+      "c": {
+        "count": 3,
+        "sum": 1.75
+      },
+      "d": {
+        "count": 3,
+        "sum": 1.0
+      }
+    },
+    "b": {
+      "a": {
+        "count": 4,
+        "sum": 3.35
+      },
+      "c": {
+        "count": 4,
+        "sum": 2.85
+      },
+      "d": {
+        "count": 0,
+        "sum": 0.0
+      }
+    },
+    "c": {
+      "a": {
+        "count": 3,
+        "sum": 1.15
+      },
+      "b": {
+        "count": 2,
+        "sum": 1.1
+      },
+      "d": {
+        "count": 1,
+        "sum": 0.55
+      }
+    },
+    "d": {
+      "a": {
+        "count": 5,
+        "sum": 4.0
+      },
+      "b": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "c": {
+        "count": 1,
+        "sum": 0.65
+      }
+    }
+  },
+  "match": "000-demo",
+  "pacts_active": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "d"
+    ],
+    [
+      "c",
+      "d"
+    ]
+  ],
+  "powers": {
+    "a": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": "0e0ca3a35684831a646eab4a585da2275c470e5e1a8971d0c26ba8b012ddc457",
+      "reputation": 1.0,
+      "resources": 17,
+      "score_penalty": 0
+    },
+    "b": {
+      "betrayals": 1,
+      "broken_commits": 0,
+      "commit": "fef8121be38a0fedb5db7c4ff3c2e60125b7ee4b0d65aac619b7533362ce4d6a",
+      "reputation": 1.0,
+      "resources": 4,
+      "score_penalty": 3
+    },
+    "c": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": "a6d1a1e110c6dc337076221eb720944f345ff62d6cd3c0bd221a80bd3c224c0e",
+      "reputation": 1.0,
+      "resources": 9,
+      "score_penalty": 0
+    },
+    "d": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": "d2d04268da1953c04e1812e46ea2510a044eac1b79bcc33ecc41ca372793f9bf",
+      "reputation": 1.0,
+      "resources": 8,
+      "score_penalty": 0
+    }
+  },
+  "round": 7,
+  "scores": {
+    "a": 36,
+    "b": 13,
+    "c": 49,
+    "d": 35
+  },
+  "seats": {
+    "a": "honest-a",
+    "b": "liar-b",
+    "c": "honest-c",
+    "d": "liar-d"
+  },
+  "stance_history": [
+    {
+      "round": 1,
+      "stances": {
+        "a": {
+          "b": 1.0,
+          "c": 1.0,
+          "d": 1.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 1.0,
+          "b": 1.0,
+          "d": 1.0
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    },
+    {
+      "round": 2,
+      "stances": {
+        "a": {
+          "b": 1.0,
+          "c": 1.0,
+          "d": 1.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 1.0,
+          "b": 1.0,
+          "d": 1.0
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    },
+    {
+      "round": 3,
+      "stances": {
+        "a": {
+          "b": 0.3,
+          "c": 0.7,
+          "d": 0.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 0.9,
+          "b": 0.6,
+          "d": 0.8
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    },
+    {
+      "round": 4,
+      "stances": {
+        "a": {
+          "b": 0.3,
+          "c": 0.6,
+          "d": 0.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 0.8,
+          "b": 0.8,
+          "d": 0.7
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    },
+    {
+      "round": 5,
+      "stances": {
+        "a": {
+          "b": 0.5,
+          "c": 0.6,
+          "d": 0.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 0.7,
+          "b": 0.8,
+          "d": 0.8
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    },
+    {
+      "round": 6,
+      "stances": {
+        "a": {
+          "b": 0.6,
+          "c": 0.1,
+          "d": 0.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 0.8,
+          "b": 0.8,
+          "d": 1.0
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    }
+  ],
+  "territories": {
+    "t01": {
+      "holder": "a",
+      "units": 3
+    },
+    "t02": {
+      "holder": "a",
+      "units": 4
+    },
+    "t03": {
+      "holder": "b",
+      "units": 0
+    },
+    "t04": {
+      "holder": "b",
+      "units": 6
+    },
+    "t05": {
+      "holder": "c",
+      "units": 8
+    },
+    "t06": {
+      "holder": "c",
+      "units": 4
+    },
+    "t07": {
+      "holder": "c",
+      "units": 2
+    },
+    "t08": {
+      "holder": "c",
+      "units": 14
+    },
+    "t09": {
+      "holder": "d",
+      "units": 0
+    },
+    "t10": {
+      "holder": "a",
+      "units": 3
+    },
+    "t11": {
+      "holder": "d",
+      "units": 5
+    },
+    "t12": {
+      "holder": "d",
+      "units": 13
+    }
+  }
+}

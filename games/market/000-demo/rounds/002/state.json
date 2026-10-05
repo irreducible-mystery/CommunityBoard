@@ -1,0 +1,141 @@
+{
+  "contracts_open": [],
+  "firms": {
+    "hoarder-3": {
+      "cash": 617.5,
+      "facilities": {
+        "factory": 0,
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "inventory": {
+        "fuel": 0,
+        "grain": 3,
+        "ore": 0,
+        "parts": 0
+      },
+      "net_worth_history": [
+        928.0
+      ],
+      "offer_seq": 0,
+      "pending_builds": {
+        "factory": 0,
+        "farm": 0,
+        "mine": 3,
+        "well": 0
+      },
+      "reputation": 1.0
+    },
+    "merchant-1": {
+      "cash": 630.0,
+      "facilities": {
+        "factory": 0,
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "inventory": {
+        "fuel": 0,
+        "grain": 0,
+        "ore": 0,
+        "parts": 0
+      },
+      "net_worth_history": [
+        926.0
+      ],
+      "offer_seq": 0,
+      "pending_builds": {
+        "factory": 0,
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "reputation": 1.0
+    },
+    "merchant-2": {
+      "cash": 630.0,
+      "facilities": {
+        "factory": 0,
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "inventory": {
+        "fuel": 0,
+        "grain": 0,
+        "ore": 0,
+        "parts": 0
+      },
+      "net_worth_history": [
+        926.0
+      ],
+      "offer_seq": 0,
+      "pending_builds": {
+        "factory": 0,
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "reputation": 1.0
+    },
+    "merchant-4": {
+      "cash": 630.0,
+      "facilities": {
+        "factory": 0,
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "inventory": {
+        "fuel": 0,
+        "grain": 0,
+        "ore": 0,
+        "parts": 0
+      },
+      "net_worth_history": [
+        926.0
+      ],
+      "offer_seq": 0,
+      "pending_builds": {
+        "factory": 0,
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "reputation": 1.0
+    }
+  },
+  "game": "market/1",
+  "last_price": {
+    "fuel": null,
+    "grain": 7.5,
+    "ore": null,
+    "parts": null
+  },
+  "match": "000-demo",
+  "offers_open": [],
+  "pools": {
+    "fuel": 2000,
+    "ore": 3000
+  },
+  "round": 2,
+  "shocks": {
+    "fuel": [
+      1.0,
+      0
+    ],
+    "grain": [
+      1.0,
+      0
+    ],
+    "ore": [
+      1.0,
+      0
+    ],
+    "parts": [
+      1.0,
+      0
+    ]
+  }
+}

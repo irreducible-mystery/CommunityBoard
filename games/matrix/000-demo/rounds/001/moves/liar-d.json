@@ -1,0 +1,17 @@
+{
+  "commit": "95bc2e557871d11729a4fdd8baf431b587feb7e49e5f8f6cf810496bde05c11f",
+  "game": "matrix/1",
+  "match": "000-demo",
+  "pacts": [
+    "honest-a",
+    "liar-b",
+    "honest-c"
+  ],
+  "player": "liar-d",
+  "round": 1,
+  "stance": {
+    "honest-a": 0.9,
+    "honest-c": 0.9,
+    "liar-b": 0.9
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "game": "market/1",
+  "match": "000-demo",
+  "rounds": 24,
+  "rules": {
+    "consumer_demand": {
+      "fuel": 15,
+      "grain": 40,
+      "ore": 20,
+      "parts": 12
+    },
+    "consumer_ladder": 10,
+    "consumer_pmax": {
+      "fuel": 12,
+      "grain": 5,
+      "ore": 8,
+      "parts": 60
+    },
+    "contract_lead": 2,
+    "default_penalty": 0.2,
+    "drawdown_weight": 0.5,
+    "facilities": {
+      "factory": {
+        "cost": 200,
+        "inputs": {
+          "fuel": 4,
+          "grain": 1,
+          "ore": 8
+        },
+        "opex": 20,
+        "output": {
+          "parts": 4
+        },
+        "pool": null
+      },
+      "farm": {
+        "cost": 100,
+        "inputs": {},
+        "opex": 8,
+        "output": {
+          "grain": 8
+        },
+        "pool": null
+      },
+      "mine": {
+        "cost": 120,
+        "inputs": {
+          "grain": 1
+        },
+        "opex": 10,
+        "output": {
+          "ore": 6
+        },
+        "pool": "ore"
+      },
+      "well": {
+        "cost": 150,
+        "inputs": {
+          "grain": 1
+        },
+        "opex": 12,
+        "output": {
+          "fuel": 5
+        },
+        "pool": "fuel"
+      }
+    },
+    "facility_value": 0.8,
+    "goods": [
+      "ore",
+      "grain",
+      "fuel",
+      "parts"
+    ],
+    "import_goods": [
+      "ore",
+      "grain",
+      "fuel"
+    ],
+    "import_markup": 1.5,
+    "max_contracts": 5,
+    "max_offers": 5,
+    "max_orders": 40,
+    "p_demand_shock": 0.1,
+    "p_disaster": 0.15,
+    "p_windfall": 0.05,
+    "pool_regen": {
+      "fuel": 25,
+      "ore": 40
+    },
+    "pools": {
+      "fuel": 2000,
+      "ore": 3000
+    },
+    "reputation_drop": 0.2,
+    "run_order": [
+      "farm",
+      "mine",
+      "well",
+      "factory"
+    ],
+    "scarcity_fraction": 0.25,
+    "season_amplitude": 0.25,
+    "season_period": 8,
+    "shock_range": [
+      0.5,
+      2.0
+    ],
+    "shock_rounds": 2,
+    "start_cash": 1000,
+    "start_reputation": 1.0,
+    "windfall": 200
+  },
+  "seats": null,
+  "seed": "opening-bell"
+}
