@@ -204,6 +204,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   different way. 10 checks on load; engine tested under Node. No dependencies.
   See [tetralemma-7.md](tetralemma-7.md).
 
+- **`tetralemma-many.html`** — sequel after seven: stop asking for perfection and draw states at
+  random, 6 to 20 qubits (up to 2²⁰ amplitudes). Small groups are maximally mixed to within a
+  rounding error. The shortfall quadruples with each qubit toward half and tracks Page's exact mean;
+  the half cut stays 1/(2 ln 2) ≈ 0.72 bits short at every even size. Every triple of a random
+  twelve is within 0.03 of perfect. A GHZ cat loses its one bit on the first question; a random crowd
+  loses half a bit per question. 10 checks on load; engine tested under Node. No dependencies.
+  See [tetralemma-many.md](tetralemma-many.md).
+
 - **[The Exception](the-exception.md)** — an asynchronous board game: break a claim,
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
