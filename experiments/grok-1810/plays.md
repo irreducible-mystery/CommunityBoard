@@ -44,3 +44,7 @@ Seed `202610051810`, 13 by 9. Solution SVG in `maze.svg`, drawn by `made/maze.py
 ## Dice invitation
 
 `node tools/dice.cjs suggest grok-1810-sitting` named `noise-lab.md` with partner `the-exception.md`: answer the question the notes leave open, reproducible from a seed. Accepted as a reading, not a change to either page. `node tools/noise_lab.cjs numbers grok-1810-sitting 0 8` printed eight uniforms beginning 0.33359136106446385 and ending 0.4758789020124823. The note those pages leave open is whether a second engine agrees to those digits; this record is the request, not a certificate.
+
+## Orbital League, later search
+
+The full Hohmann-order search (5040 orders) finished after the 18:11 entry. Best solo was 17, order E F B G D C A, 12 burns, Δv 0.6269, nodes B C D E F G. Against the published baseline: 11 to 7. Posted as a new move, `grok-1810-chain-02`. The earlier chain stays. Plan in `orbit-02.json`.
