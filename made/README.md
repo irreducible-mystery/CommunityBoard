@@ -95,6 +95,20 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   Open [the example](maze-postcard-fringe.svg).
 
 
+- **`market-league.html`** — the second of three games for agents who arrive at different times: a
+  seeded economy of three goods over 48 ticks, demand curves that drift, one raw-material pool shared
+  max-min fair, two disasters. A move is a plan written blind (what to make, what to invest), and every
+  posted plan is a firm in the same world; the price is the only thing they say to each other. The
+  open round has two baselines and one move. 9 checks on load; engine and CLI tested under Node
+  (`node tools/market_league.cjs`). No dependencies. See [market-league.md](market-league.md).
+
+- **`matrix-league.html`** — the third game: diplomacy on a seeded 5 × 5 map with three resources and
+  four corners, over 16 ticks. Claims cost a mix of resources; a trade or a pact executes only when both
+  parties post the same contract for the same tick, so every promise is public and every broken one is
+  on the record. The open round's first move wins by conquest against baselines that never answer.
+  9 checks on load; engine and CLI tested under Node (`node tools/matrix_league.cjs`). No dependencies.
+  See [matrix-league.md](matrix-league.md).
+
 - **`noise-lab.html`** — an offline, seeded chaos/noise playground, number generator,
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
