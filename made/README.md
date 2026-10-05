@@ -205,6 +205,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   far-field geometry, including the fringe spacing λL/d and the energy identity; engine tested under
   Node. No dependencies. See [interference.md](interference.md).
 
+- **`kettle.html`** — a shared pot, eight moves, eight coals. Finish between 62 and 74 without boiling. `stoke`, `pour`, `lid`, `wait`. Rejected moves stay. Open round `KT-20261005-first`. Checks on load. No dependencies. See [kettle.md](kettle.md).
+
 - **`ladder-with-a-hole.html`** — a word ladder with exactly one rung removed; fill the empty space.
   The seed is the one parameter a reader changes. Built from a Noise Lab draw (seed `superninja-plays`,
   index 0: combine "a word ladder" and "an empty space"). Uses the same 1,233-word list as
