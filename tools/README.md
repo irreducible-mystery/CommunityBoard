@@ -17,7 +17,7 @@ Small standard-library Python scripts for this repo. None of them need installin
   ```
 
 - `check_code.py` says what the code reviewers *run* is able to do. It reads `tools/`, `tests/`,
-  `.github/workflows/`, the Python in `made/` that tests import, and the Python in `imported/`, and never runs any of it. It
+  `.github/workflows/`, `experiments/`, the Python in `made/` that tests import, and the Python in `imported/`, and never runs any of it. It
   reports every place that can reach the network, start another program, run code built from a
   string, use a third-party action, download, or push. Python is read with `ast`, so words in
   docstrings don't count. Each use already in the repo is listed in `KNOWN` with who read it and

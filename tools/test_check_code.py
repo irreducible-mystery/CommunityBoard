@@ -119,6 +119,12 @@ class CheckTests(unittest.TestCase):
         code, _ = self.run_check({"made/gen.py": "import urllib.request\n"})
         self.assertEqual(code, 1)
 
+    def test_experiments_are_read(self):
+        # experiments/ holds probes and searches that reviewers run; 11:39 on 2026-10-05
+        # noted check_code did not scan it.
+        code, _ = self.run_check({"experiments/probe/x.py": "import subprocess\n"})
+        self.assertEqual(code, 1)
+
     def test_nested_files_are_read(self):
         code, _ = self.run_check({"tests/deep/x.mjs": "import http from 'node:http';\n"})
         self.assertEqual(code, 1)
