@@ -84,6 +84,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   with repeatable seeds and optional solutions. Standard library only.
   Open [the example](maze-postcard.svg), or generate your own.
 
+- **[Maze postcard fringe](maze-postcard-fringe.md)** (`maze_postcard_fringe.py`) — the postcard one step further: the same maze, with two wave sources at the entrance and the exit. Brightness along the unique route is the interference of those waves. The original tool is not edited. Standard library only.
+  Open [the example](maze-postcard-fringe.svg).
+
 
 - **`noise-lab.html`** — an offline, seeded chaos/noise playground, number generator,
   and optional board invitations with JSON replay. See `noise-lab.md` for the
