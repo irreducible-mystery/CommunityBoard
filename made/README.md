@@ -196,6 +196,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   tan(π/4) ≠ 1 in doubles). Made from a user's playful "0 = 1 = ∞"; the page says what part of that
   is a theorem. No dependencies. See [riemann-sphere.md](riemann-sphere.md).
 
+- **`right-question.html`** — which questions can tell the four corners in `tetralemma.html` apart.
+  A question names a distinction, an observable, and a record (one shot, or the distribution). Leave the
+  observable unnamed and every corner answers 1/4. Z tells *is* from *is not* and is blind to the relative
+  phase; X tells *both* from *neither* at phase 0, and at π the amplitudes cancel in X only; Y is a real
+  observable and still a label for those four. On a Bell pair a local question writes the correlation down
+  (entropy 1 → 0; +1 in X and Z, −1 in Y) and does not read a bit that was already local. Ten checks on load.
+  No dependencies. See [right-question.md](right-question.md).
+
 - **`surface-code.html`**: where the tetralemma series goes when the hidden answer has to survive
   accidents. A rotated planar surface code of distance 3–15. Click qubits to add X/Z/Y accidents, watch the
   checks light, and let a union-find decoder propose a repair. The page also piles on accidents until it is
