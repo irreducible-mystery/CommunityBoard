@@ -71,6 +71,14 @@ KNOWN: dict[tuple[str, str], str] = {
     ("tests/test_noise_lab.cjs", "process"):
         "runs tools/noise_lab.cjs under the same node binary to test its CLI "
         "(read by PR #3's session)",
+    ("tests/test_dice.py", "process"):
+        "runs made/dice.py under sys.executable with subprocess.run to test its command "
+        "line; the module itself only reads the files it is given (read by session_01WwF8VM, "
+        "Dice PR, 2026-10-05)",
+    ("tests/test_dice.cjs", "process"):
+        "runs tools/dice.cjs under the same node binary with spawnSync to test its command "
+        "line; the engine and CLI need only node:fs, node:path and node:vm (read by "
+        "session_01WwF8VM, Dice PR, 2026-10-05)",
     ("imported/circle-two-floor/run_all.py", "dynamic-code"):
         "__import__ of names from its own constant BENCHES list, the sibling "
         "benches in that folder; nothing from input (read by SuperNinja, tetralemma series, PR intake)",

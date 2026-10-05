@@ -46,7 +46,8 @@ line, for use in a shell. A pool is a file name or `-` for standard input: one i
 trimmed, blank lines dropped. The tools read only what they are given, write nothing, and never
 reach the network.
 
-As a library:
+As a library (a stream object carries `seed`, `stream`, its own name, and `cursor`; `name` is the
+draw):
 
 ```python
 import sys; sys.path.insert(0, "made")
@@ -124,6 +125,12 @@ same numbers, and `tests/dice_fixtures.json` is the evidence that the two here d
   who make the same calls in the same order on the same stream get the same values. `word(i)`
   is random access and does not move the cursor.
 
+Text rules. **Trimming** removes leading and trailing characters from this set and nothing else:
+U+0009 to U+000D, U+0020, U+00A0, U+1680, U+2000 to U+200A, U+2028, U+2029, U+202F, U+205F,
+U+3000 and U+FEFF (the set JavaScript's `trim()` uses; Python's `strip()` differs at a few code
+points, so the Python side names the set explicitly). Every length limit on text (seeds, stream
+names, pool items) counts Unicode code points, not UTF-16 units and not bytes.
+
 Anchor, computed with `sha256sum` and no implementation at all: for seed `a` and stream `b`
 the key of block 0 is the 28 bytes
 `00000006 646963652f31 00000001 61 00000001 62 0000000000000000`, its SHA-256 is
@@ -174,10 +181,13 @@ is the first name of stream `name` under seed `336489`.
 
 `run(request)` takes `{"version": "dice/1", "seed", "stream", "kind", "params"}`, draws from a
 fresh stream (cursor 0) named `stream`, and returns `{"request", "result"}` where the returned
-request repeats the input with its parameters normalised (defaults filled in, pools as arrays),
-so that `run(record.request)` reproduces `record`. Invalid input raises; nothing is silently
-replaced by a default (the command lines apply their defaults explicitly, and the record shows
-them).
+request repeats the input with its parameters normalised (only the kind's parameters, in the
+table's order, pool items trimmed), so that `run(record.request)` reproduces `record`. `run`
+requires every parameter its kind lists and fills in nothing; the command lines apply their
+defaults explicitly, and the record shows them. A key the request or its params does not take is
+an error, as is any value outside the limits below: invalid input raises, and nothing is silently
+replaced. An integer parameter may arrive as a JSON number with a zero fraction (`3.0`, which some
+parsers produce) and is recorded as an integer; strings and booleans are never numbers.
 
 | kind | params | result | takes |
 |---|---|---|---|
@@ -190,7 +200,7 @@ them).
 | `name` | `count` | `count` names | varies |
 | `pick` | `pool`, `count` | `count` items, with replacement | varies |
 | `shuffle` | `pool` | the pool, shuffled | varies |
-| `sample` | `pool`, `k` | `k` distinct positions of the pool | varies |
+| `sample` | `pool`, `k` | the items at `k` distinct positions of the pool | varies |
 | `weighted` | `pool`, `weights`, `count` | `count` items | `2·count` |
 | `suggest` | `pool` | `{subject, partner, operation, constraint, invitation, choices}` | varies |
 
@@ -226,9 +236,18 @@ check                                  built-in checks; exit 1 if any fails
 ```
 
 Defaults: `COUNT` 6, `P` 0.5, `WORDS` 4, `--stream` the kind; the two flags may appear anywhere on
-the line. The default pool for `suggest`
-is the regular files in the `made/` directory beside the tool, excluding `README.md` and names
-beginning with `.`, sorted by plain string comparison. Errors go to standard error with exit
+the line. An integer argument is an optional sign and decimal digits; `P` and the `WEIGHTS` are
+decimal numbers that must be finite. `--plain` prints one value per line, numbers as that
+language's JSON writes them (so `1e-05` and `0.00001` can differ in text, never in value) and
+booleans as `true` and `false`; for `suggest` the four lines are the subject, the partner, the
+operation and the constraint. `replay` refuses `--stream` (the record names its own stream),
+honours `--plain`, prints the recomputed record, and if the saved result differs from the
+recomputed one says so on standard error while still exiting 0, since normals may differ in their
+last bits between runtimes. `check` takes no flags. `--help` prints the usage to standard output
+and exits 0; no arguments prints it to standard error and exits 1. The default pool for `suggest`
+is the regular files (following symbolic links) in the `made/` directory beside the tool, excluding
+`README.md` and names beginning with `.`, sorted by plain string comparison (code point order, which
+is also UTF-16 order for the ASCII names here). Errors go to standard error with exit
 status 1.
 
 ### The lists

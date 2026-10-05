@@ -1,0 +1,1601 @@
+{
+ "version": "dice/1",
+ "note": "Records produced by `python3 made/dice.py replay` on 2026-10-05 and verified identical, as parsed JSON, from `node tools/dice.cjs replay` (normals to 1e-9, everything else exactly). Both test suites replay every record here. The two implementations were written independently from made/dice.md; this file is the evidence that they agree.",
+ "records": [
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "words",
+    "kind": "words",
+    "params": {
+     "count": 9
+    }
+   },
+   "result": [
+    3666007444,
+    2340265432,
+    1070693126,
+    3314380339,
+    3573746132,
+    996028156,
+    834130341,
+    1129206578,
+    2344979101
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "uniform",
+    "kind": "uniform",
+    "params": {
+     "count": 5
+    }
+   },
+   "result": [
+    0.5834728392861512,
+    0.9993725392386169,
+    0.9703616824172051,
+    0.6838666555377462,
+    0.41862859668534236
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 8,
+     "min": 1,
+     "max": 6
+    }
+   },
+   "result": [
+    1,
+    4,
+    6,
+    5,
+    3,
+    5,
+    1,
+    2
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 4,
+     "min": 0,
+     "max": 4294967296
+    }
+   },
+   "result": [
+    1927104761,
+    2752788182,
+    3648320957,
+    4067463178
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 4,
+     "min": -9007199254740991,
+     "max": 0
+    }
+   },
+   "result": [
+    -8421380968331014,
+    -1899819986925682,
+    -3420313002771984,
+    -4371967263733663
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "normal",
+    "kind": "normal",
+    "params": {
+     "count": 4
+    }
+   },
+   "result": [
+    1.0235509495737563,
+    -1.3693293349400597,
+    -3.10804775851599,
+    0.05464073008725639
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "coin",
+    "kind": "coin",
+    "params": {
+     "count": 10,
+     "p": 0.3
+    }
+   },
+   "result": [
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false,
+    false,
+    true
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "hex",
+    "kind": "hex",
+    "params": {
+     "words": 4
+    }
+   },
+   "result": "fe7ccfc8fd44a40816ccb9ad489697af"
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "name",
+    "kind": "name",
+    "params": {
+     "count": 3
+    }
+   },
+   "result": [
+    "early-island-16",
+    "near-fog-18",
+    "dry-cellar-18"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "pick",
+    "kind": "pick",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "count": 6
+    }
+   },
+   "result": [
+    "a word ladder",
+    "a word ladder",
+    "a maze",
+    "a maze",
+    "a rhythm",
+    "a flock"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "shuffle",
+    "kind": "shuffle",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ]
+    }
+   },
+   "result": [
+    "an empty space",
+    "a flock",
+    "a rhythm",
+    "a memory",
+    "a word ladder",
+    "a maze"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "sample",
+    "kind": "sample",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "k": 3
+    }
+   },
+   "result": [
+    "a memory",
+    "a rhythm",
+    "a maze"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "weighted",
+    "kind": "weighted",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "weights": [
+      5,
+      0,
+      1,
+      1,
+      0.5,
+      2
+     ],
+     "count": 6
+    }
+   },
+   "result": [
+    "a flock",
+    "a word ladder",
+    "a flock",
+    "a flock",
+    "a flock",
+    "a flock"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "suggest",
+    "kind": "suggest",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ]
+    }
+   },
+   "result": {
+    "subject": "an empty space",
+    "partner": "a rhythm",
+    "operation": "Answer the question its notes leave open, or sharpen that question.",
+    "constraint": "Reproducible from a seed.",
+    "invitation": "Answer the question its notes leave open, or sharpen that question. Subject: an empty space. Partner: a rhythm. Reproducible from a seed.",
+    "choices": [
+     "accept",
+     "reinterpret",
+     "decline"
+    ]
+   }
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "words",
+    "kind": "words",
+    "params": {
+     "count": 9
+    }
+   },
+   "result": [
+    158210233,
+    969208962,
+    3816564901,
+    1617173641,
+    4178107251,
+    1617157946,
+    822179413,
+    1057814274,
+    3370922747
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "uniform",
+    "kind": "uniform",
+    "params": {
+     "count": 5
+    }
+   },
+   "result": [
+    0.2490738440778295,
+    0.9233393628411163,
+    0.04534790214089901,
+    0.25609216896363185,
+    0.6670003880691795
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 8,
+     "min": 1,
+     "max": 6
+    }
+   },
+   "result": [
+    5,
+    2,
+    6,
+    3,
+    2,
+    6,
+    6,
+    6
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 4,
+     "min": 0,
+     "max": 4294967296
+    }
+   },
+   "result": [
+    1024973436,
+    3850053997,
+    2953455830,
+    2034121155
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 4,
+     "min": -9007199254740991,
+     "max": 0
+    }
+   },
+   "result": [
+    -4127372564520543,
+    -730356440108516,
+    -6450331184014723,
+    -1978563220369854
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "normal",
+    "kind": "normal",
+    "params": {
+     "count": 4
+    }
+   },
+   "result": [
+    0.9367005277225098,
+    0.364429096813954,
+    -1.315004161006546,
+    0.6656980213619863
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "coin",
+    "kind": "coin",
+    "params": {
+     "count": 10,
+     "p": 0.3
+    }
+   },
+   "result": [
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "hex",
+    "kind": "hex",
+    "params": {
+     "words": 4
+    }
+   },
+   "result": "5908ea91235df6a51a48ed305cbd07d9"
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "name",
+    "kind": "name",
+    "params": {
+     "count": 3
+    }
+   },
+   "result": [
+    "pale-meadow-48",
+    "odd-signal-49",
+    "still-kite-56"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "pick",
+    "kind": "pick",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "count": 6
+    }
+   },
+   "result": [
+    "a word ladder",
+    "a rhythm",
+    "a rhythm",
+    "a maze",
+    "a rhythm",
+    "a rhythm"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "shuffle",
+    "kind": "shuffle",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ]
+    }
+   },
+   "result": [
+    "a maze",
+    "a memory",
+    "a rhythm",
+    "a word ladder",
+    "an empty space",
+    "a flock"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "sample",
+    "kind": "sample",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "k": 3
+    }
+   },
+   "result": [
+    "a word ladder",
+    "a rhythm",
+    "a maze"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "weighted",
+    "kind": "weighted",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "weights": [
+      5,
+      0,
+      1,
+      1,
+      0.5,
+      2
+     ],
+     "count": 6
+    }
+   },
+   "result": [
+    "a rhythm",
+    "a flock",
+    "a flock",
+    "a flock",
+    "an empty space",
+    "a flock"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "room-for-chance",
+    "stream": "suggest",
+    "kind": "suggest",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ]
+    }
+   },
+   "result": {
+    "subject": "a rhythm",
+    "partner": "a flock",
+    "operation": "Port one piece of it to the other language, Python or JavaScript, and check the two agree.",
+    "constraint": "Finished inside one session.",
+    "invitation": "Port one piece of it to the other language, Python or JavaScript, and check the two agree. Subject: a rhythm. Partner: a flock. Finished inside one session.",
+    "choices": [
+     "accept",
+     "reinterpret",
+     "decline"
+    ]
+   }
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "words",
+    "kind": "words",
+    "params": {
+     "count": 9
+    }
+   },
+   "result": [
+    2733132044,
+    3337236138,
+    1191583626,
+    457237193,
+    201428738,
+    896045331,
+    2296216445,
+    532354168,
+    2894215603
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "uniform",
+    "kind": "uniform",
+    "params": {
+     "count": 5
+    }
+   },
+   "result": [
+    0.23788709089952897,
+    0.2964878723755596,
+    0.7915369108016088,
+    0.23523502117495843,
+    0.6596706983550201
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 8,
+     "min": 1,
+     "max": 6
+    }
+   },
+   "result": [
+    6,
+    4,
+    1,
+    1,
+    6,
+    2,
+    1,
+    6
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 4,
+     "min": 0,
+     "max": 4294967296
+    }
+   },
+   "result": [
+    74985745,
+    298820470,
+    649357994,
+    462731976
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 4,
+     "min": -9007199254740991,
+     "max": 0
+    }
+   },
+   "result": [
+    -2886212023615887,
+    -7912768498290414,
+    -600871237386252,
+    -1504360676052506
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "normal",
+    "kind": "normal",
+    "params": {
+     "count": 4
+    }
+   },
+   "result": [
+    0.04791320302134916,
+    2.3586191219224517,
+    -1.6435185544807354,
+    1.065925184885683
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "coin",
+    "kind": "coin",
+    "params": {
+     "count": 10,
+     "p": 0.3
+    }
+   },
+   "result": [
+    false,
+    false,
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    false
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "hex",
+    "kind": "hex",
+    "params": {
+     "words": 4
+    }
+   },
+   "result": "8193a7e5789166454e8d2103191d960e"
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "name",
+    "kind": "name",
+    "params": {
+     "count": 3
+    }
+   },
+   "result": [
+    "red-meadow-64",
+    "narrow-corner-56",
+    "wet-marsh-29"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "pick",
+    "kind": "pick",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "count": 6
+    }
+   },
+   "result": [
+    "a memory",
+    "an empty space",
+    "an empty space",
+    "a flock",
+    "a rhythm",
+    "a word ladder"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "shuffle",
+    "kind": "shuffle",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ]
+    }
+   },
+   "result": [
+    "an empty space",
+    "a rhythm",
+    "a maze",
+    "a memory",
+    "a word ladder",
+    "a flock"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "sample",
+    "kind": "sample",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "k": 3
+    }
+   },
+   "result": [
+    "an empty space",
+    "a memory",
+    "a maze"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "weighted",
+    "kind": "weighted",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "weights": [
+      5,
+      0,
+      1,
+      1,
+      0.5,
+      2
+     ],
+     "count": 6
+    }
+   },
+   "result": [
+    "an empty space",
+    "a word ladder",
+    "an empty space",
+    "a flock",
+    "a flock",
+    "a flock"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "c7d70a6 claude-k7bxd8",
+    "stream": "suggest",
+    "kind": "suggest",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ]
+    }
+   },
+   "result": {
+    "subject": "a word ladder",
+    "partner": "a maze",
+    "operation": "Take one number it reports and get the same number a different way.",
+    "constraint": "Say what you expect before you run it, then what happened.",
+    "invitation": "Take one number it reports and get the same number a different way. Subject: a word ladder. Partner: a maze. Say what you expect before you run it, then what happened.",
+    "choices": [
+     "accept",
+     "reinterpret",
+     "decline"
+    ]
+   }
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "words",
+    "kind": "words",
+    "params": {
+     "count": 9
+    }
+   },
+   "result": [
+    957916824,
+    2892280814,
+    2852401131,
+    3635224396,
+    2972588800,
+    2570810082,
+    4166510779,
+    3379898939,
+    2263497047
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "uniform",
+    "kind": "uniform",
+    "params": {
+     "count": 5
+    }
+   },
+   "result": [
+    0.8062047495644847,
+    0.741377644998046,
+    0.7761170355008743,
+    0.07159386802897272,
+    0.53278496497517
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 8,
+     "min": 1,
+     "max": 6
+    }
+   },
+   "result": [
+    5,
+    1,
+    6,
+    3,
+    6,
+    3,
+    3,
+    3
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 4,
+     "min": 0,
+     "max": 4294967296
+    }
+   },
+   "result": [
+    3072546396,
+    3733884770,
+    1594202531,
+    1642656175
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 4,
+     "min": -9007199254740991,
+     "max": 0
+    }
+   },
+   "result": [
+    -963082551008335,
+    -3619651961980225,
+    -2515601332211979,
+    -5883758525589923
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "normal",
+    "kind": "normal",
+    "params": {
+     "count": 4
+    }
+   },
+   "result": [
+    1.2964501248501175,
+    -1.1660294703116376,
+    1.5117800188476664,
+    -0.8168413711954039
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "coin",
+    "kind": "coin",
+    "params": {
+     "count": 10,
+     "p": 0.3
+    }
+   },
+   "result": [
+    false,
+    false,
+    false,
+    true,
+    true,
+    false,
+    false,
+    true,
+    true,
+    false
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "hex",
+    "kind": "hex",
+    "params": {
+     "words": 4
+    }
+   },
+   "result": "8c2e0a11389165e91c145d8767748854"
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "name",
+    "kind": "name",
+    "params": {
+     "count": 3
+    }
+   },
+   "result": [
+    "early-compass-20",
+    "old-valley-55",
+    "busy-hour-35"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "pick",
+    "kind": "pick",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "count": 6
+    }
+   },
+   "result": [
+    "a flock",
+    "a rhythm",
+    "a rhythm",
+    "a rhythm",
+    "an empty space",
+    "a word ladder"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "shuffle",
+    "kind": "shuffle",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ]
+    }
+   },
+   "result": [
+    "a flock",
+    "a rhythm",
+    "an empty space",
+    "a maze",
+    "a word ladder",
+    "a memory"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "sample",
+    "kind": "sample",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "k": 3
+    }
+   },
+   "result": [
+    "a maze",
+    "a word ladder",
+    "a memory"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "weighted",
+    "kind": "weighted",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "weights": [
+      5,
+      0,
+      1,
+      1,
+      0.5,
+      2
+     ],
+     "count": 6
+    }
+   },
+   "result": [
+    "a memory",
+    "a flock",
+    "a flock",
+    "a flock",
+    "a flock",
+    "a flock"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "ünïcödé 🎲 日本",
+    "stream": "suggest",
+    "kind": "suggest",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ]
+    }
+   },
+   "result": {
+    "subject": "a word ladder",
+    "partner": "a rhythm",
+    "operation": "Write a test for one claim it makes.",
+    "constraint": "The original stays as it is; everything new goes beside it.",
+    "invitation": "Write a test for one claim it makes. Subject: a word ladder. Partner: a rhythm. The original stays as it is; everything new goes beside it.",
+    "choices": [
+     "accept",
+     "reinterpret",
+     "decline"
+    ]
+   }
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "b",
+    "kind": "words",
+    "params": {
+     "count": 1
+    }
+   },
+   "result": [
+    3844899584
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "a",
+    "stream": "b",
+    "kind": "uniform",
+    "params": {
+     "count": 1
+    }
+   },
+   "result": [
+    0.8952104463493895
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "336489",
+    "stream": "name",
+    "kind": "name",
+    "params": {
+     "count": 1
+    }
+   },
+   "result": [
+    "quiet-hour-15"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 3,
+     "min": 0,
+     "max": 9007199254740991
+    }
+   },
+   "result": [
+    2901441642363359,
+    7230334800254265,
+    5030495637710221
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 3,
+     "min": 9007199254740989,
+     "max": 9007199254740991
+    }
+   },
+   "result": [
+    9007199254740990,
+    9007199254740991,
+    9007199254740991
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "integer",
+    "kind": "integer",
+    "params": {
+     "count": 2,
+     "min": 7,
+     "max": 7
+    }
+   },
+   "result": [
+    7,
+    7
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "coin",
+    "kind": "coin",
+    "params": {
+     "count": 3,
+     "p": 0
+    }
+   },
+   "result": [
+    false,
+    false,
+    false
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "coin",
+    "kind": "coin",
+    "params": {
+     "count": 3,
+     "p": 1
+    }
+   },
+   "result": [
+    true,
+    true,
+    true
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "hex",
+    "kind": "hex",
+    "params": {
+     "words": 1
+    }
+   },
+   "result": "6bc1b44e"
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "hex",
+    "kind": "hex",
+    "params": {
+     "words": 64
+    }
+   },
+   "result": "6bc1b44ebc13f03de780ce5457d59154f984ff14f9fec4a7fbdb973b66a57dfc1ff40121b8f5c0fe8134d74504c5a2f50f985584d5f9f1ba362b742d0d4532b941f384f5512a021b2e15407e37e8ab3dad20526e092325d7f6243ce1d530ab405398fd1b10421fbc24be3749dd4818a3189f6f062ca404e75917feeefd378cf84250e6d8c2fd44dfd4d5dc2731abc3e3d1b9b0cc26d230d1050224bd6976d4e18d30d3f2b3791a700a67d99eb372aa29022a4191794f56b9a4ae48b95ee49d75d3bbf017a994ac8c09f78003118f18b44430d154d6d0ce9090427f705a894d3de83eb963d537975c7e870a7830e28681ba4adee7ad1d1157484595291626b8f2"
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "pick",
+    "kind": "pick",
+    "params": {
+     "pool": [
+      "only"
+     ],
+     "count": 2
+    }
+   },
+   "result": [
+    "only",
+    "only"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "shuffle",
+    "kind": "shuffle",
+    "params": {
+     "pool": [
+      "one"
+     ]
+    }
+   },
+   "result": [
+    "one"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "sample",
+    "kind": "sample",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "k": 0
+    }
+   },
+   "result": []
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "sample",
+    "kind": "sample",
+    "params": {
+     "pool": [
+      "a flock",
+      "a maze",
+      "a word ladder",
+      "a memory",
+      "a rhythm",
+      "an empty space"
+     ],
+     "k": 6
+    }
+   },
+   "result": [
+    "a rhythm",
+    "a maze",
+    "a flock",
+    "an empty space",
+    "a memory",
+    "a word ladder"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "edge",
+    "stream": "shuffle",
+    "kind": "shuffle",
+    "params": {
+     "pool": [
+      "x",
+      "y",
+      "x",
+      "z"
+     ]
+    }
+   },
+   "result": [
+    "x",
+    "x",
+    "z",
+    "y"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "trim",
+    "stream": "pick",
+    "kind": "pick",
+    "params": {
+     "pool": [
+      "padded",
+      "nbsp",
+      "plain"
+     ],
+     "count": 3
+    }
+   },
+   "result": [
+    "plain",
+    "nbsp",
+    "plain"
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "stream": "uniform",
+    "kind": "uniform",
+    "params": {
+     "count": 1
+    }
+   },
+   "result": [
+    0.6315505273597479
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "s",
+    "stream": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+    "kind": "uniform",
+    "params": {
+     "count": 2
+    }
+   },
+   "result": [
+    0.38884238600051224,
+    0.5553987672319742
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "\t",
+    "stream": "words",
+    "kind": "words",
+    "params": {
+     "count": 2
+    }
+   },
+   "result": [
+    1585370984,
+    2947134898
+   ]
+  },
+  {
+   "request": {
+    "version": "dice/1",
+    "seed": "dup",
+    "stream": "suggest",
+    "kind": "suggest",
+    "params": {
+     "pool": [
+      "p",
+      "q"
+     ]
+    }
+   },
+   "result": {
+    "subject": "q",
+    "partner": "p",
+    "operation": "Run it, and write down one thing it does that its notes do not mention.",
+    "constraint": "The original stays as it is; everything new goes beside it.",
+    "invitation": "Run it, and write down one thing it does that its notes do not mention. Subject: q. Partner: p. The original stays as it is; everything new goes beside it.",
+    "choices": [
+     "accept",
+     "reinterpret",
+     "decline"
+    ]
+   }
+  }
+ ]
+}
