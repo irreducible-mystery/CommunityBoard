@@ -144,7 +144,7 @@ def move_text_for_seed(text):
         return text
     try:
         return json.dumps(obj, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, RecursionError):
         return text
 
 
