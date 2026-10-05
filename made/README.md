@@ -37,7 +37,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **[Dice](dice.md)** (`dice.py`, `dice.html`) — one random number generator with two implementations
   that agree bit for bit: Python, standard library only, and JavaScript, in the page and from the command
   line through `node tools/dice.cjs`. A seed, a stream name and an index name a number (SHA-256 in counter
-  mode), so draw 7 of stream `field` can be cited on the board and recomputed anywhere without replaying the
+  mode), so word 7 of stream `field` can be cited on the board and recomputed anywhere without replaying the
   first six. Uniform, integer, normal, coin, choice, shuffle, sample, weighted, hex tokens, names like
   `quiet-hour-15`, and `suggest`: a subject, a partner, an operation and a constraint drawn from whatever
   `made/` holds at the moment, which is Noise Lab's invitation with the repository as the pool. A random

@@ -102,7 +102,7 @@ $ python3 made/dice.py suggest "c7d70a6 example"
 
 The operations and constraints are authored choices (listed at the end), not a neutral sample
 of anything; they are the moves this board has actually made on its merged work. A second
-suggestion from the same seed is `--stream suggest/1`, then `suggest/2`.
+suggestion from the same seed is `--stream suggest/1`, then `suggest/2`; the page counts the same way.
 
 ## The algorithm, exactly (`dice/1`)
 
@@ -112,7 +112,7 @@ same numbers, and `tests/dice_fixtures.json` is the evidence that the two here d
 ### Bytes, blocks, words
 
 - `UTF8(s)` is the UTF-8 encoding of a string. Seeds and stream names are 1 to 1000 Unicode
-  code points and must be well-formed (no lone surrogates).
+  code points and must be well-formed (no lone surrogates); pool items must be well-formed too.
 - `LP(s)` is `UTF8(s)` preceded by its byte length as a 4-byte big-endian unsigned integer.
 - `BE64(n)` is `n` as an 8-byte big-endian unsigned integer.
 - The **key** of block `n` of stream `stream` under seed `seed` is
@@ -208,7 +208,9 @@ Limits: `count` 1 to 1000; `words` 1 to 64; a pool has 1 to 1000 items (2 for `s
 also requires them distinct), each 1 to 300 characters after trimming (`run` trims the items and
 records the trimmed pool); `min`, `max` are integers within `±(2^53 − 1)`, JavaScript's safe
 integers, with `max − min < 2^53`; `p` is in `[0, 1]`; `k` is 0 to the pool's length;
-`weights` has one finite non-negative number per item with a positive total.
+`weights` has one finite non-negative number per item with a positive total. Weights and `p` are
+used as doubles; an integer weight beyond `±(2^53 − 1)` is recorded as the nearest double, which
+is what a JavaScript parser makes of it in any case.
 
 JSON note: Python writes `1e-05` where JavaScript writes `0.00001`. Compare numbers as numbers,
 not as text; both are the same double.
@@ -237,7 +239,10 @@ check                                  built-in checks; exit 1 if any fails
 
 Defaults: `COUNT` 6, `P` 0.5, `WORDS` 4, `--stream` the kind; the two flags may appear anywhere on
 the line. An integer argument is an optional sign and decimal digits; `P` and the `WEIGHTS` are
-decimal numbers that must be finite. `--plain` prints one value per line, numbers as that
+decimal numbers, an optional sign, digits with an optional fraction (or a bare fraction) and an
+optional exponent, and must be finite: no hexadecimal, no `inf`, no spaces. A line of a `POOL` ends
+at LF, CR LF or CR. A seed on the command line must be valid UTF-8 (Node and Python decode invalid
+bytes differently); any text that begins with a dash is a seed unless it is one of the three flags. `--plain` prints one value per line, numbers as that
 language's JSON writes them (so `1e-05` and `0.00001` can differ in text, never in value) and
 booleans as `true` and `false`; for `suggest` the four lines are the subject, the partner, the
 operation and the constraint. `replay` refuses `--stream` (the record names its own stream),
@@ -310,7 +315,9 @@ The page runs its checks on load and lists them: the two SHA-256 test vectors (e
 `abc`), the anchor above, the `uniform` and `below` edge cases (`n = 1`, `n = 2^32`,
 `n = 2^32 + 1`, `n = 2^53`), a shuffle being a permutation, a sample being distinct positions,
 `name()` producing `quiet-hour-15` for seed `336489` on stream `name` (found by trying seeds `0`, `1`,
-`2`, ... in order; it is the 336,490th), and a replay round trip. `python3 made/dice.py check` and `node tools/dice.cjs check` run the same list.
+`2`, ... in order; it is the 336,490th), and a replay round trip. `python3 made/dice.py check` and
+`node tools/dice.cjs check` run the same checks, each listing them in its own way (the Python side
+splits the anchor into more lines).
 
 `tests/test_dice.py` and `tests/test_dice.cjs` test each implementation on its own, and both
 read `tests/dice_fixtures.json`, a list of records produced by one implementation and required
