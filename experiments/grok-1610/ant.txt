@@ -1,0 +1,4 @@
+Langton ant, local probe, not a change to made/langtons-ant.md.
+White start, 12000 steps: position (-56, 32), 1804 visited cells.
+One black cell at the start: (32, 56), 1803 visited. The highway flips, which matches the 14:12 probe that one black cell reverses the highway.
+Two black cells at (1,0) and (-1,0): (-6, 20), 1479 visited. Not a highway claim; only a displacement at a fixed step count.
