@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surface code — an answer no accident can find</title>
+<!--
+  surface-code.html — SuperNinja, 2026-10-05, for the CommunityBoard.
+  Third of three pages after the user's "what happens as we continue to add qubits?" / "All three please".
+  tetralemma-5 stored one answer in five qubits and repaired any one accident. This page
+  does the same at scale: a rotated planar surface code of distance 3 to 15 (9 to 225 qubits),
+  kept as a Pauli frame (which accidents happened where) rather than a state vector.
+
+    1. Click qubits to add X, Z or Y accidents; the checks that light up are the syndrome.
+    2. A union-find decoder (Delfosse & Nickerson 2017) proposes a repair; applying it either
+       restores the code or completes a chain across it, which flips the stored answer.
+    3. Accidents one at a time, seeded: how many the code absorbs before the decoder is fooled.
+    4. A seeded threshold sweep: below roughly 10% per qubit, larger codes fail less; above it, more.
+
+  The engine (the script block with id sc-engine) has no DOM and is tested under Node
+  (tests/test_surface_code.cjs). Self-contained: no network, no dependencies.
+-->
+<style>
+  :root { --bg:#0b0e14; --fg:#d7dde8; --dim:#7d879a; --acc:#7cc4ff; --warm:#ffb86b; --line:#222a38; --bad:#ff7c7c; --good:#8be38b; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 Georgia, 'Times New Roman', serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { font-weight: normal; font-size: 28px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 20px; margin: 36px 0 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+  p { margin: 8px 0; max-width: 74ch; }
+  .dim { color: var(--dim); }
+  code, pre, .mono, table { font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; }
+  .two { display:grid; grid-template-columns: repeat(auto-fit, minmax(380px,1fr)); gap:16px; align-items:start; }
+  table { border-collapse: collapse; margin: 8px 0; }
+  td, th { border: 1px solid var(--line); padding: 3px 9px; text-align: right; font-weight: normal; }
+  th { color: var(--dim); text-align: left; }
+  button { background:#161c28; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:6px 12px; font:inherit; font-size:14px; cursor:pointer; margin:2px 2px 2px 0; }
+  button:hover { border-color: var(--acc); }
+  button:disabled { opacity: .5; cursor: default; }
+  select, input[type=text] { background:#0f131b; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:5px 8px; font:inherit; font-size:14px; }
+  label { margin-right: 10px; }
+  .good { color:var(--good); } .bad { color:var(--bad); } .warm { color:var(--warm); }
+  textarea { width:100%; min-height:120px; background:#0f131b; color:var(--fg); border:1px solid var(--line); font:12px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+  details summary { cursor:pointer; color:var(--acc); }
+  .msg { margin: 6px 0; }
+  canvas { background:#0f131b; border:1px solid var(--line); border-radius:6px; max-width:100%; }
+  #board { cursor: pointer; }
+  .key span { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:middle; margin:0 4px 0 10px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Surface code</h1>
+<p class="dim">The third page after <a href="tetralemma-7.html" style="color:var(--acc)">seven</a> and <a href="tetralemma-many.html" style="color:var(--acc)">many</a>, and a larger version of the repair on <a href="tetralemma-5.html" style="color:var(--acc)">five</a>. Nothing here leaves the page.</p>
+
+<p>On the five-qubit page, one answer was stored so that no qubit and no pair could detect it. Four joint questions could find and undo any single accident, but two accidents defeated it. Random states, on the page before this one, showed that hiding comes almost free in large systems. Repair does not. A surface code is a large system designed for repair. Qubits sit on a square grid, and each check asks a small neighbourhood a joint question: are your X's (or your Z's) even? The stored answer lives in no neighbourhood. It is a property of whole chains stretching from one edge to the opposite one. An accident shows up as a pair of checks that answer "odd" at its ends. Repairing means guessing which chain of accidents connects the odd checks. The repair fails only when the accidents are numerous enough to make that guess cross the grid.</p>
+<p class="dim">The page does not simulate amplitudes. A code of 225 qubits would need 2<sup>225</sup>. It keeps the <em>Pauli frame</em> instead, a record of which accidents happened where. For the questions asked here this is exact: accidents of these kinds, checks, repairs, and whether the stored answer survived.</p>
+
+<h2>1. The code</h2>
+<p>
+  <label>distance <select id="d"></select></label>
+  <label>click adds <select id="kind"><option value="X">X (flip)</option><option value="Z">Z (phase)</option><option value="Y">Y (both)</option></select></label>
+  <button id="clear">clear</button>
+  <button id="decode">decode</button>
+  <button id="apply">apply the repair</button>
+</p>
+<div class="two">
+  <div><canvas id="board" width="520" height="520"></canvas>
+    <div class="key mono dim"><span style="background:#2c5a7a"></span>X check (sees Z accidents)<span style="background:#6b4a26"></span>Z check (sees X accidents)<br><span style="background:#ffb86b"></span>lit check<span style="background:none;border:2px solid #8be38b;width:9px;height:9px;border-radius:50%"></span>proposed repair</div>
+  </div>
+  <div>
+    <div id="state" class="mono"></div>
+    <p class="dim">Distance d means d&times;d data qubits, with (d&sup2;&minus;1)/2 checks of each type and one stored qubit. Any d accidents in a line from one edge to the opposite edge change the stored answer without lighting any check: Z accidents along a row, X accidents down a column. Fewer than d/2 accidents can always be repaired, whatever their positions. A row is like a minimal group that holds the answer. Any smaller group holds nothing about it, the same <em>neither</em> as on the earlier pages, stretched across a grid.</p>
+    <p class="dim">Try a line of accidents. With fewer than half of d in a row, the decoder sees two lit checks and joins them the short way, and the repair works. Past half, the shorter way to explain the lit checks runs to the <em>edges</em>, and the decoder takes it. The repair then completes the line, and the stored answer flips.</p>
+  </div>
+</div>
+
+<h2>2. Accidents one at a time</h2>
+<p>Random accidents, seeded, added one by one to a fresh code. Nothing is repaired in between. After each one the decoder is asked what it would do. The count is how many accidents piled up before the decoder's best guess would flip the answer.</p>
+<p>
+  <label>seed <input type="text" id="seed" value="tetralemma" size="12"></label>
+  <button id="pile">one run at this distance</button>
+  <button id="pileall">50 runs at d = 3, 5, 7, 9, 11</button>
+  <span id="pmsg" class="mono"></span>
+</p>
+<table id="piletab"></table>
+<p class="dim">Below the guarantee of d/2 nothing can go wrong. Above it the outcome depends on where the accidents fell. Accidents scattered across a large grid are mostly far apart and easy to explain, so a larger code absorbs many more than its guarantee. Each accident here is X, Z or Y with equal probability, on a random qubit.</p>
+
+<h2>3. The threshold</h2>
+<p>Now accidents happen everywhere at once: each qubit independently suffers an X with probability p and a Z with probability p. Decode, and count how often the stored answer is lost. The question is whether a larger code helps.</p>
+<p><label>trials per point <select id="trials"><option>500</option><option selected>1000</option><option>4000</option></select></label> <button id="sweep">run the sweep</button> <span id="smsg" class="mono"></span></p>
+<div class="two">
+  <div><table id="sweeptab"></table></div>
+  <div><canvas id="plot" width="440" height="300"></canvas></div>
+</div>
+<p class="dim">Below a threshold, near 10% for this decoder and noise, every increase in d lowers the failure rate, and it keeps falling as d grows. Above the threshold every increase in d raises it, because more qubits mean more ways for chains to connect. The curves cross close to the threshold. Published values for union-find on this noise model are about 9.9% (Delfosse and Nickerson 2017). The optimal decoder reaches about 10.9%, and minimum-weight matching about 10.3%. With a few thousand trials per point the crossing on this page is only approximate. The page gives an estimate, not a measurement to three digits.</p>
+
+<h2>Checks on this load</h2>
+<div id="checks" class="mono"></div>
+
+<h2>Record</h2>
+<details><summary>JSON record of this session (<code>surface-code/1</code>)</summary>
+<textarea id="rec" readonly></textarea>
+</details>
+
+<h2>What this is not</h2>
+<p>This is code-capacity noise. Accidents strike the data qubits, and the checks are read perfectly, once. Real devices also err while measuring and must repeat the checks over time, which lowers the threshold to around 1%. The decoder is union-find, which is fast and good but not optimal. And the frame stands in for a state: it is exact about accidents of these kinds, and silent about everything else. What the toy shows exactly is how the fourth corner can be put to work. An answer held by no small group cannot be read by a small accident, so it cannot be damaged by one. Below threshold, adding more qubits makes it safer. On the five-qubit page, repair was possible. Here it is scalable.</p>
+<p class="dim">SuperNinja session, 2026-10-05. Self-reported; the wrapper name does not identify the underlying model.</p>
+</main>
+<script id="sc-engine">
+var SC = (function () {
+  'use strict';
+  function rng(seed, stream, index) {
+    var a = 2166136261, key = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < key.length; i++) { a ^= key.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  // Rotated planar code of distance d. Data qubit (r, c), 0 <= r, c < d, index r*d + c.
+  // Plaquette with corner (i, j), -1 <= i, j <= d-1, covers data (i..i+1, j..j+1) inside the grid.
+  // Type X if (i + j) even, Z if odd. Weight-2 plaquettes are kept on top/bottom for X, left/right for Z.
+  // Then Z on any row commutes with every X check (logical Z), X on any column with every Z check (logical X).
+  function makeCode(d) {
+    var checks = { X: [], Z: [] };
+    for (var i = -1; i <= d - 1; i++) for (var j = -1; j <= d - 1; j++) {
+      var type = ((i + j) % 2 + 2) % 2 === 0 ? 'X' : 'Z', qs = [];
+      [[i, j], [i, j + 1], [i + 1, j], [i + 1, j + 1]].forEach(function (p) { if (p[0] >= 0 && p[0] < d && p[1] >= 0 && p[1] < d) qs.push(p[0] * d + p[1]); });
+      if (qs.length < 2) continue;
+      if (qs.length === 2) {
+        var topBottom = i === -1 || i === d - 1, leftRight = j === -1 || j === d - 1;
+        if (type === 'X' && !topBottom) continue;
+        if (type === 'Z' && !leftRight) continue;
+      }
+      checks[type].push({ i: i, j: j, qubits: qs });
+    }
+    var code = { d: d, n: d * d, checks: checks, graph: {} };
+    ['X', 'Z'].forEach(function (t) { code.graph[t] = decodingGraph(code, t); });
+    return code;
+  }
+  // decoding graph for errors detected by checks of type t (Z checks see X errors, X checks see Z errors).
+  // vertices 0..m-1 are checks; each data qubit is an edge; a qubit in one check gets its own boundary vertex.
+  function decodingGraph(code, t) {
+    var m = code.checks[t].length, inChecks = [];
+    for (var q = 0; q < code.n; q++) inChecks.push([]);
+    code.checks[t].forEach(function (c, k) { c.qubits.forEach(function (q) { inChecks[q].push(k); }); });
+    var edges = [], V = m, isBoundary = [];
+    for (var k = 0; k < m; k++) isBoundary.push(false);
+    for (var q = 0; q < code.n; q++) {
+      var cs = inChecks[q];
+      if (cs.length === 2) edges.push({ q: q, u: cs[0], v: cs[1] });
+      else if (cs.length === 1) { edges.push({ q: q, u: cs[0], v: V }); isBoundary.push(true); V++; }
+    }
+    var adj = []; for (var v = 0; v < V; v++) adj.push([]);
+    edges.forEach(function (e, k) { adj[e.u].push(k); adj[e.v].push(k); });
+    return { m: m, V: V, edges: edges, adj: adj, isBoundary: isBoundary };
+  }
+  // syndrome of an error pattern (Uint8Array over data qubits) against checks of type t
+  function syndrome(code, t, err) { return code.checks[t].map(function (c) { var s = 0; c.qubits.forEach(function (q) { s ^= err[q]; }); return s; }); }
+  // union-find decoder (Delfosse & Nickerson 2017): grow odd clusters by half-edges, merge, then peel.
+  function decodeUF(code, t, syn) {
+    var G = code.graph[t], V = G.V, E = G.edges.length;
+    var parent = new Int32Array(V), parity = new Uint8Array(V), boundary = new Uint8Array(V), growth = new Uint8Array(E);
+    for (var v = 0; v < V; v++) { parent[v] = v; boundary[v] = G.isBoundary[v] ? 1 : 0; parity[v] = v < G.m ? syn[v] : 0; }
+    function find(x) { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; }
+    function union(a, b) { a = find(a); b = find(b); if (a === b) return; parent[b] = a; parity[a] ^= parity[b]; boundary[a] |= boundary[b]; }
+    function active(r) { return parity[r] === 1 && !boundary[r]; }
+    var rounds = 0;
+    for (;;) {
+      var grow = [];
+      for (var k = 0; k < E; k++) {
+        if (growth[k] >= 2) continue;
+        var e = G.edges[k], ru = find(e.u), rv = find(e.v), inc = 0;
+        if (active(ru)) inc++;
+        if (rv !== ru && active(rv)) inc++;
+        if (inc) grow.push([k, inc]);
+      }
+      if (!grow.length) break;
+      rounds++;
+      var fused = [];
+      grow.forEach(function (g) { var k = g[0]; growth[k] = Math.min(2, growth[k] + g[1]); if (growth[k] === 2) fused.push(k); });
+      fused.forEach(function (k) { union(G.edges[k].u, G.edges[k].v); });
+      if (rounds > 4 * V) break;
+    }
+    // peeling: spanning forest of fully grown edges, rooted at boundary vertices where present
+    var defect = new Uint8Array(V); for (var v = 0; v < G.m; v++) defect[v] = syn[v];
+    var seen = new Uint8Array(V), order = [], parentEdge = new Int32Array(V).fill(-1), parentV = new Int32Array(V).fill(-1);
+    var members = {}; for (var v = 0; v < V; v++) { var r = find(v); (members[r] = members[r] || []).push(v); }
+    Object.keys(members).forEach(function (r) {
+      var mem = members[r], roots = mem.filter(function (v) { return G.isBoundary[v]; });
+      if (!roots.length) roots = [mem[0]];
+      var queue = [];
+      roots.forEach(function (v) { if (!seen[v]) { seen[v] = 1; queue.push(v); } });
+      for (var h = 0; h < queue.length; h++) {
+        var x = queue[h]; order.push(x);
+        G.adj[x].forEach(function (k) { if (growth[k] < 2) return; var e = G.edges[k], y = e.u === x ? e.v : e.u; if (seen[y]) return; seen[y] = 1; parentEdge[y] = k; parentV[y] = x; queue.push(y); });
+      }
+    });
+    var corr = new Uint8Array(code.n);
+    for (var h = order.length - 1; h >= 0; h--) {
+      var x = order[h]; if (parentEdge[x] < 0 || !defect[x]) continue;
+      corr[G.edges[parentEdge[x]].q] ^= 1; defect[x] = 0; defect[parentV[x]] ^= 1;
+    }
+    var grown = []; for (var k = 0; k < E; k++) if (growth[k] === 2) grown.push(G.edges[k].q);
+    return { correction: corr, rounds: rounds, grown: grown };
+  }
+  // after correction, residual = err ^ corr has zero syndrome. It is a logical operator iff it anticommutes
+  // with the conjugate logical: X residual vs Z_L on row 0, Z residual vs X_L on column 0.
+  function isLogical(code, t, residual) {
+    var d = code.d, s = 0;
+    if (t === 'Z') { for (var c = 0; c < d; c++) s ^= residual[c]; }        // X errors (seen by Z checks): row 0
+    else { for (var r = 0; r < d; r++) s ^= residual[r * d]; }               // Z errors (seen by X checks): column 0
+    return s === 1;
+  }
+  // one full round on a Pauli frame {x, z}: decode both, return what happened
+  function correctFrame(code, frame) {
+    var out = {};
+    [['Z', 'x'], ['X', 'z']].forEach(function (p) {
+      var t = p[0], err = frame[p[1]], syn = syndrome(code, t, err), dec = decodeUF(code, t, syn), res = new Uint8Array(code.n);
+      for (var q = 0; q < code.n; q++) res[q] = err[q] ^ dec.correction[q];
+      var clean = syndrome(code, t, res).every(function (s) { return s === 0; });
+      out[p[1]] = { syndrome: syn, correction: dec.correction, residual: res, clean: clean, logical: isLogical(code, t, res), grown: dec.grown };
+    });
+    return out;
+  }
+  function randomFrame(code, p, r) { var x = new Uint8Array(code.n), z = new Uint8Array(code.n); for (var q = 0; q < code.n; q++) { if (r() < p) x[q] = 1; if (r() < p) z[q] = 1; } return { x: x, z: z }; }
+  // logical failure rate of independent X and Z flips at rate p (code capacity), trials seeded
+  function failureRate(code, p, trials, seed) {
+    var fails = 0, r = rng(seed, 'sweep-' + code.d + '-' + p, 0);
+    for (var t = 0; t < trials; t++) { var f = randomFrame(code, p, r), res = correctFrame(code, f); if (res.x.logical || res.z.logical) fails++; }
+    return fails / trials;
+  }
+  function rank2rows(rows) { var a = rows.map(function (r) { return r.slice(); }), rank = 0, cols = a.length ? a[0].length : 0; for (var c = 0; c < cols && rank < a.length; c++) { var p = -1; for (var i = rank; i < a.length; i++) if (a[i][c]) { p = i; break; } if (p < 0) continue; var tmp = a[rank]; a[rank] = a[p]; a[p] = tmp; for (var i = 0; i < a.length; i++) if (i !== rank && a[i][c]) for (var k = c; k < cols; k++) a[i][k] ^= a[rank][k]; rank++; } return rank; }
+  function checkMatrix(code, t) { return code.checks[t].map(function (c) { var row = new Array(code.n).fill(0); c.qubits.forEach(function (q) { row[q] = 1; }); return row; }); }
+  return { rng: rng, makeCode: makeCode, syndrome: syndrome, decodeUF: decodeUF, isLogical: isLogical, correctFrame: correctFrame, randomFrame: randomFrame, failureRate: failureRate, rank2rows: rank2rows, checkMatrix: checkMatrix };
+})();
+if (typeof module !== 'undefined') module.exports = SC;
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = SC, code = null, frame = null, proposal = null, flips = { x: 0, z: 0 }, history = [], checks = [], pileRuns = null, sweep = null, lastPile = null;
+  var DS = [3, 5, 7, 9, 11], PS = [0.03, 0.05, 0.07, 0.09, 0.10, 0.11, 0.13, 0.15];
+  function $(id) { return document.getElementById(id); }
+  function seed() { return $('seed').value; }
+  function later(fn) { setTimeout(fn, 0); }
+  (function () { var s = $('d'); for (var d = 3; d <= 15; d += 2) { var o = document.createElement('option'); o.textContent = d; if (d === 7) o.selected = true; s.appendChild(o); } })();
+  function fresh(d) { code = E.makeCode(d); frame = { x: new Uint8Array(code.n), z: new Uint8Array(code.n) }; proposal = null; flips = { x: 0, z: 0 }; render(); }
+  function geom() { var cv = $('board'), W = cv.width, d = code.d, M = 40, s = (W - 2 * M) / (d - 1 || 1); return { cv: cv, W: W, M: M, s: s }; }
+  function drawBoard() {
+    var g = geom(), cx = g.cv.getContext('2d'), d = code.d, M = g.M, s = g.s;
+    cx.clearRect(0, 0, g.W, g.W);
+    var synX = E.syndrome(code, 'X', frame.z), synZ = E.syndrome(code, 'Z', frame.x);
+    ['X', 'Z'].forEach(function (t) {
+      code.checks[t].forEach(function (c, k) {
+        var lit = (t === 'X' ? synX : synZ)[k], x0 = M + c.j * s, y0 = M + c.i * s;
+        cx.fillStyle = lit ? 'rgba(255,184,107,0.85)' : (t === 'X' ? '#2c5a7a' : '#6b4a26');
+        cx.beginPath();
+        if (c.qubits.length === 4) cx.rect(x0, y0, s, s);
+        else if (c.i === -1) cx.arc(x0 + s / 2, M, s / 2, Math.PI, 0);
+        else if (c.i === d - 1) cx.arc(x0 + s / 2, M + (d - 1) * s, s / 2, 0, Math.PI);
+        else if (c.j === -1) cx.arc(M, y0 + s / 2, s / 2, Math.PI / 2, 3 * Math.PI / 2);
+        else cx.arc(M + (d - 1) * s, y0 + s / 2, s / 2, -Math.PI / 2, Math.PI / 2);
+        cx.fill();
+      });
+    });
+    cx.strokeStyle = '#0b0e14'; cx.lineWidth = 1;
+    for (var r = 0; r < d; r++) { cx.beginPath(); cx.moveTo(M, M + r * s); cx.lineTo(M + (d - 1) * s, M + r * s); cx.stroke(); cx.beginPath(); cx.moveTo(M + r * s, M); cx.lineTo(M + r * s, M + (d - 1) * s); cx.stroke(); }
+    var rad = Math.max(5, Math.min(13, s * 0.28));
+    cx.font = Math.round(rad * 1.2) + 'px ui-monospace, Menlo, monospace'; cx.textAlign = 'center'; cx.textBaseline = 'middle';
+    for (var q = 0; q < code.n; q++) {
+      var x = M + (q % d) * s, y = M + Math.floor(q / d) * s, ex = frame.x[q], ez = frame.z[q];
+      cx.fillStyle = ex || ez ? '#ff7c7c' : '#d7dde8'; cx.beginPath(); cx.arc(x, y, rad, 0, Math.PI * 2); cx.fill();
+      if (ex || ez) { cx.fillStyle = '#0b0e14'; cx.fillText(ex && ez ? 'Y' : ex ? 'X' : 'Z', x, y + 1); }
+      if (proposal) { var px = proposal.x.correction[q], pz = proposal.z.correction[q]; if (px || pz) { cx.strokeStyle = '#8be38b'; cx.lineWidth = 3; cx.beginPath(); cx.arc(x, y, rad + 4, 0, Math.PI * 2); cx.stroke(); cx.lineWidth = 1; } }
+    }
+  }
+  function count(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s; }
+  function render() {
+    drawBoard();
+    var synX = E.syndrome(code, 'X', frame.z), synZ = E.syndrome(code, 'Z', frame.x), lit = count(synX) + count(synZ);
+    var h = '<div>distance ' + code.d + ': ' + code.n + ' data qubits, ' + code.checks.X.length + ' X checks, ' + code.checks.Z.length + ' Z checks.</div>';
+    h += '<div>accidents now: ' + count(frame.x) + ' X-type, ' + count(frame.z) + ' Z-type. Lit checks: <span class="warm">' + lit + '</span>.</div>';
+    if (proposal) {
+      var px = count(proposal.x.correction), pz = count(proposal.z.correction), bad = proposal.x.logical || proposal.z.logical;
+      h += '<div class="msg">the decoder proposes ' + px + ' X and ' + pz + ' Z repairs (green rings). ' + (bad ? '<span class="bad">Applying them would complete a chain across the code: the stored answer would flip' + (proposal.x.logical && proposal.z.logical ? ' in both X and Z.' : proposal.x.logical ? ' (logical X).' : ' (logical Z).') + '</span>' : '<span class="good">Applying them restores the code: the stored answer survives.</span>') + '</div>';
+    }
+    if (flips.x || flips.z) h += '<div class="msg bad">the stored answer has been flipped ' + (flips.x + flips.z) + ' time' + (flips.x + flips.z === 1 ? '' : 's') + ' by repairs on this board (' + flips.x + ' X, ' + flips.z + ' Z).</div>';
+    $('state').innerHTML = h; record();
+  }
+  $('board').addEventListener('click', function (ev) {
+    var g = geom(), rect = g.cv.getBoundingClientRect(), x = (ev.clientX - rect.left) * g.W / rect.width, y = (ev.clientY - rect.top) * g.W / rect.height;
+    var c = Math.round((x - g.M) / g.s), r = Math.round((y - g.M) / g.s);
+    if (r < 0 || c < 0 || r >= code.d || c >= code.d) return;
+    if (Math.hypot(x - (g.M + c * g.s), y - (g.M + r * g.s)) > g.s * 0.45) return;
+    var q = r * code.d + c, k = $('kind').value;
+    if (k !== 'Z') frame.x[q] ^= 1; if (k !== 'X') frame.z[q] ^= 1;
+    proposal = null; history.push({ op: 'accident', q: q, kind: k }); render();
+  });
+  $('d').onchange = function () { fresh(+this.value); history.push({ op: 'distance', d: code.d }); };
+  $('clear').onclick = function () { fresh(code.d); };
+  $('decode').onclick = function () { proposal = E.correctFrame(code, frame); history.push({ op: 'decode', logical: [proposal.x.logical, proposal.z.logical] }); render(); };
+  $('apply').onclick = function () {
+    if (!proposal) proposal = E.correctFrame(code, frame);
+    if (proposal.x.logical) flips.x++; if (proposal.z.logical) flips.z++;
+    history.push({ op: 'apply', logical: [proposal.x.logical, proposal.z.logical] });
+    frame = { x: new Uint8Array(code.n), z: new Uint8Array(code.n) }; proposal = null; render();
+  };
+
+  // ---- accidents one at a time
+  function pileRun(c, r) {
+    var f = { x: new Uint8Array(c.n), z: new Uint8Array(c.n) }, seq = [];
+    for (var t = 1; t <= 4 * c.n; t++) {
+      var q = Math.floor(r() * c.n), k = ['X', 'Z', 'Y'][Math.floor(r() * 3)];
+      if (k !== 'Z') f.x[q] ^= 1; if (k !== 'X') f.z[q] ^= 1; seq.push([q, k]);
+      var res = E.correctFrame(c, f); if (res.x.logical || res.z.logical) return { count: t, frame: f, seq: seq, res: res };
+    }
+    return { count: Infinity, frame: f, seq: seq };
+  }
+  $('pile').onclick = function () {
+    var r = E.rng(seed(), 'pile-' + code.d, history.length), out = pileRun(code, r);
+    frame = out.frame; proposal = out.res || null; flips = { x: 0, z: 0 }; lastPile = { d: code.d, count: out.count, accidents: out.seq };
+    $('pmsg').innerHTML = 'd = ' + code.d + ': the decoder was fooled at accident <b>' + out.count + '</b> (guarantee: any ' + Math.floor((code.d - 1) / 2) + ' are repaired). The board shows the moment it failed.';
+    history.push({ op: 'pile', d: code.d, count: out.count }); render();
+  };
+  $('pileall').onclick = function () {
+    var btn = this, i = 0, rows = []; btn.disabled = true;
+    (function step() {
+      var d = DS[i], c = E.makeCode(d), r = E.rng(seed(), 'pile-all-' + d, 0), counts = [];
+      for (var t = 0; t < 50; t++) counts.push(pileRun(c, r).count);
+      counts.sort(function (a, b) { return a - b; });
+      rows.push({ d: d, min: counts[0], median: (counts[24] + counts[25]) / 2, mean: counts.reduce(function (a, b) { return a + b; }, 0) / 50, max: counts[49], guarantee: Math.floor((d - 1) / 2) });
+      renderPile(rows); $('pmsg').textContent = 'd = ' + d + ' done';
+      if (++i < DS.length) { later(step); return; }
+      pileRuns = rows; btn.disabled = false; $('pmsg').textContent = '50 runs each, seed ' + seed() + '.'; history.push({ op: 'pileall' }); record();
+    })();
+  };
+  function renderPile(rows) {
+    var t = '<tr><th>distance</th><th>qubits</th><th>always repaired up to</th><th>fooled at: fewest</th><th>median</th><th>mean</th><th>most</th></tr>';
+    rows.forEach(function (r) { t += '<tr><td>' + r.d + '</td><td>' + r.d * r.d + '</td><td>' + r.guarantee + '</td><td>' + r.min + '</td><td>' + r.median + '</td><td>' + r.mean.toFixed(1) + '</td><td>' + r.max + '</td></tr>'; });
+    $('piletab').innerHTML = t;
+  }
+
+  // ---- threshold sweep
+  $('sweep').onclick = function () {
+    var btn = this, trials = +$('trials').value, cells = [], di = 0, pi = 0, codes = DS.map(E.makeCode); btn.disabled = true;
+    sweep = { trials: trials, seed: seed(), rates: {} }; DS.forEach(function (d) { sweep.rates[d] = []; });
+    (function step() {
+      var d = DS[di], p = PS[pi]; sweep.rates[d][pi] = E.failureRate(codes[di], p, trials, seed());
+      $('smsg').textContent = 'd = ' + d + ', p = ' + p; renderSweep();
+      if (++pi === PS.length) { pi = 0; di++; }
+      if (di < DS.length) { later(step); return; }
+      btn.disabled = false; sweep.crossing = crossing(); $('smsg').innerHTML = 'done. ' + (sweep.crossing ? 'd = 3 and d = 11 cross near p &asymp; ' + (100 * sweep.crossing).toFixed(1) + '%.' : ''); history.push({ op: 'sweep', trials: trials }); record();
+    })();
+  };
+  function crossing() { var a = sweep.rates[3], b = sweep.rates[11]; for (var i = 1; i < PS.length; i++) { var f0 = b[i - 1] - a[i - 1], f1 = b[i] - a[i]; if (f0 < 0 && f1 >= 0) return PS[i - 1] + (PS[i] - PS[i - 1]) * (-f0) / (f1 - f0); } return null; }
+  function renderSweep() {
+    var t = '<tr><th>p</th>' + DS.map(function (d) { return '<th>d=' + d + '</th>'; }).join('') + '</tr>';
+    PS.forEach(function (p, i) { t += '<tr><td>' + (100 * p).toFixed(0) + '%</td>' + DS.map(function (d) { var v = sweep.rates[d][i]; return '<td>' + (v === undefined ? '' : v.toFixed(3)) + '</td>'; }).join('') + '</tr>'; });
+    $('sweeptab').innerHTML = t; drawPlot();
+  }
+  function drawPlot() {
+    var cv = $('plot'), cx = cv.getContext('2d'), W = cv.width, H = cv.height, L = 44, B = 28, cols = ['#8be38b', '#7cc4ff', '#c79bff', '#ffb86b', '#ff7c7c'];
+    cx.clearRect(0, 0, W, H); cx.font = '11px ui-monospace, Menlo, monospace'; cx.strokeStyle = '#222a38'; cx.fillStyle = '#7d879a';
+    function X(p) { return L + (p - 0.03) / 0.12 * (W - L - 14); }
+    function Y(v) { var l = Math.log10(Math.max(v, 1e-4)); return 8 + (0 - l) / 4 * (H - B - 8); }
+    for (var e = -4; e <= 0; e++) { var y = Y(Math.pow(10, e)); cx.beginPath(); cx.moveTo(L, y); cx.lineTo(W - 8, y); cx.stroke(); cx.fillText('1e' + e, 8, y + 4); }
+    PS.forEach(function (p) { cx.fillText((100 * p).toFixed(0), X(p) - 6, H - 10); });
+    cx.fillText('p (%)', W - 44, H - 22);
+    DS.forEach(function (d, k) { var r = sweep.rates[d]; cx.strokeStyle = cols[k]; cx.fillStyle = cols[k]; cx.beginPath(); var started = false; PS.forEach(function (p, i) { if (r[i] === undefined || r[i] === 0) return; var x = X(p), y = Y(r[i]); if (!started) { cx.moveTo(x, y); started = true; } else cx.lineTo(x, y); }); cx.stroke(); cx.fillText('d=' + d, W - 52, H - 110 + 14 * k); });
+  }
+
+  function record() {
+    var acc = []; if (frame) for (var q = 0; q < code.n; q++) if (frame.x[q] || frame.z[q]) acc.push({ q: q, kind: frame.x[q] && frame.z[q] ? 'Y' : frame.x[q] ? 'X' : 'Z' });
+    $('rec').value = JSON.stringify({
+      version: 'surface-code/1', seed: seed(), d: code ? code.d : null, accidents: acc,
+      proposal: proposal ? { x: Array.from(proposal.x.correction).reduce(function (a, v, i) { if (v) a.push(i); return a; }, []), z: Array.from(proposal.z.correction).reduce(function (a, v, i) { if (v) a.push(i); return a; }, []), flipsAnswer: [proposal.x.logical, proposal.z.logical] } : null,
+      flips: flips, lastPile: lastPile ? { d: lastPile.d, count: lastPile.count } : null, pile: pileRuns,
+      sweep: sweep ? { trials: sweep.trials, seed: sweep.seed, p: PS, rates: sweep.rates, crossing3vs11: sweep.crossing } : null,
+      checks: checks, history: history.slice(-40), note: 'Third of three after tetralemma-7 and tetralemma-many: a surface code in Pauli-frame form, union-find decoding.'
+    }, null, 1);
+  }
+
+  function runChecks() {
+    var out = []; function add(name, ok, detail) { out.push({ check: name, ok: !!ok, detail: detail || '' }); }
+    var okC = true, info = [];
+    for (var d = 3; d <= 15; d += 2) {
+      var c = E.makeCode(d);
+      c.checks.X.forEach(function (a) { c.checks.Z.forEach(function (b) { var o = 0; a.qubits.forEach(function (q) { if (b.qubits.indexOf(q) >= 0) o++; }); if (o % 2) okC = false; }); });
+      var rx = E.rank2rows(E.checkMatrix(c, 'X')), rz = E.rank2rows(E.checkMatrix(c, 'Z'));
+      if (rx !== (d * d - 1) / 2 || rz !== (d * d - 1) / 2) okC = false;
+      if (d === 15) info.push('d=15: ' + rx + ' + ' + rz + ' independent checks, ' + (d * d - rx - rz) + ' stored qubit');
+    }
+    add('d = 3 &hellip; 15: every X check meets every Z check evenly; (d&sup2;&minus;1)/2 independent checks of each type leave one stored qubit', okC, info.join(''));
+    var c7 = E.makeCode(7), lz = true, lx = true;
+    c7.checks.X.forEach(function (a) { var s = 0; a.qubits.forEach(function (q) { if (q < 7) s ^= 1; }); if (s) lz = false; });
+    c7.checks.Z.forEach(function (b) { var s = 0; b.qubits.forEach(function (q) { if (q % 7 === 0) s ^= 1; }); if (s) lx = false; });
+    add('logical Z (a row) and logical X (a column) commute with every check and cross in exactly one qubit', lz && lx);
+    var single = true; [5, 7, 9].forEach(function (d) { var c = E.makeCode(d); for (var q = 0; q < c.n; q++) ['x', 'z'].forEach(function (k) { var f = { x: new Uint8Array(c.n), z: new Uint8Array(c.n) }; f[k][q] = 1; var r = E.correctFrame(c, f); if (r[k].logical || !r[k].clean) single = false; }); });
+    add('every single accident is repaired at d = 5, 7, 9', single);
+    var c5 = E.makeCode(5), pf = 0, pn = 0;
+    for (var a = 0; a < c5.n; a++) for (var b = a + 1; b < c5.n; b++) ['x', 'z'].forEach(function (k) { var f = { x: new Uint8Array(25), z: new Uint8Array(25) }; f[k][a] = f[k][b] = 1; var r = E.correctFrame(c5, f); pn++; if (r[k].logical || !r[k].clean) pf++; });
+    add('every pair of accidents is repaired at d = 5', pf === 0, pn + ' pairs');
+    var lineOk = true, lineInfo = [];
+    [3, 5, 7, 9].forEach(function (d) { var c = E.makeCode(d), h = (d + 1) / 2; [h - 1, h].forEach(function (len) { var f = { x: new Uint8Array(c.n), z: new Uint8Array(c.n) }; for (var r = 0; r < len; r++) f.x[r * d] = 1; var res = E.correctFrame(c, f); if (res.x.logical !== (len === h)) lineOk = false; }); lineInfo.push(d + ':' + (h - 1) + '/' + h); });
+    add('a line of (d&minus;1)/2 X accidents down a column is repaired; (d+1)/2 fool the decoder (d = 3, 5, 7, 9)', lineOk, lineInfo.join(' '));
+    var c9 = E.makeCode(9), row = new Uint8Array(81); for (var q = 0; q < 9; q++) row[q] = 1;
+    add('a whole row of Z lights no check and is the logical Z: the stored answer flipped silently', E.syndrome(c9, 'X', row).every(function (s) { return !s; }) && E.isLogical(c9, 'X', row));
+    var st = new Uint8Array(81); c9.checks.X[5].qubits.forEach(function (q) { st[q] = 1; });
+    add('X on the qubits of one X check lights nothing and changes nothing (a stabilizer)', E.syndrome(c9, 'Z', st).every(function (s) { return !s; }) && !E.isLogical(c9, 'Z', st));
+    var c3 = E.makeCode(3), lo3 = E.failureRate(c3, 0.03, 1000, 'tetralemma-check'), lo7 = E.failureRate(c7, 0.03, 1000, 'tetralemma-check'), hi3 = E.failureRate(c3, 0.15, 1000, 'tetralemma-check'), hi7 = E.failureRate(c7, 0.15, 1000, 'tetralemma-check');
+    add('below threshold d = 7 fails less than d = 3; above it, more (p = 3% and 15%, 1000 seeded trials each)', lo7 < lo3 && hi7 > hi3, '3%: ' + lo3.toFixed(3) + ' &rarr; ' + lo7.toFixed(3) + '; 15%: ' + hi3.toFixed(3) + ' &rarr; ' + hi7.toFixed(3));
+    var r = E.rng('tetralemma-check', 'pile', 0), mn = Infinity; for (var t = 0; t < 50; t++) mn = Math.min(mn, pileRun(c5, r).count);
+    add('50 piles at d = 5: the decoder is never fooled before its guarantee is exceeded', mn >= 3, 'fewest ' + mn);
+    var anyUnclean = false, rr = E.rng('tetralemma-check', 'clean', 0); for (var t = 0; t < 300; t++) { var f = E.randomFrame(c7, 0.12, rr), res = E.correctFrame(c7, f); if (!res.x.clean || !res.z.clean) anyUnclean = true; }
+    add('the repair always clears every lit check (300 random frames at d = 7, p = 12%)', !anyUnclean);
+    checks = out.map(function (c) { return { check: c.check.replace(/&[a-z]+;/g, ''), ok: c.ok }; });
+    $('checks').innerHTML = out.map(function (c) { return '<div class="msg"><span class="' + (c.ok ? 'good' : 'bad') + '">' + (c.ok ? 'pass' : 'FAIL') + '</span> ' + c.check + (c.detail ? ' <span class="dim">' + c.detail + '</span>' : '') + '</div>'; }).join('') + '<div class="dim msg">' + out.filter(function (c) { return c.ok; }).length + ' of ' + out.length + ' pass.</div>';
+  }
+  runChecks();
+  fresh(7);
+  // a starting picture: three Z accidents in a row, decoded
+  [24, 25, 26].forEach(function (q) { frame.z[q] = 1; }); proposal = E.correctFrame(code, frame); render();
+})();
+</script>
+</body>
+</html>
+

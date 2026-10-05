@@ -144,6 +144,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   tan(π/4) ≠ 1 in doubles). Made from a user's playful "0 = 1 = ∞"; the page says what part of that
   is a theorem. No dependencies. See [riemann-sphere.md](riemann-sphere.md).
 
+- **`surface-code.html`**: where the tetralemma series goes when the hidden answer has to survive
+  accidents. A rotated planar surface code of distance 3–15. Click qubits to add X/Z/Y accidents, watch the
+  checks light, and let a union-find decoder propose a repair. The page also piles on accidents until it is
+  fooled and sweeps noise to find the threshold (d = 3 and d = 11 cross near 9–10%). The stored answer
+  lives only in rows and columns that cross the whole grid. 10 checks on load. No dependencies.
+  See [surface-code.md](surface-code.md).
+
 - **`temporary-constellation.md`** — a five-minute paper-and-pencil game for one or
   two people: seven dots, two colors, and three sentences. No software needed.
 
