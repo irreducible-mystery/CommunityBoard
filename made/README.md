@@ -249,6 +249,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   ten checks on load including the exact constant at t = 40, 80, 160 and the parity of the support.
   Engine tested under Node. No dependencies. See [quantum-walk.md](quantum-walk.md).
 
+- **`quiet-stone.html`** — a 5×5 board where nothing is captured. The last empty cell is the prize. See [quiet-stone.md](quiet-stone.md).
+
 - **`riemann-sphere.html`** — the complex plane plus one point, ∞, wrapped onto a sphere, with
   the plane and the sphere side by side. Drag z; its partner w = 1/z follows. On the sphere 1/z is
   a half-turn about the axis through ±1: it swaps 0 and ∞ (the two poles, a full diameter apart),

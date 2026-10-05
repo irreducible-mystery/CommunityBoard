@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quiet Stone</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; background: #f4efe6; color: #1c1915; margin: 2rem auto; max-width: 40rem; padding: 0 1rem; }
+  h1 { font-weight: normal; letter-spacing: 0.04em; }
+  .board { display: grid; grid-template-columns: repeat(5, 3.2rem); gap: 0.35rem; margin: 1rem 0; }
+  button.cell { width: 3.2rem; height: 3.2rem; border: 1px solid #1c1915; background: #faf7f1; font-size: 1.3rem; cursor: pointer; }
+  button.cell.light { background: #f3e2b0; }
+  button.cell.dark { background: #2c2824; color: #f4efe6; }
+  button.cell.quiet { outline: 2px solid #8a5a2a; }
+  pre { background: #fff; border: 1px solid #ddd; padding: 0.75rem; overflow: auto; }
+  .muted { color: #5c564c; }
+</style>
+</head>
+<body>
+<h1>Quiet Stone</h1>
+<p>Five by five. Stones stay. The last empty cell is the prize, and it goes to whoever the neighbour count says. Even opposing neighbours: the player who would have moved. Odd: the player who just did.</p>
+<p class="muted" id="status">Light to move. Round QS-20261005-first.</p>
+<div class="board" id="board"></div>
+<pre id="log">quiet-stone QS-20261005-first</pre>
+<p class="muted" id="checks"></p>
+<script>
+const cols = "abcde", rows = "12345";
+const cells = {};
+let turn = "light";
+let moves = [];
+const board = document.getElementById("board");
+const log = document.getElementById("log");
+const status = document.getElementById("status");
+function key(c, r) { return c + r; }
+function neighbours(c, r) {
+  const out = [];
+  const ci = cols.indexOf(c), ri = rows.indexOf(r);
+  [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dc, dr]) => {
+    const nc = cols[ci + dc], nr = rows[ri + dr];
+    if (nc && nr) out.push(key(nc, nr));
+  });
+  return out;
+}
+function emptyCells() { return Object.keys(cells).filter(k => !cells[k]); }
+function scoreQuiet() {
+  const left = emptyCells();
+  if (left.length !== 1) return null;
+  const q = left[0];
+  const opp = turn === "light" ? "dark" : "light";
+  const n = neighbours(q[0], q[1]).filter(k => cells[k] === opp).length;
+  const winner = n % 2 === 0 ? turn : opp;
+  return { cell: q, opposing: n, winner };
+}
+function render() {
+  Object.keys(cells).forEach(k => {
+    const el = document.getElementById("c-" + k);
+    el.textContent = cells[k] === "light" ? "○" : cells[k] === "dark" ? "●" : "";
+    el.className = "cell" + (cells[k] ? " " + cells[k] : "");
+  });
+  const s = scoreQuiet();
+  if (s) {
+    document.getElementById("c-" + s.cell).classList.add("quiet");
+    status.textContent = "Quiet stone " + s.cell + " has " + s.opposing + " opposing neighbours. It scores for " + s.winner + ".";
+  } else {
+    status.textContent = turn + " to move. " + emptyCells().length + " cells open.";
+  }
+}
+function place(k) {
+  if (cells[k] || emptyCells().length <= 1) return;
+  cells[k] = turn;
+  moves.push(turn + ": " + k);
+  turn = turn === "light" ? "dark" : "light";
+  log.textContent = "quiet-stone QS-20261005-first\n" + moves.join("\n");
+  render();
+}
+cols.split("").forEach(c => rows.split("").forEach(r => {
+  const k = key(c, r);
+  cells[k] = null;
+  const b = document.createElement("button");
+  b.className = "cell";
+  b.id = "c-" + k;
+  b.title = k;
+  b.addEventListener("click", () => place(k));
+  board.appendChild(b);
+}));
+function check() {
+  const notes = [];
+  const n = neighbours("a1", "1".replace("1","1"));
+  notes.push(neighbours("a","1").length === 2 ? "corner has 2 neighbours" : "corner FAIL");
+  notes.push(neighbours("c","3").length === 4 ? "centre has 4 neighbours" : "centre FAIL");
+  notes.push(neighbours("a","3").length === 3 ? "edge has 3 neighbours" : "edge FAIL");
+  document.getElementById("checks").textContent = "Checks: " + notes.join("; ") + ".";
+}
+check();
+render();
+</script>
+</body>
+</html>
