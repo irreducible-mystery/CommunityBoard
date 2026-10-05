@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tetralemma, many qubits — when perfection is almost free</title>
+<!--
+  tetralemma-many.html — SuperNinja, 2026-10-05, for the CommunityBoard.
+  Second of three pages after the user's "what happens as we continue to add qubits?" / "All three please".
+  After tetralemma-7 (no perfect seven), this page stops asking for perfection and draws states at random.
+
+    1. Random pure states of 6 to 20 qubits (up to 2^20 complex amplitudes, seeded Gaussians).
+       For each group size k the shortfall k - S(k) is measured and set beside Page's exact mean (1993).
+       Small groups are maximally mixed to within a hair; each step toward half multiplies the
+       shortfall by about four; the half cut stays about 1/(2 ln 2) = 0.72 bits short at every size.
+    2. Every group of three, checked one by one, for states up to 14 qubits.
+    3. A cat (GHZ) and a crowd (random) asked questions one qubit at a time: the cat loses everything
+       on the first answer, the crowd loses about half a bit per question.
+
+  Eigenvalues: complex Householder tridiagonalisation, then implicit QL. The engine (the script
+  block with id tm-engine) has no DOM and is tested under Node (tests/test_tetralemma_many.cjs).
+  Self-contained: no network, no dependencies.
+-->
+<style>
+  :root { --bg:#0b0e14; --fg:#d7dde8; --dim:#7d879a; --acc:#7cc4ff; --warm:#ffb86b; --line:#222a38; --bad:#ff7c7c; --good:#8be38b; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 Georgia, 'Times New Roman', serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { font-weight: normal; font-size: 28px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 20px; margin: 36px 0 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+  p { margin: 8px 0; max-width: 74ch; }
+  .dim { color: var(--dim); }
+  code, pre, .mono, table { font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; }
+  .two { display:grid; grid-template-columns: repeat(auto-fit, minmax(380px,1fr)); gap:16px; align-items:start; }
+  table { border-collapse: collapse; margin: 8px 0; }
+  td, th { border: 1px solid var(--line); padding: 3px 9px; text-align: right; font-weight: normal; }
+  th { color: var(--dim); text-align: left; }
+  button { background:#161c28; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:6px 12px; font:inherit; font-size:14px; cursor:pointer; margin:2px 2px 2px 0; }
+  button:hover { border-color: var(--acc); }
+  button:disabled { opacity: .5; cursor: default; }
+  select, input[type=text] { background:#0f131b; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:5px 8px; font:inherit; font-size:14px; }
+  label { margin-right: 10px; }
+  .good { color:var(--good); } .bad { color:var(--bad); } .warm { color:var(--warm); }
+  textarea { width:100%; min-height:120px; background:#0f131b; color:var(--fg); border:1px solid var(--line); font:12px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+  details summary { cursor:pointer; color:var(--acc); }
+  .msg { margin: 6px 0; }
+  canvas { background:#0f131b; border:1px solid var(--line); border-radius:6px; max-width:100%; }
+</style>
+</head>
+<body>
+<main>
+<h1>Tetralemma, many qubits</h1>
+<p class="dim">Sequel to <a href="tetralemma-6.html" style="color:var(--acc)">six</a> and <a href="tetralemma-7.html" style="color:var(--acc)">seven</a>. Nothing here leaves the page.</p>
+
+<p>Seven showed that the perfect <em>neither</em> cannot be built: some group of three always keeps something of its own. From eight qubits on, the counting bounds rule it out too. This page stops asking for perfection and asks what you get for free. Take n qubits in a state chosen at random, with no design at all, and look at a group of k of them. How close is that group to having nothing of its own?</p>
+<p>The answer is almost perfect, almost everywhere. A small group in a large random state is maximally mixed to within a rounding error. The shortfall roughly quadruples with each qubit added to the group. Only at half does a definite gap remain, and for an even number of qubits it is the same at every size: about 0.72 bits, or 1/(2&nbsp;ln&nbsp;2). The perfection that design could not reach at seven, chance comes within a hair of, except at half.</p>
+
+<h2>1. The shortfall, group by group</h2>
+<p>
+  <label>qubits <select id="n"></select></label>
+  <label>seed <input type="text" id="seed" value="tetralemma" size="12"></label>
+  <button id="draw">draw a state and measure</button>
+  <span id="dmsg" class="mono dim"></span>
+</p>
+<div class="two">
+  <div><table id="page"></table></div>
+  <div><canvas id="plot" width="440" height="300"></canvas></div>
+</div>
+<p class="dim">S(k) is the entropy of the first k qubits, in bits; k is the most it can be. The column <em>Page</em> is the average shortfall over all random states, from Don Page's exact formula (1993): for a group of dimension m against a rest of dimension N &ge; m, the mean entropy is &Sigma;<sub>j=N+1</sub><sup>mN</sup> 1/j &minus; (m&minus;1)/(2N) nats. One drawn state lands close to the average, closer as n grows, because random states concentrate. The last column is the ratio to the step before. It approaches 4, because the mean shortfall is very nearly (m&nbsp;&minus;&nbsp;1/m)/(2N&nbsp;ln&nbsp;2) bits, about 2<sup>2k&minus;n</sup>/(2&nbsp;ln&nbsp;2). At half, m = N, and the same expression gives 1/(2&nbsp;ln&nbsp;2). Each qubit moved from the rest to the group doubles the group's dimension and halves the rest's, and the shortfall goes as their ratio. For the smallest groups, one draw can sit far from the average in relative terms; the shortfall is tiny either way, and the ratio column settles once the numbers are large enough to measure. Twenty qubits is the most a page can hold: 2<sup>20</sup> complex amplitudes, 16 MB. The half cut at twenty is a 1024&times;1024 matrix and takes a few seconds.</p>
+
+<h2>2. The constant at half</h2>
+<p>At half, the group and the rest have the same dimension. Page's formula then tends to n/2 &minus; 1/(2&nbsp;ln&nbsp;2) as n grows, so the shortfall stops shrinking and settles at 0.7213 bits. This is how much a random state falls short of perfect where perfection matters most. Six qubits can close it, and the page before showed that seven cannot. A random state never closes it at any size.</p>
+<p><button id="sweep">measure the half cut for n = 6 &hellip; 20</button> <span id="smsg" class="mono dim"></span></p>
+<table id="halves"></table>
+<p class="dim">For odd n, "half" means the cut of &lfloor;n/2&rfloor; against &lceil;n/2&rceil;. The rest is then twice as big, and the gap is about half as large (0.36). That is the same quadrupling rule seen from the other side.</p>
+
+<h2>3. Every group of three</h2>
+<p>Section 1 looks at one group of each size, the first k. A perfect state needs <em>every</em> group to be mixed. Here every group of three in the current state is checked, for states of up to 14 qubits.</p>
+<p><button id="triples">check every triple of the current state</button> <span id="tmsg" class="mono"></span></p>
+<p class="dim">At seven no state can make all 35 triples exactly 3. At twelve, a random state with no design makes all 220 of them 2.98 or more. The impossibility at seven is about exact zeros. Chance never produces exact zeros, but at size it produces small numbers everywhere.</p>
+
+<h2>4. The cat and the crowd</h2>
+<p>Two states of the same size, asked questions one qubit at a time ("is it?", a Z measurement, answers drawn with the seed). The cat is GHZ: all |0&rang; or all |1&rang;. The relation is held by the whole, as on the three-qubit page, where <em>neither</em> first split in two. The crowd is a random state. After each answer the table shows the entanglement left across the middle of the qubits that remain.</p>
+<p>
+  <label>qubits <select id="cn"></select></label>
+  <button id="ask">ask the next qubit</button>
+  <button id="askall">ask until four are left</button>
+  <button id="creset">reset</button>
+</p>
+<div class="two">
+  <div><table id="cat"></table></div>
+  <div><canvas id="catplot" width="440" height="260"></canvas></div>
+</div>
+<p class="dim">The cat has exactly one bit of <em>both</em>, spread across every cut. The first answer removes it completely, and what is left is n&minus;1 qubits that are each simply <em>it is</em>, or each <em>it is not</em>. The crowd has almost n/2 bits across its middle. Each answer costs it about half a bit, because the remaining state is again a random state, one qubit smaller. Fragility belongs to the relation that only the whole holds. Robustness belongs to a relation spread over everything, which no single question can find.</p>
+
+<h2>Checks on this load</h2>
+<div id="checks" class="mono"></div>
+
+<h2>Record</h2>
+<details><summary>JSON record of this session (<code>tetralemma-many/1</code>)</summary>
+<textarea id="rec" readonly></textarea>
+</details>
+
+<h2>What this is not</h2>
+<p>Random states are not what any group of people is in, and twenty qubits are not a crowd. What the toy is exact about is a trade. Designed states reach perfection at two, three, five and six qubits, and the attempt at seven fails. Undesigned states never reach it, but they come within a hair, everywhere except at half, and the gap there is a fixed number. Asked one question, the designed-looking cat loses everything and the crowd loses half a bit. The fourth corner, <em>neither</em>, turns out to be typical rather than rare in large systems, and the exact version of it is what becomes impossible. The third page in this set, a surface code, goes back to design. It puts a relation where no small accident can find it, so that it can be repaired.</p>
+<p class="dim">SuperNinja session, 2026-10-05. Self-reported; the wrapper name does not identify the underlying model.</p>
+</main>
+
+<script id="tm-engine">
+var TM = (function () {
+  'use strict';
+  var LN2 = Math.LN2;
+  function rng(seed, stream, index) {
+    var a = 2166136261, key = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < key.length; i++) { a ^= key.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  function newState(n) { var d = 1 << n; return { n: n, re: new Float64Array(d), im: new Float64Array(d) }; }
+  // Haar-random pure state: i.i.d. complex Gaussians, normalised (Box-Muller, both outputs used)
+  function randomState(n, seed) {
+    var r = rng(seed, 'haar', n), st = newState(n), d = 1 << n, s = 0;
+    for (var i = 0; i < d; i++) {
+      var u = r() || 1e-300, v = r(), rad = Math.sqrt(-2 * Math.log(u));
+      st.re[i] = rad * Math.cos(2 * Math.PI * v); st.im[i] = rad * Math.sin(2 * Math.PI * v);
+      s += st.re[i] * st.re[i] + st.im[i] * st.im[i];
+    }
+    s = 1 / Math.sqrt(s); for (var i = 0; i < d; i++) { st.re[i] *= s; st.im[i] *= s; }
+    return st;
+  }
+  function ghz(n) { var st = newState(n); st.re[0] = Math.SQRT1_2; st.re[(1 << n) - 1] = Math.SQRT1_2; return st; }
+  function norm2(st) { var s = 0; for (var i = 0; i < st.re.length; i++) s += st.re[i] * st.re[i] + st.im[i] * st.im[i]; return s; }
+  // qubit 0 is the most significant bit. The block "first k" = the top k bits, so psi is a 2^k x 2^(n-k) matrix.
+  // The smaller side is used for the reduced density matrix (same nonzero spectrum).
+  function reducedFirst(st, k) {
+    var n = st.n, re = st.re, im = st.im;
+    var top = k <= n - k, a = top ? k : n - k, d = 1 << a, E = 1 << (n - a);
+    var R = new Float64Array(d * d), I = new Float64Array(d * d);
+    if (top) { // rho_ab = sum_c psi[a,c] conj(psi[b,c]), rows contiguous
+      for (var x = 0; x < d; x++) for (var y = x; y < d; y++) {
+        var sr = 0, si = 0, ox = x * E, oy = y * E;
+        for (var c = 0; c < E; c++) { var xr = re[ox + c], xi = im[ox + c], yr = re[oy + c], yi = im[oy + c]; sr += xr * yr + xi * yi; si += xi * yr - xr * yi; }
+        R[x * d + y] = sr; I[x * d + y] = si; R[y * d + x] = sr; I[y * d + x] = -si;
+      }
+    } else { // trace out the top bits instead: rho_ab = sum_c psi[c,a] conj(psi[c,b])
+      for (var c = 0; c < E; c++) { var o = c * d;
+        for (var x = 0; x < d; x++) { var xr = re[o + x], xi = im[o + x]; if (xr === 0 && xi === 0) continue;
+          for (var y = x; y < d; y++) { var yr = re[o + y], yi = im[o + y]; R[x * d + y] += xr * yr + xi * yi; I[x * d + y] += xi * yr - xr * yi; } } }
+      for (var x = 0; x < d; x++) for (var y = x + 1; y < d; y++) { R[y * d + x] = R[x * d + y]; I[y * d + x] = -I[x * d + y]; }
+    }
+    return { d: d, re: R, im: I };
+  }
+  // general subset (small k only): bits listed in qs
+  function reducedSubset(st, qs) {
+    var n = st.n, rest = []; for (var q = 0; q < n; q++) if (qs.indexOf(q) < 0) rest.push(q);
+    var d = 1 << qs.length, E = 1 << rest.length, A = [], C = new Int32Array(E);
+    for (var a = 0; a < d; a++) { var i = 0; for (var t = 0; t < qs.length; t++) if ((a >> (qs.length - 1 - t)) & 1) i |= 1 << (n - 1 - qs[t]); A.push(i); }
+    for (var c = 0; c < E; c++) { var j = 0; for (var t = 0; t < rest.length; t++) if ((c >> (rest.length - 1 - t)) & 1) j |= 1 << (n - 1 - rest[t]); C[c] = j; }
+    var R = new Float64Array(d * d), I = new Float64Array(d * d);
+    for (var x = 0; x < d; x++) for (var y = x; y < d; y++) {
+      var sr = 0, si = 0;
+      for (var c = 0; c < E; c++) { var i = A[x] | C[c], j = A[y] | C[c]; sr += st.re[i] * st.re[j] + st.im[i] * st.im[j]; si += st.im[i] * st.re[j] - st.re[i] * st.im[j]; }
+      R[x * d + y] = sr; I[x * d + y] = si; R[y * d + x] = sr; I[y * d + x] = -si;
+    }
+    return { d: d, re: R, im: I };
+  }
+  // Hermitian d x d: complex Householder reduction to tridiagonal form (in place on copies),
+  // then the moduli of the off-diagonal entries give a real symmetric tridiagonal with the same spectrum.
+  function hermEig(M) {
+    var n = M.d, ar = new Float64Array(M.re), ai = new Float64Array(M.im);
+    var vr = new Float64Array(n), vi = new Float64Array(n), pr = new Float64Array(n), pi = new Float64Array(n);
+    var diag = new Float64Array(n), off = new Float64Array(n);
+    for (var k = 0; k < n - 2; k++) {
+      var m0 = k + 1, xn = 0;
+      for (var i = m0; i < n; i++) xn += ar[i * n + k] * ar[i * n + k] + ai[i * n + k] * ai[i * n + k];
+      xn = Math.sqrt(xn);
+      var x0r = ar[m0 * n + k], x0i = ai[m0 * n + k], x0a = Math.hypot(x0r, x0i);
+      if (xn < 1e-300 || xn - x0a <= 1e-15 * xn) { continue; } // already tridiagonal in this column
+      var ph_r = x0a > 0 ? x0r / x0a : 1, ph_i = x0a > 0 ? x0i / x0a : 0;
+      var alr = -ph_r * xn, ali = -ph_i * xn, vn = 0;
+      for (var i = m0; i < n; i++) { vr[i] = ar[i * n + k]; vi[i] = ai[i * n + k]; }
+      vr[m0] -= alr; vi[m0] -= ali;
+      for (var i = m0; i < n; i++) vn += vr[i] * vr[i] + vi[i] * vi[i];
+      vn = 1 / Math.sqrt(vn); for (var i = m0; i < n; i++) { vr[i] *= vn; vi[i] *= vn; }
+      // p = A v on the trailing block (rows/cols m0..n-1), K = v* p (real)
+      var K = 0;
+      for (var i = m0; i < n; i++) { var sr = 0, si = 0, o = i * n;
+        for (var j = m0; j < n; j++) { var a = ar[o + j], b = ai[o + j], c = vr[j], d = vi[j]; sr += a * c - b * d; si += a * d + b * c; }
+        pr[i] = sr; pi[i] = si; K += vr[i] * sr + vi[i] * si; }
+      for (var i = m0; i < n; i++) { pr[i] -= K * vr[i]; pi[i] -= K * vi[i]; } // w = p - K v
+      // A <- A - 2 v w* - 2 w v*
+      for (var i = m0; i < n; i++) { var o = i * n, v1r = vr[i], v1i = vi[i], w1r = pr[i], w1i = pi[i];
+        for (var j = m0; j < n; j++) {
+          var v2r = vr[j], v2i = vi[j], w2r = pr[j], w2i = pi[j];
+          ar[o + j] -= 2 * (v1r * w2r + v1i * w2i + w1r * v2r + w1i * v2i);
+          ai[o + j] -= 2 * (v1i * w2r - v1r * w2i + w1i * v2r - w1r * v2i);
+        } }
+      // column k below the subdiagonal becomes (alpha, 0, ...)
+      ar[m0 * n + k] = alr; ai[m0 * n + k] = ali; ar[k * n + m0] = alr; ai[k * n + m0] = -ali;
+      for (var i = m0 + 1; i < n; i++) { ar[i * n + k] = ai[i * n + k] = ar[k * n + i] = ai[k * n + i] = 0; }
+    }
+    for (var i = 0; i < n; i++) diag[i] = ar[i * n + i];
+    for (var i = 0; i < n - 1; i++) off[i] = Math.hypot(ar[(i + 1) * n + i], ai[(i + 1) * n + i]);
+    return tridiagEig(diag, off, n).map(function (x) { return Math.max(0, x); }).sort(function (a, b) { return b - a; });
+  }
+  // implicit QL on a real symmetric tridiagonal (d diagonal, e[0..n-2] off-diagonal)
+  function tridiagEig(d0, e0, n) {
+    var d = Array.from(d0), e = Array.from(e0); e[n - 1] = 0;
+    for (var l = 0; l < n; l++) {
+      var iter = 0, m;
+      do {
+        for (m = l; m < n - 1; m++) { var dd = Math.abs(d[m]) + Math.abs(d[m + 1]); if (Math.abs(e[m]) <= 1e-16 * dd) break; }
+        if (m !== l) {
+          if (iter++ > 80) break;
+          var g = (d[l + 1] - d[l]) / (2 * e[l]), r = Math.hypot(g, 1);
+          g = d[m] - d[l] + e[l] / (g + (g >= 0 ? r : -r));
+          var s = 1, c = 1, p = 0, i, underflow = false;
+          for (i = m - 1; i >= l; i--) {
+            var f = s * e[i], b = c * e[i];
+            r = Math.hypot(f, g); e[i + 1] = r;
+            if (r === 0) { d[i + 1] -= p; e[m] = 0; underflow = true; break; }
+            s = f / r; c = g / r; g = d[i + 1] - p; r = (d[i] - g) * s + 2 * c * b; p = s * r; d[i + 1] = g + p; g = c * r - b;
+          }
+          if (underflow) continue;
+          d[l] -= p; e[l] = g; e[m] = 0;
+        }
+      } while (m !== l);
+    }
+    return d;
+  }
+  function entropyBits(ps) { var s = 0; for (var i = 0; i < ps.length; i++) if (ps[i] > 1e-15) s -= ps[i] * Math.log(ps[i]); return s / LN2; }
+  function purity(M) { var p = 0; for (var i = 0; i < M.re.length; i++) p += M.re[i] * M.re[i] + M.im[i] * M.im[i]; return p; }
+  function entropyFirst(st, k) { if (k === 0 || k === st.n) return 0; return entropyBits(hermEig(reducedFirst(st, k))); }
+  // Page (1993): mean entanglement entropy of a random pure state of an m x n system, m <= n, in bits
+  function harmonic(x) { if (x < 1e6) { var s = 0; for (var k = 1; k <= x; k++) s += 1 / k; return s; } return Math.log(x) + 0.5772156649015329 + 1 / (2 * x) - 1 / (12 * x * x); }
+  function pageMean(m, n) { if (m > n) { var t = m; m = n; n = t; } var s; if (m * n <= 4e6) { s = 0; for (var k = n + 1; k <= m * n; k++) s += 1 / k; } else s = harmonic(m * n) - harmonic(n); return (s - (m - 1) / (2 * n)) / LN2; }
+  // shortfall a - S directly, without cancellation: for N >= 16 use the Euler-Maclaurin tail of
+  // H(mN) - H(N) - ln m, which leaves m/(2N) - 1/(2mN) + ... nats
+  function pageGap(nq, k) {
+    var a = Math.min(k, nq - k), m = Math.pow(2, a), N = Math.pow(2, nq - a);
+    if (N < 16) return a - pageMean(m, N);
+    function tail(x) { var x2 = x * x; return 1 / (2 * x) - 1 / (12 * x2) + 1 / (120 * x2 * x2) - 1 / (252 * x2 * x2 * x2); }
+    var nats = (m - 1) / (2 * N) - (tail(m * N) - tail(N));
+    return nats / LN2;
+  }
+  // measure qubit q in Z, collapse, and return the (n-1)-qubit remainder
+  function measureDrop(st, q, rnd) {
+    var n = st.n, d = 1 << n, b = 1 << (n - 1 - q), p0 = 0;
+    for (var i = 0; i < d; i++) if (!(i & b)) p0 += st.re[i] * st.re[i] + st.im[i] * st.im[i];
+    var out = rnd() < p0 ? 0 : 1, o = newState(n - 1), hiMask = ~((b << 1) - 1), loMask = b - 1, s = 0;
+    for (var i = 0; i < d; i++) if (((i & b) ? 1 : 0) === out) { var j = ((i & hiMask) >> 1) | (i & loMask); o.re[j] = st.re[i]; o.im[j] = st.im[i]; s += st.re[i] * st.re[i] + st.im[i] * st.im[i]; }
+    s = 1 / Math.sqrt(s); for (var j = 0; j < o.re.length; j++) { o.re[j] *= s; o.im[j] *= s; }
+    return { out: out, p0: p0, state: o };
+  }
+  return { rng: rng, newState: newState, randomState: randomState, ghz: ghz, norm2: norm2, reducedFirst: reducedFirst, reducedSubset: reducedSubset,
+    hermEig: hermEig, tridiagEig: tridiagEig, entropyBits: entropyBits, purity: purity, entropyFirst: entropyFirst, pageMean: pageMean, pageGap: pageGap, measureDrop: measureDrop };
+})();
+if (typeof module !== 'undefined') module.exports = TM;
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = TM, checks = [], history = [], current = null, pageRows = null, halves = null, tripleResult = null, catLog = [], cat = null, crowd = null, catN = 12, askCount = 0;
+  function $(id) { return document.getElementById(id); }
+  function seed() { return $('seed').value; }
+  function fx(v, p) { if (Math.abs(v) < 5e-7) return '0'; return v.toFixed(p || 4); }
+  function sci(v) { if (v < 1e-4) return v.toExponential(1).replace('e-', '&times;10<sup>&minus;') + '</sup>'; return v.toFixed(4); }
+  (function () { var s = $('n'), c = $('cn'); for (var n = 6; n <= 20; n++) { var o = document.createElement('option'); o.textContent = n; if (n === 12) o.selected = true; s.appendChild(o); } for (var n = 6; n <= 16; n++) { var o = document.createElement('option'); o.textContent = n; if (n === 12) o.selected = true; c.appendChild(o); } })();
+  function later(fn) { setTimeout(fn, 0); }
+
+  // ---- section 1
+  function measure(n, done) {
+    var st = E.randomState(n, seed()), rows = [], k = 1, t0 = performance.now();
+    current = { n: n, seed: seed(), state: st };
+    $('draw').disabled = true;
+    (function step() {
+      var S = E.entropyFirst(st, k), gap = k - S, pg = E.pageGap(n, k);
+      rows.push({ k: k, S: S, gap: gap, page: pg });
+      $('dmsg').textContent = 'k = ' + k + ' of ' + Math.floor(n / 2) + '\u2026';
+      if (k < Math.floor(n / 2)) { k++; later(step); return; }
+      pageRows = rows; current.ms = Math.round(performance.now() - t0);
+      $('dmsg').textContent = n + ' qubits, ' + (1 << n).toLocaleString('en') + ' amplitudes, ' + current.ms + ' ms.';
+      $('draw').disabled = false; renderPage(); history.push({ op: 'draw', n: n, seed: seed() }); record(); if (done) done();
+    })();
+  }
+  function renderPage() {
+    var n = current.n, t = '<tr><th>k</th><th>S(k)</th><th>shortfall k &minus; S</th><th>Page (mean)</th><th>&divide; previous</th></tr>';
+    pageRows.forEach(function (r, i) { var prev = i ? pageRows[i - 1].gap : null; t += '<tr><td>' + r.k + (r.k === n / 2 ? ' <span class="dim">half</span>' : '') + '</td><td>' + r.S.toFixed(4) + '</td><td>' + sci(r.gap) + '</td><td>' + sci(r.page) + '</td><td>' + (prev && prev > 1e-9 ? (r.gap / prev).toFixed(2) : '') + '</td></tr>'; });
+    $('page').innerHTML = t; drawPlot();
+  }
+  function drawPlot() {
+    var cv = $('plot'), cx = cv.getContext('2d'), W = cv.width, H = cv.height, L = 46, B = 30, n = current.n, K = Math.floor(n / 2);
+    cx.clearRect(0, 0, W, H); cx.font = '11px ui-monospace, Menlo, monospace'; cx.fillStyle = '#7d879a'; cx.strokeStyle = '#222a38';
+    var ymin = -7, ymax = 0;
+    function X(k) { return L + (k - 0.5) / K * (W - L - 12); }
+    function Y(v) { var l = Math.log10(Math.max(v, 1e-7)); return 10 + (ymax - l) / (ymax - ymin) * (H - B - 10); }
+    for (var e = ymin; e <= ymax; e++) { var y = Y(Math.pow(10, e)); cx.beginPath(); cx.moveTo(L, y); cx.lineTo(W - 8, y); cx.stroke(); cx.fillText('1e' + e, 6, y + 4); }
+    for (var k = 1; k <= K; k++) cx.fillText(k, X(k) - 3, H - 10);
+    cx.fillStyle = '#7d879a'; cx.fillText('group size k', W - 110, H - 24);
+    cx.strokeStyle = '#ffb86b'; cx.beginPath();
+    for (var k = 1; k <= K; k++) { var y = Y(E.pageGap(n, k)); if (k === 1) cx.moveTo(X(k), y); else cx.lineTo(X(k), y); } cx.stroke();
+    cx.fillStyle = '#7cc4ff'; pageRows.forEach(function (r) { cx.beginPath(); cx.arc(X(r.k), Y(r.gap), 4, 0, Math.PI * 2); cx.fill(); });
+    var yh = Y(1 / (2 * Math.LN2)); cx.setLineDash([3, 4]); cx.strokeStyle = '#8be38b'; cx.beginPath(); cx.moveTo(L, yh); cx.lineTo(W - 8, yh); cx.stroke(); cx.setLineDash([]);
+    cx.fillStyle = '#8be38b'; cx.fillText('1/(2 ln 2)', L + 4, yh - 5);
+    cx.fillStyle = '#ffb86b'; cx.fillText('\u2014 Page mean', W - 110, H - 58); cx.fillStyle = '#7cc4ff'; cx.fillText('\u25cf this state', W - 110, H - 44);
+  }
+  $('draw').onclick = function () { measure(+$('n').value); };
+
+  // ---- section 2
+  $('sweep').onclick = function () {
+    var btn = this; btn.disabled = true; var n = 6, out = [];
+    (function step() {
+      var st = E.randomState(n, seed()), k = Math.floor(n / 2), S = E.entropyFirst(st, k);
+      out.push({ n: n, k: k, gap: k - S, page: E.pageGap(n, k) });
+      $('smsg').textContent = 'n = ' + n + ' done';
+      renderHalves(out);
+      if (n < 20) { n++; later(step); return; }
+      halves = out; btn.disabled = false; $('smsg').textContent = 'done.'; history.push({ op: 'sweep', seed: seed() }); record();
+    })();
+  };
+  function renderHalves(out) {
+    var t = '<tr><th>n</th><th>cut</th><th>shortfall, this seed</th><th>Page mean</th></tr>';
+    out.forEach(function (r) { t += '<tr><td>' + r.n + '</td><td>' + r.k + ' | ' + (r.n - r.k) + '</td><td>' + r.gap.toFixed(4) + '</td><td>' + r.page.toFixed(4) + '</td></tr>'; });
+    t += '<tr><td colspan="2" class="dim">limit, even n</td><td colspan="2">1/(2 ln 2) = ' + (1 / (2 * Math.LN2)).toFixed(4) + '</td></tr>';
+    $('halves').innerHTML = t;
+  }
+
+  // ---- section 3
+  $('triples').onclick = function () {
+    if (!current) return;
+    if (current.n > 14) { $('tmsg').textContent = 'draw a state of 14 qubits or fewer first (section 1).'; return; }
+    var st = current.state, n = st.n, list = [];
+    for (var a = 0; a < n; a++) for (var b = a + 1; b < n; b++) for (var c = b + 1; c < n; c++) list.push([a, b, c]);
+    var i = 0, mn = Infinity, mx = -Infinity, sum = 0, worst = null, btn = this; btn.disabled = true;
+    (function step() {
+      var end = Math.min(list.length, i + 40);
+      for (; i < end; i++) { var v = E.entropyBits(E.hermEig(E.reducedSubset(st, list[i]))); sum += v; if (v < mn) { mn = v; worst = list[i]; } mx = Math.max(mx, v); }
+      $('tmsg').textContent = i + ' of ' + list.length + '\u2026';
+      if (i < list.length) { later(step); return; }
+      tripleResult = { n: n, seed: current.seed, triples: list.length, min: mn, mean: sum / list.length, max: mx, worst: worst };
+      $('tmsg').innerHTML = n + ' qubits: all ' + list.length + ' triples between <b>' + mn.toFixed(4) + '</b> and ' + mx.toFixed(4) + ' bits of 3 (mean ' + (sum / list.length).toFixed(4) + '; lowest ' + worst.join('-') + ').';
+      btn.disabled = false; history.push({ op: 'triples', n: n }); record();
+    })();
+  };
+
+  // ---- section 4
+  function middle(st) { if (st.n < 2) return 0; return E.entropyFirst(st, Math.floor(st.n / 2)); }
+  function catReset() {
+    catN = +$('cn').value; askCount = 0; cat = E.ghz(catN); crowd = E.randomState(catN, seed() + '/crowd');
+    catLog = [{ left: catN, answerCat: null, answerCrowd: null, cat: middle(cat), crowd: middle(crowd), page: E.pageMean(Math.pow(2, Math.floor(catN / 2)), Math.pow(2, catN - Math.floor(catN / 2))) }];
+    renderCat();
+  }
+  function askOne() {
+    if (cat.n <= 4) return false;
+    var r1 = E.rng(seed(), 'cat', askCount), r2 = E.rng(seed(), 'crowd', askCount); askCount++;
+    var a = E.measureDrop(cat, 0, r1), b = E.measureDrop(crowd, 0, r2); cat = a.state; crowd = b.state;
+    var m = cat.n;
+    catLog.push({ left: m, answerCat: a.out ? 'is not' : 'is', answerCrowd: b.out ? 'is not' : 'is', cat: middle(cat), crowd: middle(crowd), page: E.pageMean(Math.pow(2, Math.floor(m / 2)), Math.pow(2, m - Math.floor(m / 2))) });
+    history.push({ op: 'ask', left: m, cat: a.out, crowd: b.out });
+    return true;
+  }
+  function renderCat() {
+    var t = '<tr><th>qubits left</th><th>cat answered</th><th>cat: across the middle</th><th>crowd answered</th><th>crowd: across the middle</th><th>Page</th></tr>';
+    catLog.forEach(function (r) { t += '<tr><td>' + r.left + '</td><td>' + (r.answerCat ? '"' + r.answerCat + '"' : '') + '</td><td class="' + (r.cat < 0.5 ? 'bad' : '') + '">' + fx(r.cat, 3) + '</td><td>' + (r.answerCrowd ? '"' + r.answerCrowd + '"' : '') + '</td><td>' + r.crowd.toFixed(3) + '</td><td class="dim">' + r.page.toFixed(3) + '</td></tr>'; });
+    $('cat').innerHTML = t; drawCat(); record();
+  }
+  function drawCat() {
+    var cv = $('catplot'), cx = cv.getContext('2d'), W = cv.width, H = cv.height, L = 34, B = 26, top = catN / 2;
+    cx.clearRect(0, 0, W, H); cx.font = '11px ui-monospace, Menlo, monospace'; cx.strokeStyle = '#222a38'; cx.fillStyle = '#7d879a';
+    function X(i) { return L + i / Math.max(1, catN - 4) * (W - L - 14); }
+    function Y(v) { return 10 + (1 - v / top) * (H - B - 10); }
+    for (var v = 0; v <= top; v++) { cx.beginPath(); cx.moveTo(L, Y(v)); cx.lineTo(W - 8, Y(v)); cx.stroke(); cx.fillText(v, 10, Y(v) + 4); }
+    cx.fillText('questions asked', W - 120, H - 8);
+    [['crowd', '#7cc4ff'], ['cat', '#ffb86b']].forEach(function (s) { cx.strokeStyle = s[1]; cx.fillStyle = s[1]; cx.beginPath(); catLog.forEach(function (r, i) { var x = X(i), y = Y(r[s[0]]); if (i === 0) cx.moveTo(x, y); else cx.lineTo(x, y); }); cx.stroke(); catLog.forEach(function (r, i) { cx.beginPath(); cx.arc(X(i), Y(r[s[0]]), 3, 0, Math.PI * 2); cx.fill(); }); });
+    cx.fillStyle = '#7cc4ff'; cx.fillText('crowd (random)', W - 120, H - 70); cx.fillStyle = '#ffb86b'; cx.fillText('cat (GHZ)', W - 120, H - 56);
+  }
+  $('ask').onclick = function () { askOne(); renderCat(); };
+  $('askall').onclick = function () { var btn = this; btn.disabled = true; (function step() { if (askOne()) { renderCat(); later(step); } else btn.disabled = false; })(); };
+  $('creset').onclick = catReset; $('cn').onchange = catReset;
+
+  function record() {
+    var r6 = function (v) { return Math.round(v * 1e6) / 1e6; };
+    $('rec').value = JSON.stringify({
+      version: 'tetralemma-many/1', seed: seed(),
+      shortfall: current && pageRows ? { n: current.n, seed: current.seed, ms: current.ms, rows: pageRows.map(function (r) { return { k: r.k, S: r6(r.S), shortfall: r6(r.gap), page: r6(r.page) }; }) } : null,
+      halfCuts: halves ? halves.map(function (h) { return { n: h.n, shortfall: r6(h.gap), page: r6(h.page) }; }) : null,
+      triples: tripleResult ? { n: tripleResult.n, count: tripleResult.triples, min: r6(tripleResult.min), mean: r6(tripleResult.mean), max: r6(tripleResult.max) } : null,
+      catAndCrowd: { n: catN, steps: catLog.map(function (r) { return { left: r.left, cat: r6(r.cat), crowd: r6(r.crowd), page: r6(r.page), answers: r.answerCat ? [r.answerCat, r.answerCrowd] : null }; }) },
+      checks: checks, history: history.slice(-40), note: 'Second of three after tetralemma-7: random states of 6 to 20 qubits against Page (1993).'
+    }, null, 1);
+  }
+
+  function runChecks() {
+    var out = []; function add(name, ok, detail) { out.push({ check: name, ok: !!ok, detail: detail || '' }); }
+    var r = E.rng('tetralemma-check', 'herm', 0), d = 24, re = new Float64Array(d * d), im = new Float64Array(d * d);
+    for (var i = 0; i < d; i++) for (var j = i; j < d; j++) { var a = r() - 0.5, b = i === j ? 0 : r() - 0.5; re[i * d + j] = re[j * d + i] = a; im[i * d + j] = b; im[j * d + i] = -b; }
+    for (var i = 0; i < d; i++) re[i * d + i] += d;
+    var ev = E.hermEig({ d: d, re: re, im: im }), tr = 0, fro = 0, s1 = 0, s2 = 0;
+    for (var i = 0; i < d; i++) tr += re[i * d + i]; for (var k = 0; k < d * d; k++) fro += re[k] * re[k] + im[k] * im[k];
+    ev.forEach(function (x) { s1 += x; s2 += x * x; });
+    add('Hermitian eigensolver: eigenvalues reproduce trace and Frobenius norm of a random 24&times;24', Math.abs(tr - s1) < 1e-9 && Math.abs(fro - s2) < 1e-7, 'errors ' + Math.abs(tr - s1).toExponential(1) + ', ' + Math.abs(fro - s2).toExponential(1));
+    var st10 = E.randomState(10, 'tetralemma-check'), a3 = E.entropyFirst(st10, 3), b3 = E.entropyBits(E.hermEig(E.reducedSubset(st10, [0, 1, 2]))), a7 = E.entropyFirst(st10, 7), c3 = E.entropyBits(E.hermEig(E.reducedSubset(st10, [7, 8, 9])));
+    add('a cut has the same entropy from either side (first 7 vs last 3), and both reduction routines agree', Math.abs(a3 - b3) < 1e-9 && Math.abs(a7 - c3) < 1e-9, 'S(first 3) ' + a3.toFixed(6) + ', S(first 7) = S(last 3) ' + a7.toFixed(6));
+    var mc = 0, M = 400; for (var i = 0; i < M; i++) mc += E.entropyFirst(E.randomState(2, 'mc' + i), 1); mc /= M;
+    add('Page for two qubits: mean entropy 1/(3 ln 2) = 0.4809 bits; seeded average of 400 draws within 0.03', Math.abs(E.pageMean(2, 2) - 1 / (3 * Math.LN2)) < 1e-12 && Math.abs(mc - E.pageMean(2, 2)) < 0.03, 'average ' + mc.toFixed(4));
+    var st12 = E.randomState(12, 'tetralemma'), half = 6 - E.entropyFirst(st12, 6), g1 = 1 - E.entropyFirst(st12, 1);
+    add('a random 12-qubit state: one qubit short by less than 0.001, the half cut by 0.65 to 0.80', g1 < 1e-3 && half > 0.65 && half < 0.8, 'k=1 ' + g1.toExponential(1) + ', half ' + half.toFixed(4));
+    var lim = 1 / (2 * Math.LN2), okRule = true; for (var k = 1; k <= 8; k++) { var p = E.pageGap(20, k), approx = Math.pow(2, 2 * k - 20) * (1 - Math.pow(4, -k)) * lim; if (Math.abs(p / approx - 1) > 0.01) okRule = false; }
+    var okDirect = [[8, 2], [10, 3], [12, 5], [14, 6]].every(function (c) { var a = c[1], m = Math.pow(2, a), N = Math.pow(2, c[0] - a); return Math.abs(E.pageGap(c[0], a) - (a - E.pageMean(m, N))) < 1e-9; });
+    add('Page shortfall &asymp; (m &minus; 1/m)/(2N ln 2) = 2^(2k&minus;n)(1 &minus; 4^&minus;k)/(2 ln 2) within 1% for n = 20, k &le; 8 (series agrees with the direct sum); at half it tends to 1/(2 ln 2)', okRule && okDirect && Math.abs(E.pageGap(40, 20) - lim) < 1e-6, 'n=40 half ' + E.pageGap(40, 20).toFixed(6));
+    var gh = E.ghz(10), ghOk = true; for (var k = 1; k <= 5; k++) if (Math.abs(E.entropyFirst(gh, k) - 1) > 1e-9) ghOk = false;
+    add('GHZ10: every cut of the first k is exactly one bit', ghOk);
+    var ok0 = true; [0, 1].forEach(function (want) { for (var t = 0; t < 20; t++) { var m = E.measureDrop(E.ghz(10), 3, E.rng('tetralemma-check', 'ghz', t)); for (var k = 1; k <= 4; k++) if (E.entropyFirst(m.state, k) > 1e-9) ok0 = false; } });
+    add('GHZ10 asked one qubit: whatever the answer, no entanglement is left', ok0);
+    var md = E.measureDrop(E.randomState(12, 'tetralemma'), 0, E.rng('tetralemma-check', 'crowd', 0)), left = E.entropyFirst(md.state, 5), pm = E.pageMean(32, 64);
+    add('random 12 asked one qubit: the 11 left are again close to a random state (within 0.1 bit of Page)', Math.abs(left - pm) < 0.1, left.toFixed(4) + ' vs ' + pm.toFixed(4));
+    var mn = Infinity; for (var a = 0; a < 12; a++) for (var b = a + 1; b < 12; b++) for (var c = b + 1; c < 12; c++) mn = Math.min(mn, E.entropyBits(E.hermEig(E.reducedSubset(st12, [a, b, c]))));
+    add('random 12: all 220 triples at 2.95 bits or more', mn >= 2.95, 'lowest ' + mn.toFixed(4));
+    var nrm = E.norm2(E.randomState(16, 'tetralemma'));
+    add('a 16-qubit draw is normalised', Math.abs(nrm - 1) < 1e-12, (nrm - 1).toExponential(1));
+    checks = out.map(function (c) { return { check: c.check.replace(/&[a-z]+;/g, ''), ok: c.ok }; });
+    $('checks').innerHTML = out.map(function (c) { return '<div class="msg"><span class="' + (c.ok ? 'good' : 'bad') + '">' + (c.ok ? 'pass' : 'FAIL') + '</span> ' + c.check + (c.detail ? ' <span class="dim">' + c.detail + '</span>' : '') + '</div>'; }).join('') + '<div class="dim msg">' + out.filter(function (c) { return c.ok; }).length + ' of ' + out.length + ' pass.</div>';
+  }
+  runChecks();
+  catReset();
+  measure(12);
+})();
+</script>
+</body>
+</html>
+
