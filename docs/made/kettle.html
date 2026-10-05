@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Kettle</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; background: #1b1714; color: #f3e6d4; margin: 2rem auto; max-width: 40rem; padding: 0 1rem; }
+  button { font: inherit; margin-right: .4rem; background: #f3e6d4; color: #1b1714; border: 0; padding: .3rem .7rem; }
+  #pot { font-size: 2rem; margin: 1rem 0; }
+  .ok { color: #b7e0b2; } .bad { color: #e7a39a; }
+  a { color: #e7c98a; }
+</style>
+</head>
+<body>
+<p><a href="kettle.md">rules</a> · round <code>KT-20261005-first</code> · nothing deleted, rejected moves stay</p>
+<h1>Kettle</h1>
+<p>Eight moves. Finish between 62 and 74. Do not boil.</p>
+<div id="pot"></div>
+<p>
+  <button id="stoke">stoke</button>
+  <button id="pour">pour</button>
+  <button id="lid">lid</button>
+  <button id="wait">wait</button>
+  <button id="reset">reset</button>
+</p>
+<pre id="log"></pre>
+<p id="check"></p>
+<script>
+const START = 40, COAL = 8, TURNS = 8;
+const ACT = { stoke: [7, -1], pour: [-5, 0], lid: [2, 0], wait: [0, 0] };
+function play(moves) {
+  let temp = START, coal = COAL, accepted = 0, log = [];
+  for (const raw of moves) {
+    const m = String(raw).trim();
+    if (!ACT[m]) { log.push("rejected " + m); continue; }
+    if (accepted >= TURNS) { log.push("rejected " + m + " (round full)"); continue; }
+    const [dt, dc] = ACT[m];
+    if (coal + dc < 0) { log.push("rejected " + m + " (no coal)"); continue; }
+    temp = Math.max(0, temp + dt); coal += dc; accepted += 1;
+    log.push("ok " + m + " -> " + temp + " coal " + coal);
+    if (temp >= 100) return { temp, coal, accepted, score: 0, boiled: true, log };
+  }
+  const score = accepted === TURNS && temp >= 62 && temp <= 74 ? 8 - Math.abs(temp - 68) : 0;
+  return { temp, coal, accepted, score, boiled: false, log };
+}
+const state = { moves: [] };
+function draw() {
+  const r = play(state.moves);
+  document.getElementById("pot").textContent = r.temp + "°  coal " + r.coal + "  moves " + r.accepted + "/" + TURNS + "  score " + r.score + (r.boiled ? "  boiled" : "");
+  document.getElementById("log").textContent = r.log.join("\n");
+}
+for (const name of Object.keys(ACT)) {
+  document.getElementById(name).onclick = () => { state.moves.push(name); draw(); };
+}
+document.getElementById("reset").onclick = () => { state.moves = []; draw(); };
+draw();
+const demo = play("stoke stoke pour stoke lid stoke pour stoke".split(" "));
+const boil = play(["stoke","stoke","stoke","stoke","stoke","stoke","stoke","stoke"]);
+const el = document.getElementById("check");
+const pass = demo.temp === 68 && demo.score === 8 && demo.coal === 3 && boil.boiled && boil.score === 0;
+el.textContent = pass ? "check passed: scripted pot finishes at 68, score 8; eight stokes boil" : "check failed";
+el.className = pass ? "ok" : "bad";
+</script>
+</body>
+</html>
