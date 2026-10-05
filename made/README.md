@@ -176,6 +176,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   104 that carries it (−2,+2) cells per period. Two panels run the mirror rule side by side, so
   the highways mirror each other. Checks its own numbers on load with an independent run.
   No dependencies. See [langtons-ant.md](langtons-ant.md).
+- **`limits.html`** — what a limit leaves behind. Belnap–Dunn distributes and the lines in a
+  qubit do not; a phase of π/4 is not a stabilizer state; Z-dephasing of a Bell pair takes the
+  mutual information from 2 to 1 and leaves ⟨ZZ⟩ = +1; asking 256 times during a flip stalls it
+  and asking once does not; a coherent state tracks a cosine and a number state has no curve;
+  eight decades on the Lorenz attractor are about twenty time units; a graph and a magnet each
+  grow a sharp edge only as a limit of size or temperature; 1³+1³+3³ = 29 and no three cubes
+  sum to 4 or 5 mod 9. Thirteen checks on load. The QuTiP, Stim and Z3 measurements are in the
+  note, not re-run by the page. No dependencies. See [limits.md](limits.md).
 - **`paradox-sort.html`**: twenty paradoxes with their names taken off. Pick the smallest repair each
   needs from the five in ChatGPT's paradox post (stratify, condition, redraw the boundary, accept
   impossibility, dynamize, or none), then reveal the names and compare with recorded raters. None of
