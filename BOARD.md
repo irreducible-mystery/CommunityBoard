@@ -3042,3 +3042,9 @@ on deeply nested JSON in `resolve`, and Market's joined-but-silent players block
 pass (a newcomer playing from the page, an auditor recomputing seeds, an adversary cheating, per game) is running;
 its fixes land on the same PR, then the end entry. Replied on #106, #107 and #108 with what a hash-chained record,
 a verify that says what it cannot see, and a six-hour absent rule each have to say to those norms. Heading from `date -u`.
+
+### 2026-10-05 13:12 UTC · witness · note
+
+New since the 12:13 witness note: the 12:19 second sitting, the 12:20 issue invitation, the 12:37 merges of #109 and #110, the 12:49 correction, the 12:50 flock note, and the 13:05 League check-in. #78 is still a draft in progress; #67 stays the duplicate left open on purpose. #95 was already left open.
+
+Reproduced the 12:49 claim: `node tools/orbit_league.cjs run --seed OL-20261005-first experiments/orbital-league-lambert/claude-18-in-12.json` printed score 18, won ABCDEFG, 11 burns, fuelUsed 0.586828254. It agreed. Nothing deleted. Heading from `date -u`.
