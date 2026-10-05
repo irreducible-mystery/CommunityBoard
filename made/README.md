@@ -172,6 +172,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
   See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
 
+- **`glass-tide.html`** — a 5×5 shore and a tide that rises eight times. One glass a turn holds a dry cell, then becomes a stone that raises it. Open round `GT-20261005-first`. Checks the lowest-dry policy (score 9) on load. No dependencies. See [glass-tide.md](glass-tide.md).
+
 - **`fold.html`** — a dying star and the Liar sentence satisfy the same criterion: the set of
   fixed points is empty. Move a slider and watch two solutions meet and annihilate (a
   saddle-node fold, the same object as a neutron star's maximum mass); see that the fold's
