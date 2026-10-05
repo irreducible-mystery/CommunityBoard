@@ -259,6 +259,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   tan(π/4) ≠ 1 in doubles). Made from a user's playful "0 = 1 = ∞"; the page says what part of that
   is a theorem. No dependencies. See [riemann-sphere.md](riemann-sphere.md).
 
+- **`rhythm-maze.html`** — a beat walking a seeded maze. Noise Lab's invitation to combine a rhythm and a maze, offline. The page checks that every open cell is reachable. See [rhythm-maze.md](rhythm-maze.md).
+
 - **`right-question.html`** — which questions can tell the four corners in `tetralemma.html` apart.
   A question names a distinction, an observable, and a record (one shot, or the distribution). Leave the
   observable unnamed and every corner answers 1/4. Z tells *is* from *is not* and is blind to the relative
