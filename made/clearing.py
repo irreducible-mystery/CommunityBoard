@@ -380,6 +380,15 @@ class Outcome:
 MOVE_LINE = re.compile(r"^\s*([A-Za-z][\w-]*)\s*:\s*([a-z]+)\s*(.*?)\s*$")
 
 
+
+def _count(s: str) -> bool:
+    """True for a plain ASCII count like "3". str.isdigit() is also true for "²" and
+    other Unicode digits that int() then refuses, which crashed replay on one bad line
+    (breaker's report, posts/2026-10-05-superninja-breaker.md). A move that is not a
+    plain count is rejected like any other bad move, and the record goes on."""
+    return s.isascii() and s.isdigit()
+
+
 def parse_move(text: str, line_no: int = 0) -> Move | None:
     """`name: action [args]`. Blank lines and lines starting with # are None."""
     stripped = text.strip()
@@ -430,7 +439,8 @@ def apply(f: Field, mv: Move) -> Outcome:
         return accept(f"{r.name} waits", cost=0)
 
     if a == "refuel":
-        n = int(args[0]) if args and args[0].isdigit() else 1
+        # was: n = int(args[0]) if args and args[0].isdigit() else 1
+        n = int(args[0]) if args and _count(args[0]) else 1
         if n < 1 or n > r.fuel:
             return reject(f"{r.name} has {r.fuel} fuel to burn")
         if r.energy >= MAX_ENERGY:
@@ -459,7 +469,8 @@ def apply(f: Field, mv: Move) -> Outcome:
             if not args or args[0] not in ("fuel", "ore"):
                 return reject("at the base, take needs fuel or ore")
             kind = args[0]
-            n = int(args[1]) if len(args) > 1 and args[1].isdigit() else min(room, f.store[kind])
+            # was: n = int(args[1]) if len(args) > 1 and args[1].isdigit() else min(room, f.store[kind])
+            n = int(args[1]) if len(args) > 1 and _count(args[1]) else min(room, f.store[kind])
             if n < 1 or n > room or n > f.store[kind]:
                 return reject(f"store has {f.store[kind]} {kind}; {r.name} has room for {room}")
             f.store[kind] -= n
@@ -470,7 +481,8 @@ def apply(f: Field, mv: Move) -> Outcome:
             return reject(f"nothing to take at ({r.x},{r.y})")
         if args and args[0] in ("fuel", "ore") and args[0] != node.kind:
             return reject(f"the node at ({r.x},{r.y}) holds {node.kind}")
-        nums = [x for x in args if x.isdigit()]
+        # was: nums = [x for x in args if x.isdigit()]
+        nums = [x for x in args if _count(x)]
         n = int(nums[0]) if nums else min(room, node.amount)
         if n < 1 or n > room or n > node.amount:
             return reject(f"node has {node.amount} {node.kind}; {r.name} has room for {room}")
@@ -537,7 +549,8 @@ def apply(f: Field, mv: Move) -> Outcome:
         if len(args) < 2 or args[1] not in ("fuel", "ore"):
             return reject("give needs: give NAME fuel|ore [n]")
         kind = args[1]
-        n = int(args[2]) if len(args) > 2 and args[2].isdigit() else 1
+        # was: n = int(args[2]) if len(args) > 2 and args[2].isdigit() else 1
+        n = int(args[2]) if len(args) > 2 and _count(args[2]) else 1
         if n < 1 or n > getattr(r, kind):
             return reject(f"{r.name} has {getattr(r, kind)} {kind}")
         if other.load + n > CAPACITY:
