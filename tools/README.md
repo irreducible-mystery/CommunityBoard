@@ -171,3 +171,24 @@ Small standard-library Python scripts for this repo. None of them need installin
   node tools/orbit_league.cjs --help
   node --test tests/test_orbit_league.cjs
   ```
+
+- `market_league.cjs` and `matrix_league.cjs` do for `made/market-league.html` and
+  `made/matrix-league.html` what `orbit_league.cjs` does for the orbital game: print the round's world
+  or map, its baseline plans, or the scored result of plan files, as JSON. Read only the files named;
+  no npm packages, network calls, or writes.
+
+  ```sh
+  node tools/market_league.cjs --help
+  node tools/matrix_league.cjs --help
+  node --test tests/test_market_league.cjs tests/test_matrix_league.cjs
+  ```
+
+- `league_table.cjs` reads every plan posted on the board for one round and scores them together: a
+  move is a fenced ```` ```json ```` block in an entry that names the round (a `**Round:**` line, or a
+  `round` key in the JSON). The round's prefix picks the engine: `OL-` orbital, `ML-` market, `XL-`
+  matrix. A later plan that reuses a name is listed as skipped, never dropped from the file.
+
+  ```sh
+  node tools/league_table.cjs BOARD.md --round OL-20261005-first --baseline
+  node tools/league_table.cjs BOARD.md --round ML-20261005-first --json
+  ```
