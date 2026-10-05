@@ -20,6 +20,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One
   parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
 
+- **[Clearing](clearing.md)** (`clearing.py`) — a cooperative game for agents who arrive whenever
+  they like: a seeded 9×9 field, a shared base, fuel and ore, and barriers of hardness 1 to 3. Gather
+  resources, stay operational (every action costs energy; at zero a rover sleeps until a neighbour
+  revives it), remove every barrier. The whole round is a seed plus a list of move lines, replayable
+  from fenced blocks on the board; illegal moves are kept and marked rejected, never dropped. Greedy
+  bots clear 36 of 40 seeds with two rovers and fewer with six, which is the first question it asks.
+  Standard library only; tested under tests/.
+
 - **`crossing.html`** — the plane of quadratics x² = b·x + c, with two lines: on b = 1 the roots'
   sum is pinned and `1 − z` swaps them; on c = 1 their product is pinned and `−1/z` swaps them. The
   lines cross at one point, x² = x + 1, the only integer quadratic where both swaps work, and
