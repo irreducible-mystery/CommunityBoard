@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The infinite cat: a superposition no finite question can see</title>
+<!--
+  infinite-cat.html — SuperNinja, 2026-10-05, for the CommunityBoard.
+  Third of three pages after the user's "What happens with zero qubits? … with infinite qubits? …" / "All please!"
+
+    1. The cat and the coin: GHZ_n and the 50/50 mixture of all-0 and all-1 agree on every proper part, exactly.
+       Of all 4^n Pauli questions, only 2^(n-1) tell them apart, and each touches every qubit.
+    2. Noisy readout: the one question that works fades like (1-2e)^n; trials needed grow like (1-2e)^(-2n).
+    3. At infinity: no question on finitely many qubits works, so the infinite cat and the coin are the
+       same state for every quasi-local observable (superselection sectors; e.g. Bratteli & Robinson).
+    4. The same fact, put to work: on a surface code no X operator lighter than d touches the stored answer.
+       An exhaustive census proves it for d = 3, 5 (on load) and d = 7 (on request, 86 million operators at weight 7).
+
+  The engine (the script block with id ic-engine) has no DOM and is tested under Node
+  (tests/test_infinite_cat.cjs). Self-contained: no network, no dependencies.
+-->
+<style>
+  :root { --bg:#0b0e14; --fg:#d7dde8; --dim:#7d879a; --acc:#7cc4ff; --warm:#ffb86b; --line:#222a38; --bad:#ff7c7c; --good:#8be38b; }
+  html,body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.5 Georgia, 'Times New Roman', serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 18px 60px; }
+  h1 { font-weight: normal; font-size: 28px; margin: 0 0 4px; }
+  h2 { font-weight: normal; font-size: 20px; margin: 36px 0 8px; border-top: 1px solid var(--line); padding-top: 18px; }
+  p { margin: 8px 0; max-width: 74ch; }
+  a { color: var(--acc); }
+  .dim { color: var(--dim); }
+  code, pre, .mono, table { font: 13px/1.45 ui-monospace, Menlo, Consolas, monospace; }
+  .two { display:grid; grid-template-columns: repeat(auto-fit, minmax(380px,1fr)); gap:16px; align-items:start; }
+  table { border-collapse: collapse; margin: 8px 0; }
+  td, th { border: 1px solid var(--line); padding: 3px 9px; text-align: right; font-weight: normal; }
+  th { color: var(--dim); text-align: left; }
+  button { background:#161c28; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:6px 12px; font:inherit; font-size:14px; cursor:pointer; margin:2px 2px 2px 0; }
+  button:hover { border-color: var(--acc); }
+  button:disabled { opacity:.5; cursor:default; }
+  select { background:#0f131b; color:var(--fg); border:1px solid #2b3447; border-radius:4px; padding:5px 8px; font:inherit; font-size:14px; }
+  input[type=range] { width: 220px; vertical-align: middle; }
+  label { margin-right: 10px; }
+  .good { color:var(--good); } .bad { color:var(--bad); } .warm { color:var(--warm); }
+  textarea { width:100%; min-height:120px; background:#0f131b; color:var(--fg); border:1px solid var(--line); font:12px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+  details summary { cursor:pointer; color:var(--acc); }
+  .msg { margin: 6px 0; }
+  canvas { background:#0f131b; border:1px solid var(--line); border-radius:6px; max-width:100%; }
+  .qs span { display:inline-block; width:26px; height:26px; line-height:26px; text-align:center; margin:2px; border:1px solid #2b3447; border-radius:4px; cursor:pointer; font: 13px ui-monospace, Menlo, monospace; }
+  .qs span.on { border-color: var(--warm); color: var(--warm); }
+</style>
+</head>
+<body>
+<main>
+<h1>The infinite cat</h1>
+<p class="dim">The end of the series, after <a href="tetralemma-0.html">zero</a> and <a href="tetralemma-infinity.html">approaching infinity</a> (separate pull requests; the links work once they are merged). Nothing here leaves the page.</p>
+
+<p>Take n qubits in the cat state (|0&hellip;0&#x27E9; + |1&hellip;1&#x27E9;)/&radic;2, the <em>both</em> corner at its most extreme. Next to it put a coin: a box that is all-0 or all-1 with even odds, with no superposition at all. This page asks a single question: which measurements can tell the two apart? As n grows the answer shrinks, and at infinity it is <em>none that touch only finitely many qubits</em>.</p>
+
+<h2>1. Every part agrees</h2>
+<div class="two">
+<div>
+<p>The cat's density matrix is the coin's plus two corner entries, &frac12;|0&hellip;0&#x27E9;&#x27E8;1&hellip;1| and its mirror. Tracing out even a single qubit erases both entries, so <b>every proper part of the cat is exactly the coin's part</b>. Any question about at most n&minus;1 qubits gets the same answer from both.</p>
+<p>Questions on qubits are products of I, X, Y, Z. Of all 4<sup>n</sup> of them, the page finds the ones on which cat and coin disagree: exactly 2<sup>n&minus;1</sup>, each with X or Y on every qubit and an even number of Y's. The fraction is 2<sup>n&minus;1</sup>/4<sup>n</sup>, which goes to zero. Yet the two states are far from identical: their trace distance is &frac12; for every n. The difference is real but it lives nowhere in particular.</p>
+<p><label>n <select id="cn"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option></select></label> <button id="census">find every question that tells them apart</button></p>
+<div id="cmsg" class="msg mono"></div>
+</div>
+<div>
+<p class="dim">Build a question: click a qubit to cycle I &rarr; X &rarr; Y &rarr; Z.</p>
+<div class="qs" id="qs"></div>
+<div id="qmsg" class="msg mono"></div>
+</div>
+</div>
+
+<h2>2. The one question fades</h2>
+<div class="two">
+<div>
+<p>Measure X on every qubit and multiply the &plusmn;1 outcomes. For the cat the product is +1 on every shot. For the coin it is a fair coin flip. That is the whole difference. If each readout is wrong with probability e, every error flips the product, so the cat's average falls to (1&minus;2e)<sup>n</sup>. Telling cat from coin at 3 standard deviations takes about (3/(1&minus;2e)<sup>n</sup>)<sup>2</sup> shots, which grows exponentially in n.</p>
+<p><label>readout error e <input type="range" id="re" min="-4" max="-1" step="0.01" value="-2"></label> <span id="rev" class="mono"></span></p>
+<button id="sim">simulate 20,000 shots each (cat and coin, n = 1 &hellip; 60)</button>
+<div id="smsg" class="msg mono"></div>
+</div>
+<div><canvas id="splot" width="440" height="280"></canvas><div class="dim">Mean product of all n X outcomes. Line: (1&minus;2e)<sup>n</sup>. Orange: simulated cat. Grey: simulated coin.</div></div>
+</div>
+
+<h2>3. At infinity: two worlds, no bridge</h2>
+<p>Now let n be infinite. Any measurement anyone can actually make involves finitely many qubits, or is a limit of such measurements: these are the <em>quasi-local</em> observables. Section 1 showed that on every finite set of qubits the cat and the coin agree exactly. So on every quasi-local observable the infinite cat and the coin give identical statistics. For every physical purpose they are the same state.</p>
+<p>The mathematics confirms this in a stronger form. All-0 and all-1 now live in different <em>superselection sectors</em>: no quasi-local operator has a nonzero matrix element between them, because getting from one to the other means flipping infinitely many qubits. A "superposition" across sectors is a mixture with extra notation. In the algebraic language, the two pure states give inequivalent representations, and the cat's state is the mixture of them (Bratteli and Robinson, <i>Operator Algebras and Quantum Statistical Mechanics</i>; the same mechanism underlies spontaneous symmetry breaking). At infinity, <em>both</em> becomes <em>either</em>.</p>
+
+<h2>4. The same fact, put to work</h2>
+<div class="two">
+<div>
+<p>The surface code uses this deliberately. Its stored answer can only be flipped by an operator that stretches from edge to edge, d qubits at least. Every lighter operator either sets off a check or does nothing to the answer. The page proves it by brute force: it lists every X-type operator of each weight w &le; d, keeps the ones that set off no check ("silent"), and counts how many of those flip the answer.</p>
+<p>Below d, every silent operator is a product of checks and the answer is untouched. At w = d the first answer-flippers appear. Every one of them crosses the grid from top to bottom, touching each row exactly once. Only d of them are straight columns; the rest zig-zag (8 of them at d = 3, of which 3 are straight). As d &rarr; &infin;, no finite action can reach the stored answer. The same fact that turns the cat into a coin makes the code's answer permanent: what no finite part holds, no finite act can change.</p>
+<p><button id="c7">run the d = 7 census (about 100 million operators, a few seconds)</button></p>
+<div id="c7msg" class="msg mono"></div>
+</div>
+<div><table id="ctab"></table></div>
+</div>
+
+<h2>Checks on this load</h2>
+<div id="checks"></div>
+
+<h2>Record</h2>
+<details><summary>JSON record of this session (infinite-cat/1)</summary><textarea id="rec" readonly></textarea></details>
+
+<h2>What this is not</h2>
+<p class="dim">A finite page cannot hold infinitely many qubits. Sections 1, 2 and 4 are exact finite computations whose pattern is proved in general. Section 3 is the standard theorem those patterns point to, stated here and not computed. "Every measurement is quasi-local" is a statement about what is physical. A mathematician can write down a global observable that distinguishes the two states, but it has no finite approximation that does. Real cats are not GHZ states. Decoherence picks out sectors in a messier, approximate way. The surface code census uses only X-type operators; Z-type is the same by symmetry.</p>
+<p class="dim">SuperNinja session, 2026-10-05. Self-reported; the numbers above are computed by the page on load.</p>
+</main>
+<script id="ic-engine">
+var IC = (function () {
+  'use strict';
+  function rng(seed, stream, index) {
+    var a = 2166136261, key = JSON.stringify([seed, stream, index || 0]);
+    for (var i = 0; i < key.length; i++) { a ^= key.charCodeAt(i); a = Math.imul(a, 16777619); }
+    return function () { a = (a + 0x6D2B79F5) | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t ^= t + Math.imul(t ^ t >>> 7, 61 | t); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  }
+  // ---------- states and density matrices on n qubits (n <= 10), dense complex ----------
+  function ghz(n, sign) { var D = 1 << n, re = new Float64Array(D), im = new Float64Array(D); re[0] = Math.SQRT1_2; re[D - 1] = (sign || 1) * Math.SQRT1_2; return { n: n, re: re, im: im }; }
+  function pureRho(s) { var D = s.re.length, R = [], I = []; for (var a = 0; a < D; a++) { R.push(new Float64Array(D)); I.push(new Float64Array(D)); for (var b = 0; b < D; b++) { R[a][b] = s.re[a] * s.re[b] + s.im[a] * s.im[b]; I[a][b] = s.im[a] * s.re[b] - s.re[a] * s.im[b]; } } return { n: s.n, re: R, im: I }; }
+  // the coin: |0..0><0..0|/2 + |1..1><1..1|/2
+  function coin(n) { var D = 1 << n, R = [], I = []; for (var a = 0; a < D; a++) { R.push(new Float64Array(D)); I.push(new Float64Array(D)); } R[0][0] = 0.5; R[D - 1][D - 1] = 0.5; return { n: n, re: R, im: I }; }
+  // Pauli string as array of 'I','X','Y','Z' per qubit (index = qubit). P|b> = phase |b ^ flip>
+  function pauliAction(ps, b) {
+    var flip = 0, pr = 1, pi = 0; // phase = pr + i pi
+    for (var q = 0; q < ps.length; q++) {
+      var bit = b >> q & 1, c = ps[q];
+      if (c === 'X') flip |= 1 << q;
+      else if (c === 'Z') { if (bit) { pr = -pr; pi = -pi; } }
+      else if (c === 'Y') { flip |= 1 << q; var nr, ni; if (bit) { nr = pi; ni = -pr; } else { nr = -pi; ni = pr; } pr = nr; pi = ni; } // Y|0> = i|1>, Y|1> = -i|0>
+    }
+    return { to: b ^ flip, re: pr, im: pi };
+  }
+  // Tr(rho P) = sum_b <b|rho P|b> = sum_b sum_c rho[b][c] <c|P|b> ; P|b> = ph |b'> so <c|P|b> = ph delta(c, b')
+  function expect(rho, ps) { var D = rho.re.length, tr = 0; for (var b = 0; b < D; b++) { var a = pauliAction(ps, b), r = rho.re[b][a.to], i = rho.im[b][a.to]; tr += r * a.re - i * a.im; } return tr; }
+  // partial trace onto the qubits in mask
+  function reduce(rho, mask) {
+    var n = rho.n, A = [], B = []; for (var k = 0; k < n; k++) (mask >> k & 1 ? A : B).push(k);
+    var dA = 1 << A.length, dB = 1 << B.length, R = [], I = [];
+    for (var a = 0; a < dA; a++) { R.push(new Float64Array(dA)); I.push(new Float64Array(dA)); }
+    function idx(a, b) { var i = 0; for (var t = 0; t < A.length; t++) if (a >> t & 1) i |= 1 << A[t]; for (var t = 0; t < B.length; t++) if (b >> t & 1) i |= 1 << B[t]; return i; }
+    for (var b = 0; b < dB; b++) for (var x = 0; x < dA; x++) for (var y = 0; y < dA; y++) { var i1 = idx(x, b), i2 = idx(y, b); R[x][y] += rho.re[i1][i2]; I[x][y] += rho.im[i1][i2]; }
+    return { n: A.length, re: R, im: I };
+  }
+  function maxAbsDiff(r1, r2) { var m = 0, D = r1.re.length; for (var a = 0; a < D; a++) for (var b = 0; b < D; b++) m = Math.max(m, Math.abs(r1.re[a][b] - r2.re[a][b]), Math.abs(r1.im[a][b] - r2.im[a][b])); return m; }
+  // trace distance of two density matrices whose difference is real and supported on {0, D-1}: exact for GHZ vs coin
+  // general fallback: Jacobi on the real symmetric embedding [[R,-I],[I,R]] (eigenvalues doubled)
+  function traceDistance(r1, r2) {
+    var D = r1.re.length, M = 2 * D, A = [];
+    for (var a = 0; a < M; a++) A.push(new Float64Array(M));
+    for (var a = 0; a < D; a++) for (var b = 0; b < D; b++) { var x = r1.re[a][b] - r2.re[a][b], y = r1.im[a][b] - r2.im[a][b]; A[a][b] = x; A[a + D][b + D] = x; A[a][b + D] = -y; A[a + D][b] = y; }
+    for (var sweep = 0; sweep < 60; sweep++) {
+      var off = 0; for (var p = 0; p < M; p++) for (var q = p + 1; q < M; q++) off += A[p][q] * A[p][q];
+      if (off < 1e-24) break;
+      for (var p = 0; p < M; p++) for (var q = p + 1; q < M; q++) {
+        if (Math.abs(A[p][q]) < 1e-15) continue;
+        var th = (A[q][q] - A[p][p]) / (2 * A[p][q]), t = (th >= 0 ? 1 : -1) / (Math.abs(th) + Math.sqrt(th * th + 1)), c = 1 / Math.sqrt(t * t + 1), s = t * c;
+        for (var k = 0; k < M; k++) { var akp = A[k][p], akq = A[k][q]; A[k][p] = c * akp - s * akq; A[k][q] = s * akp + c * akq; }
+        for (var k = 0; k < M; k++) { var apk = A[p][k], aqk = A[q][k]; A[p][k] = c * apk - s * aqk; A[q][k] = s * apk + c * aqk; }
+      }
+    }
+    var t = 0; for (var a = 0; a < M; a++) t += Math.abs(A[a][a]); return t / 4; // /2 for doubling, /2 for trace distance
+  }
+  // <0..0| P |1..1> for a Pauli string: nonzero only if every qubit carries X or Y
+  function crossElement(ps) { var n = ps.length, D = 1 << n, a = pauliAction(ps, D - 1); return a.to === 0 ? Math.hypot(a.re, a.im) : 0; }
+  // every Pauli string on n qubits (4^n), as arrays
+  function allPaulis(n) { var out = [], L = ['I', 'X', 'Y', 'Z']; for (var m = 0; m < Math.pow(4, n); m++) { var ps = [], x = m; for (var q = 0; q < n; q++) { ps.push(L[x & 3]); x >>= 2; } out.push(ps); } return out; }
+  // ---------- telling the cat from the coin when every readout errs with probability e ----------
+  // the only witness is a product of X/Y on all n qubits with <GHZ> = +-1 and <coin> = 0.
+  // each readout error flips the measured parity: signal (1-2e)^n. Trials to see it at z sigma: (z / signal)^2
+  function paritySignal(n, e) { return Math.pow(1 - 2 * e, n); }
+  function trialsNeeded(n, e, z) { var s = paritySignal(n, e); return s > 0 ? Math.pow((z || 3) / s, 2) : Infinity; }
+  // simulate measuring X on every qubit and multiplying the n outcomes, then each outcome flips with prob e.
+  // GHZ+ : the product of X's is +1 on every shot (the state is its +1 eigenvector), so only errors change it.
+  // coin : |0..0> and |1..1> give uniformly random X outcomes, so the product is +-1 with equal odds.
+  function simulateParity(n, e, shots, seed, which) {
+    var r = rng(seed, 'parity-' + (which || 'cat') + '-' + n + '-' + e, 0), sum = 0;
+    for (var s = 0; s < shots; s++) {
+      var par = 0;
+      if (which === 'coin') { for (var q = 0; q < n; q++) if (r() < 0.5) par ^= 1; }
+      for (var q = 0; q < n; q++) if (r() < e) par ^= 1;
+      sum += par ? -1 : 1;
+    }
+    return sum / shots;
+  }
+  // ---------- surface code: no action smaller than d reaches the stored answer ----------
+  function makeCode(d) {
+    var X = [], Z = [];
+    for (var i = -1; i <= d - 1; i++) for (var j = -1; j <= d - 1; j++) {
+      var type = ((i + j) % 2 + 2) % 2 === 0 ? 'X' : 'Z', qs = [];
+      [[i, j], [i, j + 1], [i + 1, j], [i + 1, j + 1]].forEach(function (p) { if (p[0] >= 0 && p[0] < d && p[1] >= 0 && p[1] < d) qs.push(p[0] * d + p[1]); });
+      if (qs.length < 2) continue;
+      if (qs.length === 2) { var tb = i === -1 || i === d - 1, lr = j === -1 || j === d - 1; if (type === 'X' && !tb) continue; if (type === 'Z' && !lr) continue; }
+      (type === 'X' ? X : Z).push(qs);
+    }
+    return { d: d, n: d * d, X: X, Z: Z };
+  }
+  // enumerate every X-type operator of weight w (as qubit lists); count silent ones (commute with all Z checks)
+  // and silent ones that flip the answer (odd overlap with logical Z = row 0).
+  function weightCensus(code, w) {
+    var n = code.n, d = code.d, idx = [], silent = 0, logical = 0, total = 0, first = null, straight = 0, onePerRow = 0, zc = code.Z, owner = [];
+    for (var q = 0; q < n; q++) owner.push([]);
+    zc.forEach(function (c, ci) { c.forEach(function (q) { owner[q].push(ci); }); });
+    var par = new Uint8Array(zc.length), bad = 0;
+    function toggle(q) { owner[q].forEach(function (ci) { par[ci] ^= 1; bad += par[ci] ? 1 : -1; }); }
+    function rec(start, left, rowpar) {
+      if (left === 0) { total++; if (bad === 0) { silent++; if (rowpar) { logical++; if (!first) first = idx.slice(); var rows = 0, c0 = idx[0] % d, same = true; for (var t = 0; t < idx.length; t++) { rows |= 1 << Math.floor(idx[t] / d); if (idx[t] % d !== c0) same = false; } if (rows === (1 << d) - 1) onePerRow++; if (same) straight++; } } return; }
+      for (var q = start; q <= n - left; q++) { idx.push(q); toggle(q); rec(q + 1, left - 1, rowpar ^ (q < d ? 1 : 0)); toggle(q); idx.pop(); }
+    }
+    rec(0, w, 0);
+    return { w: w, total: total, silent: silent, logical: logical, onePerRow: onePerRow, straight: straight, example: first };
+  }
+  function choose(n, k) { var c = 1; for (var i = 0; i < k; i++) c = c * (n - i) / (i + 1); return Math.round(c); }
+  return { rng: rng, ghz: ghz, pureRho: pureRho, coin: coin, pauliAction: pauliAction, expect: expect, reduce: reduce, maxAbsDiff: maxAbsDiff, traceDistance: traceDistance, crossElement: crossElement, allPaulis: allPaulis, paritySignal: paritySignal, trialsNeeded: trialsNeeded, simulateParity: simulateParity, makeCode: makeCode, weightCensus: weightCensus, choose: choose };
+})();
+if (typeof module !== 'undefined') module.exports = IC;
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = IC, $ = function (id) { return document.getElementById(id); }, history = [], checks = [], census = {}, sim = null, q = ['X', 'X', 'X', 'X'];
+  function ex(x, k) { return (x !== 0 && (Math.abs(x) < 1e-3 || Math.abs(x) >= 1e5)) ? x.toExponential(k) : x.toFixed(k + 2); }
+  // 1. builder
+  function drawQs() {
+    var n = +$('cn').value; while (q.length < n) q.push('X'); q = q.slice(0, n);
+    $('qs').innerHTML = q.map(function (c, i) { return '<span data-i="' + i + '" class="' + (c !== 'I' ? 'on' : '') + '">' + c + '</span>'; }).join('');
+    Array.prototype.forEach.call($('qs').children, function (el) { el.onclick = function () { var i = +el.getAttribute('data-i'), L = ['I', 'X', 'Y', 'Z']; q[i] = L[(L.indexOf(q[i]) + 1) % 4]; drawQs(); history.push({ op: 'pauli', p: q.join('') }); record(); }; });
+    var g = E.pureRho(E.ghz(n)), c = E.coin(n), a = E.expect(g, q), b = E.expect(c, q), touched = q.filter(function (x) { return x !== 'I'; }).length;
+    $('qmsg').innerHTML = 'question ' + q.join('') + ' (touches ' + touched + ' of ' + n + ')<br>cat: ' + a.toFixed(3) + '&nbsp;&nbsp; coin: ' + b.toFixed(3) + '<br>' + (Math.abs(a - b) > 1e-9 ? '<span class="warm">this question tells them apart</span>' : '<span class="dim">same answer: this question cannot tell them apart</span>' + (touched < n ? ' <span class="dim">(no question that skips a qubit can)</span>' : ''));
+  }
+  $('cn').onchange = function () { drawQs(); $('cmsg').innerHTML = ''; };
+  $('census').onclick = function () {
+    var n = +$('cn').value, g = E.pureRho(E.ghz(n)), c = E.coin(n), list = [], all = E.allPaulis(n);
+    all.forEach(function (ps) { if (Math.abs(E.expect(g, ps) - E.expect(c, ps)) > 1e-9) list.push(ps.join('') + (E.expect(g, ps) > 0 ? '+' : '&minus;')); });
+    var maxPart = 0; for (var m = 1; m < (1 << n) - 1; m++) maxPart = Math.max(maxPart, E.maxAbsDiff(E.reduce(g, m), E.reduce(c, m)));
+    $('cmsg').innerHTML = all.length + ' questions; ' + list.length + ' tell cat from coin (2<sup>n&minus;1</sup> = ' + Math.pow(2, n - 1) + '):<br>' + list.join(' ') + '<br>largest difference on any of the ' + ((1 << n) - 2) + ' proper parts: ' + maxPart.toExponential(1) + '<br>trace distance of the whole: ' + E.traceDistance(g, c).toFixed(6);
+    history.push({ op: 'census', n: n, distinguishing: list.length }); record();
+  };
+  // 2. noisy parity
+  function drawSim() {
+    var e = Math.pow(10, +$('re').value), c = $('splot'), g = c.getContext('2d'), W = 440, H = 280, L = 40, B = 26, T = 10, R = 10, N = 60;
+    $('rev').textContent = e.toExponential(2);
+    function X(n) { return L + n / N * (W - L - R); } function Y(v) { return H - B - (v + 0.1) / 1.1 * (H - B - T); }
+    g.clearRect(0, 0, W, H); g.strokeStyle = '#222a38'; g.fillStyle = '#7d879a'; g.font = '11px ui-monospace, monospace';
+    for (var n = 0; n <= N; n += 10) { g.beginPath(); g.moveTo(X(n), T); g.lineTo(X(n), H - B); g.stroke(); g.fillText('' + n, X(n) - 6, H - B + 14); }
+    for (var v = 0; v <= 1.0001; v += 0.25) { g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(W - R, Y(v)); g.stroke(); g.fillText(v.toFixed(2), 4, Y(v) + 4); }
+    g.strokeStyle = '#7cc4ff'; g.lineWidth = 2; g.beginPath(); for (var n = 1; n <= N; n++) { var y = Y(E.paritySignal(n, e)); if (n === 1) g.moveTo(X(n), y); else g.lineTo(X(n), y); } g.stroke(); g.lineWidth = 1;
+    if (sim && Math.abs(sim.e - e) < 1e-12) { sim.rows.forEach(function (r) { g.fillStyle = '#ffb86b'; g.beginPath(); g.arc(X(r.n), Y(r.cat), 3, 0, 7); g.fill(); g.fillStyle = '#7d879a'; g.beginPath(); g.arc(X(r.n), Y(r.coin), 2.5, 0, 7); g.fill(); }); }
+    $('smsg').innerHTML = 'shots to tell cat from coin at 3&sigma;:<br>' + [10, 100, 1000, 10000].map(function (n) { return 'n = ' + n + ': ' + ex(E.trialsNeeded(n, e, 3), 2); }).join('<br>') + (sim && Math.abs(sim.e - e) < 1e-12 ? '<br><span class="dim">simulated, n = ' + sim.rows.map(function (r) { return r.n + ': cat ' + r.cat.toFixed(3) + ' / coin ' + r.coin.toFixed(3); }).join(', ') + '</span>' : '');
+  }
+  $('re').oninput = function () { drawSim(); history.push({ op: 'e', log10e: +$('re').value }); if (history.length > 200) history.shift(); record(); };
+  $('sim').onclick = function () {
+    var e = Math.pow(10, +$('re').value), rows = [];
+    [1, 5, 10, 20, 30, 40, 50, 60].forEach(function (n) { rows.push({ n: n, cat: E.simulateParity(n, e, 20000, 'tetralemma', 'cat'), coin: E.simulateParity(n, e, 20000, 'tetralemma', 'coin'), predicted: E.paritySignal(n, e) }); });
+    sim = { e: e, shots: 20000, rows: rows }; drawSim(); history.push({ op: 'simulate', e: e }); record();
+  };
+  // 4. census
+  function censusRows(d) { var code = E.makeCode(d), rows = []; for (var w = 1; w <= d; w++) rows.push(E.weightCensus(code, w)); census[d] = rows; return rows; }
+  function drawCensus() {
+    var h = '<tr><th>d</th><th>weight</th><th>X operators</th><th>silent</th><th>flip the answer</th><th>straight</th></tr>';
+    Object.keys(census).sort().forEach(function (d) { census[d].forEach(function (r) { h += '<tr><td>' + d + '</td><td>' + r.w + '</td><td>' + r.total.toLocaleString('en-US') + '</td><td>' + r.silent + '</td><td>' + (r.logical ? '<span class="warm">' + r.logical + '</span>' : '0') + '</td><td>' + (r.logical ? r.straight : '') + '</td></tr>'; }); });
+    $('ctab').innerHTML = h;
+  }
+  $('c7').onclick = function () {
+    var btn = $('c7'); btn.disabled = true; $('c7msg').textContent = 'counting…';
+    setTimeout(function () {
+      var t0 = Date.now(), rows = censusRows(7), last = rows[6];
+      drawCensus(); btn.disabled = false;
+            $('c7msg').innerHTML = 'd = 7 done in ' + ((Date.now() - t0) / 1000).toFixed(1) + ' s. Below weight 7: ' + rows.slice(0, 6).reduce(function (s, r) { return s + r.logical; }, 0) + ' answer-flippers. At 7: ' + last.logical + ', every one touching each of the 7 rows once; ' + last.straight + ' are straight columns.';
+      history.push({ op: 'census7', logical: rows.map(function (r) { return r.logical; }) }); record();
+    }, 20);
+  };
+  function record() {
+    $('rec').value = JSON.stringify({ version: 'infinite-cat/1', page: 'infinite-cat.html', checks: checks, census: Object.keys(census).reduce(function (o, d) { o[d] = census[d].map(function (r) { return { w: r.w, total: r.total, silent: r.silent, logical: r.logical }; }); return o; }, {}), simulation: sim, history: history.slice(-40) }, null, 1);
+  }
+  function runChecks() {
+    var out = []; function add(name, ok, detail) { out.push({ check: name, ok: !!ok, detail: detail || '' }); }
+    var okp = true; for (var n = 2; n <= 6; n++) { var g = E.pureRho(E.ghz(n)), c = E.coin(n); for (var m = 1; m < (1 << n) - 1; m++) if (E.maxAbsDiff(E.reduce(g, m), E.reduce(c, m)) > 1e-14) okp = false; }
+    add('every proper part of the cat equals the coin\'s, entry by entry (n = 2 &hellip; 6, all 2<sup>n</sup>&minus;2 parts)', okp);
+    var okc = true, det = []; for (var n = 2; n <= 5; n++) { var g = E.pureRho(E.ghz(n)), c = E.coin(n), cnt = 0, full = true; E.allPaulis(n).forEach(function (ps) { if (Math.abs(E.expect(g, ps) - E.expect(c, ps)) > 1e-9) { cnt++; if (ps.some(function (x) { return x === 'I' || x === 'Z'; })) full = false; var ny = ps.filter(function (x) { return x === 'Y'; }).length; if (ny % 2) full = false; } }); if (cnt !== Math.pow(2, n - 1) || !full) okc = false; det.push(n + ':' + cnt); }
+    add('of all 4<sup>n</sup> Pauli questions exactly 2<sup>n&minus;1</sup> tell them apart, each X/Y on every qubit with an even number of Y (n = 2 &hellip; 5)', okc, det.join(' '));
+    var okt = true; for (var n = 1; n <= 5; n++) if (Math.abs(E.traceDistance(E.pureRho(E.ghz(n)), E.coin(n)) - 0.5) > 1e-9) okt = false;
+    add('yet the whole states stay a trace distance &frac12; apart for every n (n = 1 &hellip; 5, by diagonalisation)', okt);
+    var oks = true; for (var n = 2; n <= 5; n++) { var gp = E.pureRho(E.ghz(n, 1)), gm = E.pureRho(E.ghz(n, -1)); for (var m = 1; m < (1 << n) - 1; m++) if (E.maxAbsDiff(E.reduce(gp, m), E.reduce(gm, m)) > 1e-14) oks = false; }
+    add('the cats with + and &minus; are also identical on every proper part: the relative phase lives only in the whole', oks);
+    var okx = true; for (var n = 1; n <= 8; n++) if (Math.abs(E.expect(E.pureRho(E.ghz(n)), new Array(n).fill('X')) - 1) > 1e-12 || Math.abs(E.expect(E.coin(n), new Array(n).fill('X'))) > 1e-12) okx = false;
+    add('X on every qubit: cat +1, coin 0 (n = 1 &hellip; 8)', okx);
+    var oksim = true, sd = []; [5, 20, 50].forEach(function (n) { var a = E.simulateParity(n, 0.01, 20000, 'tetralemma-check', 'cat'), b = E.simulateParity(n, 0.01, 20000, 'tetralemma-check', 'coin'), p = E.paritySignal(n, 0.01); if (Math.abs(a - p) > 0.03 || Math.abs(b) > 0.03) oksim = false; sd.push(n + ': ' + a.toFixed(3) + '/' + p.toFixed(3)); });
+    add('simulated noisy parity (e = 1%, 20,000 shots) follows (1&minus;2e)<sup>n</sup> for the cat and 0 for the coin', oksim, sd.join(' '));
+    add('shots needed at 3&sigma; grow exponentially: n = 1000 at e = 1% needs more than 10<sup>18</sup>', E.trialsNeeded(1000, 0.01, 3) > 1e18 && E.trialsNeeded(10, 0.01, 3) < 20, ex(E.trialsNeeded(1000, 0.01, 3), 2));
+    var r3 = censusRows(3), r5 = censusRows(5), okw = true;
+    [r3, r5].forEach(function (rows) { var d = rows.length; rows.forEach(function (r) { if (r.w < d && r.logical) okw = false; if (r.total !== E.choose(d * d, r.w)) okw = false; }); if (!rows[d - 1].logical) okw = false; });
+    add('surface code, exhaustive: no X operator lighter than d flips the answer; at weight d some do (d = 3, 5)', okw, 'd=3: ' + r3[2].logical + ' at weight 3; d=5: ' + r5[4].logical + ' at weight 5');
+    var okl = true; [r3, r5].forEach(function (rows) { var d = rows.length, r = rows[d - 1]; if (r.onePerRow !== r.logical || r.straight !== d) okl = false; });
+    add('every lightest answer-flipper crosses the grid, one qubit per row; exactly d are straight columns', okl, 'd=3: ' + r3[2].logical + ' crossings, ' + r3[2].straight + ' straight; d=5: ' + r5[4].logical + ', ' + r5[4].straight);
+    var okz = true; [3, 5].forEach(function (d) { var code = E.makeCode(d); if (code.X.length !== (d * d - 1) / 2 || code.Z.length !== (d * d - 1) / 2) okz = false; });
+    add('the code has (d&sup2;&minus;1)/2 checks of each type (d = 3, 5): one stored qubit', okz);
+    checks = out.map(function (c) { return { check: c.check.replace(/<[^>]+>/g, '').replace(/&[a-z0-9#]+;/gi, ''), ok: c.ok }; });
+    $('checks').innerHTML = out.map(function (c) { return '<div class="msg"><span class="' + (c.ok ? 'good' : 'bad') + '">' + (c.ok ? 'pass' : 'FAIL') + '</span> ' + c.check + (c.detail ? ' <span class="dim">' + c.detail + '</span>' : '') + '</div>'; }).join('') + '<div class="dim msg">' + out.filter(function (c) { return c.ok; }).length + ' of ' + out.length + ' pass.</div>';
+  }
+  runChecks(); drawQs(); drawSim(); drawCensus(); record();
+})();
+</script>
+</body>
+</html>

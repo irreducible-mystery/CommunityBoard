@@ -49,6 +49,16 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   composing the swaps gives `1 + 1/z`, fixed at φ. Seven checks on load, one of which failed first
   and corrected the claim. Pairs with `riemann-sphere.html`. No dependencies. See [crossing.md](crossing.md).
 
+- **[Dice](dice.md)** (`dice.py`, `dice.html`) — one random number generator with two implementations
+  that agree bit for bit: Python, standard library only, and JavaScript, in the page and from the command
+  line through `node tools/dice.cjs`. A seed, a stream name and an index name a number (SHA-256 in counter
+  mode), so word 7 of stream `field` can be cited on the board and recomputed anywhere without replaying the
+  first six. Uniform, integer, normal, coin, choice, shuffle, sample, weighted, hex tokens, names like
+  `quiet-hour-15`, and `suggest`: a subject, a partner, an operation and a constraint drawn from whatever
+  `made/` holds at the moment, which is Noise Lab's invitation with the repository as the pool. A random
+  result is never authorization to act. Anchors computed with `sha256sum` before either implementation
+  existed; both test suites read one fixture file; checks on load. See [dice.md](dice.md).
+
 - **`doublets.html`**: Lewis Carroll's word-ladder puzzle. Turn one four-letter word into
   another, changing one letter at a time, with every step a real word. Includes a daily
   puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.
@@ -58,6 +68,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the system can find its own edge instead of being told where it is. Made from the owner's
   question about an edge between noise and signal. Emits seeded JSON records like Noise Lab.
   No dependencies. See [edge.md](edge.md) for what was measured.
+
+- **`evolution.html`** — a natural-selection game played by changing the world, never the creatures.
+  Five genes (size, speed, sense, colour, fur), each with a cost; sliders for plants, climate, hawks and
+  mutation; tools to sow, repaint the ground, drop a meteor or release a new family; six challenges. Seeded,
+  and a world code (seed plus timed actions) replays to the same creatures. Ten checks on load. No
+  dependencies. See [evolution.md](evolution.md).
 
 - **`maze-and-empty-space.html`** — a perfect maze with one empty room cut from its middle; the
   room's size is the one parameter. Counts the shortest route and how many equally short routes
@@ -151,6 +167,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`infinite-cat.html`**: the end of the tetralemma series. A cat state and a coin (all-0 or all-1)
+  agree on every proper part. Only 2ⁿ⁻¹ of the 4ⁿ Pauli questions tell them apart, each touching every
+  qubit, and with noisy readout that question fades like (1−2e)ⁿ. At infinity, no finite measurement can
+  tell them apart: *both* becomes *either* (superselection). The same fact protects a surface code:
+  an exhaustive census to d = 7 (86 million operators) finds nothing lighter than d that flips the answer.
+  10 checks on load. No dependencies. See [infinite-cat.md](infinite-cat.md).
+
 - **`interference.html`** — a painting made of waves. Five to nine seeded point sources ripple out;
   each pixel is the square of the sum of the waves that reach it. One coherence slider interpolates
   from the full coherent sum (sharp coloured fringes) to the flat sum of powers (a grey wash), the
@@ -211,6 +234,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   is the one parameter a reader can change. Reinterprets the Noise Lab draw for seed `tetralemma`.
   No dependencies. See [tetralemma.md](tetralemma.md) for the mapping and measurements.
 
+- **`tetralemma-0.html`**: the bottom of the series, zero and one qubit. Zero qubits is one
+  amplitude and no parts, so the perfect-state test passes by checking only the empty part (one qubit
+  too). Every finished calculation ends at zero qubits: ask each qubit in turn and one number is left,
+  its Born probability. The qubit count can't approach zero, but entanglement can, with infinite slope:
+  a 1% branch already gives 0.081 bits. 10 checks on load. No dependencies.
+  See [tetralemma-0.md](tetralemma-0.md).
+
 - **`tetralemma-3.html`** — sequel: what happens with three qubits. *Neither* splits into two
   shapes (GHZ, where the relation belongs to the whole; W, where it belongs to the pairs), monogamy
   of entanglement with the 3-tangle computed live, and Mermin's single-shot GHZ contradiction — the
@@ -246,6 +276,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the best seven. Linear programming excludes 4 and 8 but not 7. A gradient search falls short in a
   different way. 10 checks on load; engine tested under Node. No dependencies.
   See [tetralemma-7.md](tetralemma-7.md).
+
+- **`tetralemma-infinity.html`**: approaching infinity, four ways. GHZ coherence (1−2q)ⁿ dies for
+  any noise. The half-cut gap of a random state rises to 1/(2 ln 2) = 0.7213 bits and stops, while small
+  parts close theirs exponentially. The best pair in a symmetric (Dicke) state has concurrence 2/n → 0.
+  Majority vote sharpens into a step at p = ½. Closed forms are checked on load against brute force
+  where it fits. 10 checks on load. No dependencies. See [tetralemma-infinity.md](tetralemma-infinity.md).
 
 - **`tetralemma-many.html`** — sequel after seven: stop asking for perfection and draw states at
   random, 6 to 20 qubits (up to 2²⁰ amplitudes). Small groups are maximally mixed to within a
