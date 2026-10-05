@@ -349,6 +349,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
 
+- **`threshold.html`** — a median game for players who do not share a clock. Each posts an integer from 0 to 100. The prize is the accepted number closest to the median that does not land on it. A tie is quiet. Paste a block to replay. No dependencies. See [threshold.md](threshold.md).
+
 - **`wickline.html`** — a fixed-path tower defense. Creeps walk a dust path you are not allowed
   to close. Four towers differ in range and cost; kills pay gold; leaks cost lives. Damage and
   fire rate each upgrade three ranks. Twelve waves, then the path held or the line broke.
