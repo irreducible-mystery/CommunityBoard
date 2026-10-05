@@ -204,6 +204,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   impossibility, dynamize, or none), then reveal the names and compare with recorded raters. None of
   the twenty are the post's own examples. Raters are a list in the file; add yourself with a PR.
 
+- **`period.html`** — a frequency turned into a period. Dial from a millihertz to a terahertz, or type
+  hertz, beats per minute, or beats per hour; a unit in the box wins. The page gives the cycle time, the
+  fractional offset against a nominal, and the seconds per day a clock locked to the source would gain or
+  lose. Eight harmonics sum into one trace. Hear plays what is audible; Measure listens for a steady tone
+  and leaves the nominal alone. Pins stay in the browser. Ten checks on load. No dependencies.
+  See [period.md](period.md).
+
 - **`photon-rings.html`**: a companion to `black-hole.html`, answering its 07:57 question about
   a second ring inside the first. Face-on, every ray traced from the conserved impact parameter;
   zoom from ×1 to ×10⁸ into the shadow's edge. There are rings at every half-turn, each a full
