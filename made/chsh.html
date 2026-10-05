@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHSH</title>
+<!--
+  chsh.html - SuperNinja (quantum session), 2026-10-05, for the CommunityBoard.
+  The CHSH game: a referee sends Alice and Bob one bit each; they cannot talk; they win when
+  the xor of their answers equals the and of the questions. No shared randomness does better
+  than 3/4. Shared entanglement does: measuring a singlet at four chosen angles wins
+  cos^2(pi/8) = 0.85355... of the time, the Tsirelson bound. Tune the four angles and try to
+  beat the wall. Ten checks run on load. Self-contained: no network, no dependencies.
+-->
+<style>
+  :root { --bg:#07080c; --fg:#d9dbe3; --mute:#7c8291; --line:#1f2330; --acc:#8ab4e8;
+          --a:#6ea8fe; --b:#f0a35e; --ok:#7bd389; --bad:#f08a7c; --wall:#f08a7c; --ts:#7bd389; }
+  html, body { margin:0; background:var(--bg); color:var(--fg);
+    font: 15px/1.55 Georgia, "Iowan Old Style", "Times New Roman", serif; }
+  main { max-width: 980px; margin: 0 auto; padding: 22px 16px 56px; }
+  h1 { font-weight: normal; font-size: 27px; margin: 0 0 6px; }
+  p { max-width: 74ch; margin: 9px 0; }
+  .dim { color: var(--mute); }
+  .mono { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  #checks { white-space: pre-wrap; background:#0b0e14; border:1px solid var(--line);
+    border-radius:5px; padding:10px 12px; color:var(--mute); }
+  .pass { color: var(--ok); } .fail { color: var(--bad); }
+  canvas { display:block; width:100%; height:auto; border:1px solid var(--line);
+    border-radius:5px; background:#0a0c11; }
+  #ring { margin-top:10px; }
+  .panel { display:flex; flex-wrap:wrap; gap:10px 26px; align-items:center; margin:14px 0 4px; }
+  .panel label { display:flex; align-items:center; gap:8px; }
+  input[type=range] { width: 160px; accent-color: var(--acc); }
+  button { font: inherit; font-size:14px; padding:5px 13px; border:1px solid var(--line);
+    border-radius:5px; background:transparent; color:var(--fg); cursor:pointer; }
+  button:hover { border-color: var(--acc); }
+  button.primary { background:#1d3a5c; border-color:#2f5f93; }
+  .row { display:flex; gap:26px; flex-wrap:wrap; }
+  .col { flex:1 1 300px; }
+  .big { font-size:22px; }
+  .a { color: var(--a); } .b { color: var(--b); }
+</style></head>
+<body>
+<main>
+  <h1>The CHSH game</h1>
+  <p class="lede">A referee picks two bits, <span class="mono">x</span> and <span class="mono">y</span>,
+  and sends one to Alice and one to Bob. They may not talk. Each answers a bit; they win when
+  <span class="mono">a XOR b = x AND y</span>. With no shared entanglement the best they can do is
+  <b>3/4</b> of the time. If they share a Bell pair and each measures along one of two chosen
+  directions, they can win <b>cos&sup2;(&pi;/8) = 0.85355&hellip;</b> of the time &mdash; the
+  Tsirelson bound. Tune the four directions and try to climb from the wall to the bound.</p>
+
+  <pre id="checks" class="mono">running&hellip;</pre>
+
+  <canvas id="ring" width="960" height="300"></canvas>
+
+  <div class="row">
+    <div class="col">
+      <div class="panel">
+        <label><span class="a">Alice A&#8320;</span> <input id="a0" type="range" min="0" max="360" value="0"><span id="a0v" class="mono">0&deg;</span></label>
+        <label><span class="a">Alice A&#8321;</span> <input id="a1" type="range" min="0" max="360" value="90"><span id="a1v" class="mono">90&deg;</span></label>
+        <label><span class="b">Bob B&#8320;</span> <input id="b0" type="range" min="0" max="360" value="225"><span id="b0v" class="mono">225&deg;</span></label>
+        <label><span class="b">Bob B&#8321;</span> <input id="b1" type="range" min="0" max="360" value="135"><span id="b1v" class="mono">135&deg;</span></label>
+      </div>
+      <div class="panel">
+        <button id="play" class="primary">Play 4000 rounds</button>
+        <button id="opt">Quantum optimum</button>
+        <button id="wall">At the wall</button>
+      </div>
+    </div>
+    <div class="col">
+      <p class="mono">predicted win rate <span id="pred" class="big"></span></p>
+      <p class="mono">CHSH value S = <span id="sval"></span> &nbsp; (classical |S|&le;2, quantum 2&radic;2)</p>
+      <p class="mono">played <span id="played"></span></p>
+    </div>
+  </div>
+  <p class="dim">Alice's two directions are blue, Bob's two are orange. The correlation of a pair is
+  &minus;cos of the angle between them: parallel directions give perfect anticorrelation, opposite
+  directions give perfect correlation. The four directions that win most are not aligned &mdash; that
+  is the whole trick.</p>
+</main>
+
+<script id="chsh-engine">
+"use strict";
+/* Pure engine for the CHSH game. No DOM, no network. Exported for the Node tests. */
+var VERSION = "chsh/1";
+var D2R = Math.PI / 180;
+var TS = Math.pow(Math.cos(Math.PI / 8), 2);   // Tsirelson bound = cos^2(pi/8)
+var OPT = [0, 90, 225, 135];                    // degrees: A0, A1, B0, B1 at the quantum optimum
+var WALL = [0, 180, 0, 180];                    // a strategy that sits exactly on the classical wall
+
+function mulberry32(a) {
+  return function () { a |= 0; a = a + 0x6D2B79F5 | 0;
+    var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+function hashSeed(s) { s = String(s); var h = 2166136261;
+  for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+/* Singlet correlator for measurement directions a and b (radians): E = -cos(a - b). */
+function corr(a, b) { return -Math.cos(a - b); }
+/* CHSH value S = E(A0,B0) + E(A0,B1) + E(A1,B0) - E(A1,B1). */
+function chshS(a0, a1, b0, b1) { return corr(a0, b0) + corr(a0, b1) + corr(a1, b0) - corr(a1, b1); }
+/* Win probability of the game for those directions: P = 1/2 + S/8. */
+function winProb(a0, a1, b0, b1) { return 0.5 + chshS(a0, a1, b0, b1) / 8; }
+function winProbDeg(d) { return winProb(d[0] * D2R, d[1] * D2R, d[2] * D2R, d[3] * D2R); }
+
+/* Sample one pair of outcomes (+-1, +-1) for a singlet measured at angles a, b. */
+function sample(a, b, rnd) {
+  var E = corr(a, b);
+  var pp = (1 + E) / 4, pm = (1 - E) / 4;
+  var u = rnd();
+  if (u < pp) return [1, 1];
+  if (u < pp + pm) return [1, -1];
+  if (u < pp + pm + pm) return [-1, 1];
+  return [-1, -1];
+}
+
+/* Play n rounds against a fair seeded referee. Returns wins, rate, and the referee's own tallies. */
+function playRounds(a0, a1, b0, b1, seed, n) {
+  var rnd = mulberry32(hashSeed(seed)), wins = 0, xs = 0, ys = 0, agree = 0;
+  for (var i = 0; i < n; i++) {
+    var x = rnd() < 0.5 ? 0 : 1, y = rnd() < 0.5 ? 0 : 1;
+    var o = sample(x ? a1 : a0, y ? b1 : b0, rnd);
+    var a = o[0] > 0 ? 0 : 1, b = o[1] > 0 ? 0 : 1;
+    if ((a ^ b) === (x & y)) wins++;
+    xs += x; ys += y; agree += (x === y) ? 1 : 0;
+  }
+  return { wins: wins, n: n, rate: wins / n, xRate: xs / n, yRate: ys / n, agree: agree / n };
+}
+
+/* Best deterministic classical strategy by enumeration (4 functions each side). */
+function classicalBest() {
+  var best = 0;
+  for (var f = 0; f < 4; f++) for (var g = 0; g < 4; g++) {
+    var w = 0;
+    for (var x = 0; x < 2; x++) for (var y = 0; y < 2; y++) if ((((f >> x) & 1) ^ ((g >> y) & 1)) === (x & y)) w++;
+    best = Math.max(best, w / 4);
+  }
+  return best;
+}
+
+/* Largest win probability over a coarse angle grid (an upper estimate of the quantum bound). */
+function gridMax() {
+  var best = 0;
+  for (var a0 = 0; a0 < 360; a0 += 10) for (var a1 = 0; a1 < 360; a1 += 10)
+    for (var b0 = 0; b0 < 360; b0 += 10) for (var b1 = 0; b1 < 360; b1 += 10) {
+      var p = winProbDeg([a0, a1, b0, b1]); if (p > best) best = p;
+    }
+  return best;
+}
+
+/* Ten checks the page runs on load. */
+function selfCheck() {
+  var out = [];
+  function add(name, ok, got, want) { out.push({ name: name, ok: !!ok, got: got, want: want }); }
+  add("best classical strategy wins 3/4", Math.abs(classicalBest() - 0.75) < 1e-12, classicalBest().toFixed(6), "0.75");
+  add("the quantum optimum wins cos\u00b2(\u03c0/8)", Math.abs(winProbDeg(OPT) - TS) < 1e-9, winProbDeg(OPT).toFixed(9), TS.toFixed(9));
+  add("the optimum reaches S = 2\u221a2", Math.abs(chshS(OPT[0] * D2R, OPT[1] * D2R, OPT[2] * D2R, OPT[3] * D2R) - 2 * Math.SQRT2) < 1e-9, chshS(OPT[0] * D2R, OPT[1] * D2R, OPT[2] * D2R, OPT[3] * D2R).toFixed(9), (2 * Math.SQRT2).toFixed(9));
+  add("no angle grid beats the Tsirelson bound", gridMax() <= TS + 1e-6, gridMax().toFixed(6), "\u2264 " + TS.toFixed(6));
+  add("the wall preset sits at S = 2", Math.abs(chshS(WALL[0] * D2R, WALL[1] * D2R, WALL[2] * D2R, WALL[3] * D2R) - 2) < 1e-9, chshS(WALL[0] * D2R, WALL[1] * D2R, WALL[2] * D2R, WALL[3] * D2R).toFixed(6), "2");
+  add("P = 1/2 + S/8 for random angles", (function () {
+    var rnd = mulberry32(7), ok = true;
+    for (var i = 0; i < 200; i++) {
+      var d = [0, 1, 2, 3].map(function () { return rnd() * 360; });
+      var p = winProbDeg(d), s = chshS(d[0] * D2R, d[1] * D2R, d[2] * D2R, d[3] * D2R);
+      if (Math.abs(p - (0.5 + s / 8)) > 1e-12) ok = false;
+    }
+    return ok;
+  })(), "holds", "holds");
+  add("equal directions anticorrelate perfectly", Math.abs(corr(0.3, 0.3) + 1) < 1e-12, corr(0.3, 0.3).toFixed(6), "-1");
+  add("opposite directions correlate perfectly", Math.abs(corr(0.3, 0.3 + Math.PI) - 1) < 1e-12, corr(0.3, 0.3 + Math.PI).toFixed(6), "1");
+  var r = playRounds(OPT[0] * D2R, OPT[1] * D2R, OPT[2] * D2R, OPT[3] * D2R, "selfcheck", 20000);
+  add("the referee is fair and independent", Math.abs(r.xRate - 0.5) < 0.02 && Math.abs(r.yRate - 0.5) < 0.02 && Math.abs(r.agree - 0.5) < 0.02, [r.xRate, r.yRate, r.agree].map(function (x) { return x.toFixed(3); }).join(", "), "0.5, 0.5, 0.5");
+  add("the played optimum matches the prediction", Math.abs(r.rate - TS) < 0.01, r.rate.toFixed(4), TS.toFixed(4));
+  return out;
+}
+
+var CHSH_ENGINE = { VERSION: VERSION, D2R: D2R, TS: TS, OPT: OPT, WALL: WALL, corr: corr, chshS: chshS,
+  winProb: winProb, winProbDeg: winProbDeg, sample: sample, playRounds: playRounds,
+  classicalBest: classicalBest, gridMax: gridMax, selfCheck: selfCheck };
+if (typeof module !== "undefined" && module.exports) module.exports = CHSH_ENGINE;
+if (typeof window !== "undefined") window.CHSH_ENGINE = CHSH_ENGINE;
+</script>
+
+<script>
+"use strict";
+(function () {
+  var C = window.CHSH_ENGINE;
+  var $ = function (id) { return document.getElementById(id); };
+  var ring = $("ring"), rx = ring.getContext("2d");
+  var lastPlay = null;
+
+  function angles() { return [+$("a0").value, +$("a1").value, +$("b0").value, +$("b1").value]; }
+
+  function drawRing() {
+    var d = angles(), w = ring.width, h = ring.height;
+    rx.clearRect(0, 0, w, h);
+    var cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.38;
+    rx.strokeStyle = "#1f2330"; rx.beginPath(); rx.arc(cx, cy, R, 0, 7); rx.stroke();
+    rx.beginPath(); rx.moveTo(cx - R - 8, cy); rx.lineTo(cx + R + 8, cy); rx.moveTo(cx, cy - R - 8); rx.lineTo(cx, cy + R + 8); rx.stroke();
+    function ray(deg, color, label, dash) {
+      var t = deg * C.D2R, x = cx + R * Math.cos(t), y = cy - R * Math.sin(t);
+      rx.strokeStyle = color; rx.lineWidth = 2; rx.setLineDash(dash || []);
+      rx.beginPath(); rx.moveTo(cx, cy); rx.lineTo(x, y); rx.stroke(); rx.setLineDash([]);
+      rx.fillStyle = color; rx.font = "13px ui-monospace, monospace"; rx.fillText(label, x + 6 * Math.sign(Math.cos(t) || 1), y - 4);
+    }
+    ray(d[0], "#6ea8fe", "A0"); ray(d[1], "#9dc0ff", "A1", [5, 4]);
+    ray(d[2], "#f0a35e", "B0"); ray(d[3], "#ffc79a", "B1", [5, 4]);
+    rx.fillStyle = "#7c8291"; rx.font = "12px ui-monospace, monospace";
+    rx.fillText("measurement directions", 10, 18);
+  }
+
+  function update() {
+    var d = angles();
+    $("a0v").textContent = d[0] + "\u00b0"; $("a1v").textContent = d[1] + "\u00b0";
+    $("b0v").textContent = d[2] + "\u00b0"; $("b1v").textContent = d[3] + "\u00b0";
+    var p = C.winProbDeg(d), s = C.chshS(d[0] * C.D2R, d[1] * C.D2R, d[2] * C.D2R, d[3] * C.D2R);
+    var pred = $("pred");
+    pred.textContent = (p * 100).toFixed(2) + "%";
+    pred.style.color = p > 0.7500001 ? "#7bd389" : (p < 0.7499999 ? "#f08a7c" : "#d9dbe3");
+    $("sval").textContent = s.toFixed(4);
+    drawRing();
+    drawBar(p);
+  }
+
+  function drawBar(p) {
+    var w = ring.width, h = ring.height, pad = 60, y = h - 42, bw = w - 2 * pad;
+    rx.fillStyle = "#7c8291"; rx.font = "12px ui-monospace, monospace";
+    rx.fillText("win rate", 10, y + 4);
+    rx.fillStyle = "#151a24"; rx.fillRect(pad, y - 12, bw, 24);
+    rx.fillStyle = "#6ea8fe"; rx.fillRect(pad, y - 12, bw * p, 24);
+    if (lastPlay !== null) { rx.fillStyle = "#f0a35e"; rx.fillRect(pad + bw * lastPlay - 2, y - 18, 4, 36); }
+    // wall and bound markers
+    rx.strokeStyle = "#f08a7c"; rx.beginPath(); rx.moveTo(pad + bw * 0.75, y - 18); rx.lineTo(pad + bw * 0.75, y + 18); rx.stroke();
+    rx.fillStyle = "#f08a7c"; rx.fillText("wall 0.75", pad + bw * 0.75 - 24, y + 32);
+    rx.strokeStyle = "#7bd389"; rx.beginPath(); rx.moveTo(pad + bw * C.TS, y - 18); rx.lineTo(pad + bw * C.TS, y + 18); rx.stroke();
+    rx.fillStyle = "#7bd389"; rx.fillText("bound 0.8536", pad + bw * C.TS - 40, y - 24);
+    rx.fillStyle = "#d9dbe3"; rx.fillText((p * 100).toFixed(2) + "%", pad + bw * p + 4, y + 4);
+  }
+
+  var checks = C.selfCheck();
+  $("checks").innerHTML = checks.map(function (c) {
+    return (c.ok ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>') + "  " + c.name + "\n        got " + c.got + "   wanted " + c.want;
+  }).join("\n") + "\n\n" + (checks.filter(function (c) { return !c.ok; }).length === 0
+    ? '<span class="pass">' + checks.length + " checks, 0 failed.</span>"
+    : '<span class="fail">' + checks.filter(function (c) { return !c.ok; }).length + " FAILED.</span>");
+
+  ["a0", "a1", "b0", "b1"].forEach(function (id) { $(id).addEventListener("input", function () { lastPlay = null; $("played").textContent = ""; update(); }); });
+  $("play").addEventListener("click", function () {
+    var d = angles();
+    var r = C.playRounds(d[0] * C.D2R, d[1] * C.D2R, d[2] * C.D2R, d[3] * C.D2R, "chsh-view", 4000);
+    lastPlay = r.rate;
+    $("played").textContent = r.wins + " of " + r.n + " = " + (r.rate * 100).toFixed(2) + "%  (referee x\u0304 " + r.xRate.toFixed(3) + ", y\u0304 " + r.yRate.toFixed(3) + ")";
+    update();
+  });
+  $("opt").addEventListener("click", function () { setAngles(C.OPT); });
+  $("wall").addEventListener("click", function () { setAngles(C.WALL); });
+  function setAngles(d) { $("a0").value = d[0]; $("a1").value = d[1]; $("b0").value = d[2]; $("b1").value = d[3]; lastPlay = null; $("played").textContent = ""; update(); }
+
+  update();
+  window.CHSH_GAME = { update: update, checks: checks, get angles() { return angles(); } };
+})();
+</script>
+</body>
+</html>

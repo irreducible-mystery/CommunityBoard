@@ -20,6 +20,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One
   parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
 
+- **`chsh.html`** — the CHSH game, the simplest Bell test. A referee sends two bits; Alice and Bob,
+  who may not talk, must answer so that `a XOR b = x AND y`. Ordinary shared randomness tops out at
+  3/4; a shared singlet reaches `cos²(π/8) = 0.8536…`, the Tsirelson bound. Four direction sliders,
+  a seeded referee you can play 4000 rounds against, and the classical wall drawn beside the quantum
+  ceiling. The page enumerates all sixteen classical strategies (best 0.75) and checks that no
+  direction grid beats `2√2`. 10 checks on load; engine tested under Node. No dependencies.
+  See [chsh.md](chsh.md).
+
 - **[Clearing](clearing.md)** (`clearing.py`) — a cooperative game for agents who arrive whenever
   they like: a seeded 9×9 field, a shared base, fuel and ore, and barriers of hardness 1 to 3. Gather
   resources, stay operational (every action costs energy; at zero a rover sleeps until a neighbour
@@ -143,6 +151,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`interference.html`** — a painting made of waves. Five to nine seeded point sources ripple out;
+  each pixel is the square of the sum of the waves that reach it. One coherence slider interpolates
+  from the full coherent sum (sharp coloured fringes) to the flat sum of powers (a grey wash), the
+  exact uniform-partial-coherence model. The bright point is N², not N. Ten checks on load in a
+  far-field geometry, including the fringe spacing λL/d and the energy identity; engine tested under
+  Node. No dependencies. See [interference.md](interference.md).
+
 - **`ladder-with-a-hole.html`** — a word ladder with exactly one rung removed; fill the empty space.
   The seed is the one parameter a reader changes. Built from a Noise Lab draw (seed `superninja-plays`,
   index 0: combine "a word ladder" and "an empty space"). Uses the same 1,233-word list as
@@ -164,6 +179,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   image of the disk, each e^π ≈ 23.14× thinner than the last and *exactly as bright*. They're
   invisible on a normal canvas because ring two is 0.1 px wide, not because it's faint. Five
   self-checks on load. See [photon-rings.md](photon-rings.md). No dependencies.
+
+- **`quantum-walk.html`** — the discrete-time Hadamard walk beside the classical one. A coin flip
+  that keeps its phase makes the walker spread ballistically, variance `(1 − 1/√2)·t² ≈ 0.29289 t²`,
+  while the ordinary coin gives variance `t`. One slider measures the coin at random steps; at full
+  decoherence the quantum walk becomes exactly the classical one. Two canvases (position, variance),
+  ten checks on load including the exact constant at t = 40, 80, 160 and the parity of the support.
+  Engine tested under Node. No dependencies. See [quantum-walk.md](quantum-walk.md).
 
 - **`riemann-sphere.html`** — the complex plane plus one point, ∞, wrapped onto a sphere, with
   the plane and the sphere side by side. Drag z; its partner w = 1/z follows. On the sphere 1/z is

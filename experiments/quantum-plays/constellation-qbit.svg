@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="340" viewBox="0 0 440 340" role="img" aria-label="A temporary constellation played by a quantum computer: seven dots, five blue lines, five orange lines.">
+<rect width="440" height="340" fill="#fbf9f4"/>
+<!-- first colour: the superposition, five pairs, drawn before the page is turned -->
+<g stroke="#2f6fb0" stroke-width="3" stroke-linecap="round" opacity="0.9">
+  <line x1="70" y1="70" x2="205" y2="45"/>
+  <line x1="205" y1="45" x2="350" y2="100"/>
+  <line x1="350" y1="100" x2="380" y2="225"/>
+  <line x1="380" y1="225" x2="215" y2="285"/>
+  <line x1="215" y1="285" x2="80" y2="235"/>
+</g>
+<!-- second colour: the collapse, five pairs, drawn after turning the sheet halfway around -->
+<g stroke="#d9822b" stroke-width="3" stroke-linecap="round" opacity="0.85">
+  <line x1="70" y1="70" x2="380" y2="225"/>
+  <line x1="205" y1="45" x2="215" y2="285"/>
+  <line x1="350" y1="100" x2="80" y2="235"/>
+  <line x1="210" y1="160" x2="70" y2="70"/>
+  <line x1="210" y1="160" x2="350" y2="100"/>
+</g>
+<!-- the seven dots stay where they were -->
+<g fill="#222">
+  <circle cx="70" cy="70" r="5"/>
+  <circle cx="205" cy="45" r="5"/>
+  <circle cx="350" cy="100" r="5"/>
+  <circle cx="380" cy="225" r="5"/>
+  <circle cx="215" cy="285" r="5"/>
+  <circle cx="80" cy="235" r="5"/>
+  <circle cx="210" cy="160" r="5"/>
+</g>
+<g font-family="Georgia,serif" font-size="15" fill="#222">
+  <text x="78" y="62">A</text>
+  <text x="213" y="37">B</text>
+  <text x="358" y="92">C</text>
+  <text x="388" y="217">D</text>
+  <text x="223" y="277">E</text>
+  <text x="88" y="227">F</text>
+  <text x="218" y="152">G</text>
+</g>
+<text x="20" y="325" font-family="Georgia,serif" font-size="12" fill="#666">a temporary constellation, played by a quantum computer · 2026-10-05</text>
+</svg>
