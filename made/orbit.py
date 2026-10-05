@@ -110,7 +110,7 @@ def move_text_for_seed(text):
     that is not JSON at all contributes its raw text."""
     try:
         obj = json.loads(text)
-    except ValueError:
+    except (ValueError, RecursionError):
         return text
     try:
         return json.dumps(obj, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
@@ -320,7 +320,7 @@ def new_match(match_id, seed, rounds, rules=None):
                                        "alive": True}
     debris = {}
     for i in range(rules["debris_initial"]):
-        debris[f"d{i + 1}"] = draw_debris(rng, rules)
+        debris[f"x{i + 1}"] = draw_debris(rng, rules)
     state = {"game": VERSION, "match": match_id, "round": 1, "t": 0.0,
              "seats": {s: None for s in SEATS}, "moon": {"phase": moon_phase},
              "nodes": nodes, "craft": craft, "debris": debris, "slugs": {},
@@ -557,7 +557,7 @@ def simulate_round(state, rules, seats, plans, rng):
     events = []
 
     for _ in range(rules["debris_per_round"]):
-        did = f"d{next_debris}"
+        did = f"x{next_debris}"
         next_debris += 1
         debris[did] = draw_debris(rng, rules)
         events.append({"t": t0, "kind": "debris_spawn", "id": did, "source": "round"})
@@ -668,7 +668,7 @@ def simulate_round(state, rules, seats, plans, rng):
             shooter = None
             if hit_by in slugs:
                 shooter = slugs.pop(hit_by)["owner"]
-            wid = f"d{next_debris}"
+            wid = f"x{next_debris}"
             next_debris += 1
             debris[wid] = {"pos": list(c["pos"]), "vel": list(c["vel"])}
             points = 0
@@ -684,7 +684,7 @@ def simulate_round(state, rules, seats, plans, rng):
 
     t_end = t0 + steps * dt
     for sid in sorted(slugs):
-        wid = f"d{next_debris}"
+        wid = f"x{next_debris}"
         next_debris += 1
         debris[wid] = {"pos": list(slugs[sid]["pos"]), "vel": list(slugs[sid]["vel"])}
         events.append({"t": t_end, "kind": "debris_spawn", "id": wid, "source": "slug", "from": sid})
@@ -1681,7 +1681,7 @@ def render_svg(match, state, result=None):
         out.append(f'<polyline points="{coords}" fill="none" stroke="{colour}" '
                    f'stroke-width="{width}" stroke-linejoin="round"{extra}/>')
     for bid in sorted(traces):
-        if bid.startswith("d"):
+        if bid.startswith("x"):
             polyline(traces[bid], "#64748b", 0.8)
     for bid in sorted(traces):
         if bid.startswith("s"):
@@ -1709,7 +1709,7 @@ def render_svg(match, state, result=None):
                 dead.add(e["id"])
     for bid in sorted(final_pos):
         x, y = px(final_pos[bid])
-        if bid.startswith("d"):
+        if bid.startswith("x"):
             out.append(f'<circle cx="{fmt(x)}" cy="{fmt(y)}" r="1.6" fill="#94a3b8"/>')
         elif bid.startswith("s"):
             out.append(f'<circle cx="{fmt(x)}" cy="{fmt(y)}" r="1.6" fill="#ef4444"/>')
@@ -1768,7 +1768,7 @@ def render_svg(match, state, result=None):
                 out.append(f'<text x="{lx}" y="{y}" font-size="11" font-family="monospace" fill="#cbd5e1">{esc(kind)}: {kinds[kind]}</text>')
                 y += 16
         y += 8
-        out.append(f'<text x="{lx}" y="{y}" font-size="11" font-family="monospace" fill="#cbd5e1">debris: {sum(1 for b in final_pos if b.startswith("d"))}</text>')
+        out.append(f'<text x="{lx}" y="{y}" font-size="11" font-family="monospace" fill="#cbd5e1">debris: {sum(1 for b in final_pos if b.startswith("x"))}</text>')
         y += 16
     y += 8
     for text, colour in (("craft (by seat)", "#f8fafc"), ("debris", "#94a3b8"), ("slug", "#ef4444"), ("station", "#cbd5e1")):
@@ -1876,6 +1876,7 @@ def cmd_verify(args):
         print(f"verify: {checked} round(s) recomputed, {len(differences)} difference(s)")
         sys.exit(1)
     print(f"verify: {checked} round(s) recomputed, all match")
+    print("verify recomputes the record from the files on disk; it cannot tell whether a move was the one its player meant, nor whether a file arrived after its round was resolved.")
 
 
 def cmd_score(args):

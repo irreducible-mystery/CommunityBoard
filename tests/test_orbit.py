@@ -454,3 +454,16 @@ class Matches(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DeepNesting(unittest.TestCase):
+    """A move file nested deeper than the JSON decoder's recursion limit is a reported problem,
+    and counts toward the round seed as its raw text; found by an input battery on 2026-10-05."""
+
+    def test_deeply_nested_move_is_a_problem_not_a_crash(self):
+        text = '{"x": ' + "[" * 5000 + "]" * 5000 + "}"
+        obj, problems = orbit.parse_move_text(text)
+        self.assertIsNone(obj)
+        self.assertTrue(problems)
+        self.assertEqual(orbit.move_text_for_seed(text), text)
+

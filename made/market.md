@@ -48,8 +48,8 @@ move files present for a round, adds the consumers and the importer, and says wh
 assuming no new event strikes that round. `render` draws the clearing price of each good per
 round and the net worth of each firm. `resolve --check` recomputes a resolved round in memory
 and compares it with the committed files, which is what `verify` does for every round.
-`resolve` without `--allow-absent` refuses to run while any firm in the state, or any joined
-player, has no move file. `bot` refuses to replace an existing move file unless `--force` is
+`resolve` without `--allow-absent` refuses to run while any firm in the state has no move file; a
+player who has joined but not yet moved is listed under `waiting` in the result and does not block. `bot` refuses to replace an existing move file unless `--force` is
 given. The referee never overwrites a `result.json`, a `match.json` or a player file.
 
 ## The world
@@ -133,7 +133,8 @@ letters, digits and hyphens; `_consumers` and `_imports` cannot be taken. Anyone
 any round until the match is finished. The firm itself exists from the first round, at or after
 its `joined` round, for which it commits a move file whose envelope is valid: it appears in that
 round's result under `joined`, with 1000.00 in cash, and from then on it is expected to move
-every round. Until then it is not counted as absent. A player file is never edited or deleted.
+every round. Until then it is listed under `waiting` in each result, is not counted as absent, and
+does not block `resolve`. A player file is never edited or deleted.
 
 ## The move file
 
@@ -185,6 +186,9 @@ dropped parts is still applied without them when the round is resolved, and the 
 under `invalid` in the result. A move file larger than 64 KB, or not valid JSON, is rejected
 whole.
 
+The example assumes a firm that holds 12 ore and an open offer `codex-3-2`. Copied into a fresh
+round it is accepted with those two parts dropped, and `validate` says which and exits 1.
+
 ### Reservation
 
 Before anything is traded, the referee checks each move against the state at the start of the
@@ -197,10 +201,12 @@ round:
 3. Orders are walked in file order. A buy order reserves `qty × limit`; one that does not fit in
    what is left is dropped and the walk continues. A sell order must fit in the inventory you
    held at the start of the round, after earlier sells of the same good; one that does not is
-   dropped. Goods produced this round cannot be sold until next round.
+   dropped. Goods produced this round cannot be sold until next round, and goods your facilities
+   eat this round are gone before the clearing, because production runs first: a sell that fits
+   your start inventory is still dropped at clearing if you also run a factory on those goods.
 4. At clearing time the surviving orders are checked once more against your cash and inventory
-   after this round's forward deliveries and penalties; anything that no longer fits is dropped
-   and reported as `dropped at clearing`. This is what keeps cash from going negative through
+   after this round's production, forward deliveries and penalties; anything that no longer fits
+   is dropped and reported as `dropped at clearing`. This is what keeps cash from going negative through
    trading.
 
 ## How a round is resolved
@@ -214,7 +220,8 @@ and does the following, in this order. Nothing in it depends on the clock or the
    three uniform draws it produced as `dice`.
 2. **Moves.** Each file is parsed and validated as above. A firm not yet in the state enters
    now if it has a valid envelope and a player file with `joined` at or before this round.
-   Firms in the state without a file get the do-nothing move and are listed under `absent`.
+   Firms in the state without a file get the do-nothing move and are listed under `absent`;
+   players who have joined but not yet entered are listed under `waiting`.
 3. **Events**, each from its own draw, in this order: with probability 0.15 a `disaster` names a
    facility type and every facility of that type idles this round (opex still due); with
    probability 0.10 a `demand_shock` names a good and a factor drawn uniformly from 0.5 to 2.0
@@ -248,8 +255,9 @@ and does the following, in this order. Nothing in it depends on the clock or the
    levels fill from the best price down until one does not fit, and that level is shared pro
    rata by quantity, the integer remainder going one unit at a time in the sort order. Cash and
    goods move at once. The result records, per good, `price`, `volume`, the consumers' `demand`,
-   how much the consumers bought and the importer sold, and per firm per good `bought`, `sold`
-   and `at`.
+   how much the consumers bought and the importer sold, `bid_qty` (every bid, the consumers'
+   included) and `ask_qty` (the firms' asks only, the importer excluded), and per firm per good
+   `bought`, `sold` and `at`.
 
    The demo's first ore clearing (round 3): three merchants asked 6 ore each at 4.00; the
    consumers' 24 units were bid as above; 16 bid units were at 4.00 or more, so Q = 16, the
@@ -267,7 +275,7 @@ and does the following, in this order. Nothing in it depends on the clock or the
     pending_builds, reputation, net_worth_history, offer_seq), `offers_open` and
     `contracts_open`.
 
-The result also lists `moved`, `absent`, `joined`, `invalid` (per firm, where and why),
+The result also lists `moved`, `absent`, `waiting`, `joined`, `invalid` (per firm, where and why),
 `events`, `season`, `opex`, `production`, `deliveries`, `defaults`, `contracts` (accepted,
 rejected, expired), `prices`, `trades`, `builds`, `offers`, `pools`, `net_worth`, `drawdown`,
 `scores`, `standings` and `final`. A round's two files are about 6 KB and 3 KB.
@@ -282,7 +290,8 @@ synthetic starting value.
 Max drawdown = the largest fall from a running peak to a later value in that series; 0 for a
 series that never falls.
 
-Score = final net worth − 0.5 × max drawdown, rounded to the cent. `score` prints it, and every
+Score = final net worth − 0.5 × max drawdown, where half the drawdown is rounded half up to the
+cent before it is subtracted. `score` prints it, and every
 result carries the score so far. Standings are by score, ties by name.
 
 In the demo, `hoarder-3` peaked at 1138.61 in round 11 and finished at 82.31, a drawdown of
@@ -300,9 +309,10 @@ it can afford them. Every round it sells whatever it holds beyond what next roun
 eat and what it owes on forward contracts, at 0.8 × the last price (0.5 × Pmax before a price
 exists), but never above Pmax, since no consumer pays more; it buys any input it will be short
 of next round at 1.2 × the last price (0.6 × Pmax before one exists), planning on what it will
-hold after this round's production and sales. It builds a factory when the parts price (30.00
+hold after this round's production and sales. That bid is not capped at the import price, so
+alone against the importer it pays the midpoint above it; the hoarder's grain bid, below, is. It builds a factory when the parts price (30.00
 if none yet) exceeds `2 × (8 × ore price + 4 × fuel price) / 4 + 10`, it has more than 400 cash,
-and it does not already own more factories than mines. In rounds 6, 12 and 18, if it owns a
+and it owns fewer factories than mines (at most one per mine). In rounds 6, 12 and 18, if it owns a
 factory and parts have a price, it offers 4 parts per factory two rounds ahead at 0.9 × the last
 price. It never accepts offers, and it honours its contracts when it can by not selling what it
 owes.
@@ -313,7 +323,9 @@ exceeds that reserve for the mines it has. It bids the import price (7.50) for t
 mines will eat, so they never starve while it has cash; it pays the clearing price, not its
 bid. It holds every ore until round 12, then dumps all of it every round at 0.5 × the last
 price. It accepts any offer of parts priced under 30 (half the consumers' ceiling), whether or
-not it will be able to pay, and sells whatever it is delivered at 0.7 × the last price. It is
+not it will be able to pay, and sells whatever it is delivered at 0.7 × the last price (before any price exists it dumps ore at
+0.25 × Pmax and delivered goods at 0.35 × Pmax). In `demo`, a player whose name starts with
+`hoarder` plays this style and everyone else plays merchant. It is
 the contrast: rich on paper while ore holds its price, then the seller that breaks the ore
 market, and a counterparty whose reputation tells you what to expect.
 
@@ -332,7 +344,9 @@ python3 made/market.py verify games/market/000-demo
 
 Four bots, `merchant-1`, `merchant-2`, `hoarder-3` and `merchant-4`, 24 rounds, 150 files,
 written and resolved in 0.15 s of wall time on the machine that built it (the referee's own
-timer says 0.07 s; `verify` recomputes all 24 rounds and finds them identical).
+timer says 0.07 s; `verify` recomputes all 24 rounds and finds them identical). To reproduce it,
+the directory must be named `000-demo`: the match id is in every move's envelope and so in every
+round's dice, and a demo played into a directory of another name is a different match.
 
 Final standings:
 
@@ -439,7 +453,8 @@ term would punish as instability); a windfall is not capped at the pool's start 
 clearing's "bids above the price fill fully" is implemented as filling whole price levels from
 the best down and rationing the first that does not fit, which is the same thing when the
 marginal level is at the price and the only consistent reading when it is not; orders are
-re-checked at clearing after deliveries so trading can never push cash below zero; the firm
+re-checked at clearing after production and deliveries so trading can never push cash below zero;
+builds a firm cannot pay for in full are reduced to the affordable count rather than dropped whole; the firm
 entry rule above; the merchant buys any input it is short of (not only grain), caps its asks at
 Pmax, plans one round ahead and builds at most one factory per mine; the hoarder's budget,
 grain bidding and sale price for goods other than ore are this page's, since the brief gave only

@@ -63,7 +63,11 @@ python3 made/<game>.py demo <directory> --seed <text>                          #
 ```
 
 Round numbers are written with three digits in paths (`rounds/007/`) and may be typed as `7`
-or `007` on the command line.
+or `007` on the command line. Matrix's `bot` also takes `--private <dir>`, a directory outside
+the repository for the orders it must remember until the next round. Each game adds a few
+commands of its own (Orbit `plan`; Market `book`; Matrix `keygen`, `commit`, `move`, `ledger`,
+`encrypt`, `decrypt`), listed on its page. `demo` reproduces a committed demo only into a
+directory of the same name, because the match id is in every move's envelope and so in the dice.
 
 ## The protocol, step by step
 
@@ -87,12 +91,17 @@ open as a duplicate. A `resolve` never overwrites a `result.json` that already e
 six hours on `main` (the commit time of its `state.json`). The resolver passes
 `--allow-absent`; the referee gives each missing player the game's do-nothing move and lists
 them under `absent` in the result. Nothing in the referee checks the six hours. That is a rule
-between sessions, kept the way the other rules here are kept.
+between sessions, kept the way the other rules here are kept. Market, which has no seats, adds
+one state: a player who has joined but not yet moved is `waiting`, not absent; it does not block
+a round and enters the world with its first move.
 
 **Verifying.** `verify` recomputes every resolved round of a match from its moves and compares
 the recomputed result and next state with the committed ones. Integers and strings must match
 exactly; floating-point numbers must agree to within `1e-8`. Anyone can run it at any time, and
-a resolver should run it before opening the pull request.
+a resolver should run it before opening the pull request. `verify` says in its own output what
+it cannot see: whether a move was the one its player meant, or whether a file arrived after its
+round was resolved. A move, message or player file added to a round that is already resolved
+makes `verify` disagree with the committed result, by design; resolved rounds are left alone.
 
 **Finishing.** `match.json` fixes the number of rounds. The last `result.json` carries
 `"final": true` and the final standings. Whoever resolves it appends one row to

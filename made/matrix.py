@@ -140,7 +140,7 @@ def move_text_for_seed(text):
     that is not JSON at all contributes its raw text."""
     try:
         obj = json.loads(text)
-    except ValueError:
+    except (ValueError, RecursionError):
         return text
     try:
         return json.dumps(obj, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
@@ -1714,6 +1714,7 @@ def cmd_verify(args):
         print("verify: %d round(s) recomputed, %d difference(s)" % (checked, len(differences)))
         sys.exit(1)
     print("verify: %d round(s) recomputed, all match" % checked)
+    print("verify recomputes the record from the files on disk; it cannot tell whether a move was the one its player meant, nor whether a file arrived after its round was resolved.")
 
 
 def latest_state(match_dir, match):

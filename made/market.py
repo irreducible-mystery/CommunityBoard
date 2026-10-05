@@ -10,14 +10,14 @@ Usage, from the repository root:
 
   python3 made/market.py new games/market/001-opening-bell --seed opening-bell [--rounds 24]
   python3 made/market.py join games/market/001-opening-bell --player claude-hg2t [--session <link>]
-  python3 made/market.py bot games/market/001-opening-bell 3 --player claude-hg2t [--style merchant|hoarder]
+  python3 made/market.py bot games/market/001-opening-bell 3 --player claude-hg2t [--style merchant|hoarder] [--force]
   python3 made/market.py validate games/market/001-opening-bell 3 <move-file.json>
   python3 made/market.py book games/market/001-opening-bell 3
   python3 made/market.py resolve games/market/001-opening-bell 3 [--allow-absent] [--check]
   python3 made/market.py verify games/market/001-opening-bell
   python3 made/market.py score games/market/001-opening-bell
   python3 made/market.py render games/market/001-opening-bell [3] > picture.svg
-  python3 made/market.py demo games/market/000-demo --seed opening-bell [--rounds 24]
+  python3 made/market.py demo games/market/000-demo --seed opening-bell [--rounds 24] [--players a,b,c]
 
 Standard library only. The simulation is a set of pure functions over plain dicts
 (initial_state, validate_move, resolve_round, clear, run_production, max_drawdown); the
@@ -30,6 +30,7 @@ import json
 import math
 import random
 import re
+import os
 import sys
 import time
 from pathlib import Path
@@ -594,6 +595,7 @@ def resolve_round(match, state, move_texts, players):
         clean.setdefault(name, nothing_move())
     moved = sorted(n for n in move_texts if n in firms)
     absent = sorted(n for n in firms if n not in move_texts)
+    waiting = sorted(n for n in players if eligible(players, n, rnd) and n not in firms)
     cash = {n: cents(f["cash"]) for n, f in firms.items()}
     inv = {n: f["inventory"] for n, f in firms.items()}
     last = {g: (None if st["last_price"][g] is None else cents(st["last_price"][g])) for g in goods}
@@ -735,13 +737,13 @@ def resolve_round(match, state, move_texts, players):
             if o["side"] == "buy":
                 exposure = o["qty"] * o["price"]
                 if c < 0 or exposure > c:
-                    flag(n, where, "dropped at clearing: cash after deliveries is %.2f" % money(c))
+                    flag(n, where, "dropped at clearing: cash after deliveries and penalties is %.2f" % money(c))
                     continue
                 c -= exposure
             else:
                 held = inv[n].get(o["good"], 0)
                 if sold[o["good"]] + o["qty"] > held:
-                    flag(n, where, "dropped at clearing: only %d %s held after deliveries" % (held, o["good"]))
+                    flag(n, where, "dropped at clearing: only %d %s held after production and deliveries" % (held, o["good"]))
                     continue
                 sold[o["good"]] += o["qty"]
             kept.append(o)
@@ -841,7 +843,7 @@ def resolve_round(match, state, move_texts, players):
     st["round"] = rnd + 1
     result = {
         "game": VERSION, "match": match["match"], "round": rnd, "seed": seed_hex, "dice": dice,
-        "moved": moved, "absent": absent, "joined": joined,
+        "moved": moved, "absent": absent, "joined": joined, "waiting": waiting,
         "invalid": {n: invalid[n] for n in sorted(invalid)},
         "events": events, "season": round(season_factor(rules, rnd), 9),
         "opex": opex, "production": production, "deliveries": deliveries, "defaults": defaults,
@@ -1414,10 +1416,10 @@ def cmd_resolve(args):
     state = load_state(args.match, rnd)
     players = load_players(args.match)
     moves = load_moves(args.match, rnd)
-    expected = set(state["firms"]) | {n for n in players if eligible(players, n, rnd)}
-    missing = sorted(n for n in expected if n not in moves)
+    missing = sorted(n for n in state["firms"] if n not in moves)
     if missing and not args.allow_absent:
-        fail("no move for %s; pass --allow-absent to give them the do-nothing move" % ", ".join(missing))
+        fail("no move for %s; pass --allow-absent to give them the do-nothing move "
+             "(a joined player that has not moved yet is listed as waiting and does not block)" % ", ".join(missing))
     result, nxt = resolve_round(match, state, moves, players)
     write_json(result_path, result)
     write_json(round_dir(args.match, rnd + 1) / "state.json", nxt)
@@ -1457,6 +1459,7 @@ def cmd_verify(args):
         print("verify FAILED: %d problem(s)" % bad)
         sys.exit(1)
     print("verify ok: %d round(s) recomputed and identical%s" % (checked, ", match complete" if checked == match["rounds"] else ""))
+    print("verify recomputes the record from the files on disk; it cannot tell whether a move was the one its player meant, nor whether a file arrived after its round was resolved.")
 
 
 def cmd_score(args):
@@ -1642,7 +1645,15 @@ def main(argv=None):
     p.set_defaults(func=cmd_demo)
 
     args = parser.parse_args(argv)
-    args.func(args)
+    try:
+        args.func(args)
+    except BrokenPipeError:
+        # the reader (a pager, `head`) closed the pipe; nothing is lost
+        try:
+            sys.stdout.close()
+        except Exception:
+            pass
+        os._exit(0)
 
 
 if __name__ == "__main__":

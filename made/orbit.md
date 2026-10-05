@@ -147,7 +147,7 @@ the round's seed, exactly as committed.
    newlines, as [league.md](league.md) says. A file that does not parse contributes its raw
    text. `random.Random` is seeded with the integer value of the hash.
 3. **New debris.** `debris_per_round` pieces are drawn from that generator before anything
-   moves (event `debris_spawn`, `source: "round"`), ids `d<N>` continuing from
+   moves (event `debris_spawn`, `source: "round"`), ids `x<N>` continuing from
    `next_debris` in the state.
 4. **Integration.** 1000 steps of `dt = 0.02`. At the start of step `k` (time
    `t0 + k*dt`, `t0 = (round - 1) * T`), burns scheduled for that step are applied to living
@@ -254,6 +254,12 @@ closer one captures it, so a greedy craft on the centre beats a hawk beside it.
 Neither style sees burns a rival will make, so a shot at a craft that moves will miss. Neither
 dodges debris spawned by the round's dice, which nobody can know in advance.
 
+Debris ids are `x<N>` rather than the brief's `d<N>`, because `d1`, `d2` and `d3` are also seat `d`'s
+craft: with the brief's ids the two shared keys in the result's `traces`, which is how the collision
+was found (a render of round 10 drew seat d's craft as fans of straight lines). The referee's
+physics never keyed craft and debris together, so the renamed demo has the same standings to the
+point.
+
 The bot departs from the design brief in three ways, because the brief's single-burn search
 could not have captured anything: a single burn from the parking orbit arrives at `n1` with a
 relative speed of at least 0.061 (the Hohmann arrival), above `capture_speed`, and by the
@@ -283,16 +289,16 @@ What happened, from the result files:
   a burn of 0.248 at `t = 0` and one of 0.252 at `t = 3.8`; it arrived with relative speed
   0.0008. `b3` fired the first slug at `t = 4.0` and missed. Fuel is the price: the eighteen
   burns of round 1 are most of the match's movement.
-- **Round 2.** `b2` took `n3`. `b3` fired again and missed; that slug became debris `d12`.
+- **Round 2.** `b2` took `n3`. `b3` fired again and missed; that slug became debris `x12`.
 - **Round 3.** `hawk-d` fired twice. `d1`'s slug `s4`, fired at `t = 57.0`, hit `a3` at
-  `t = 58.52` after 1.52 time units of flight: +3 for hawk-d. `a3`'s wreck `d14` destroyed
+  `t = 58.52` after 1.52 time units of flight: +3 for hawk-d. `a3`'s wreck `x14` destroyed
   `b2` in the same step, no points to anyone. `a2` took `n2` from greedy-c and `d1` took `n3`
   from hawk-b, whose `b2` had just died beside it.
 - **Rounds 4 to 8.** One miss (`d3`, round 4). `n2` went back to greedy-c in round 5; `a2`
   took `n3` from hawk-d in round 6 and `n5` from greedy-c in round 8, spending almost all of its
-  fuel. In round 6 the stray slug `d12` crossed `r_max` and was lost: a slug fired on a
+  fuel. In round 6 the stray slug `x12` crossed `r_max` and was lost: a slug fired on a
   transfer orbit can leave.
-- **Round 9.** `b1`'s slug `s7` hit `d3` at `t = 162.38` (+3 for hawk-b). Debris `d17` fell
+- **Round 9.** `b1`'s slug `s7` hit `d3` at `t = 162.38` (+3 for hawk-b). Debris `x17` fell
   into the moon. `d2` retook `n3` from greedy-a.
 - **Final standings:** greedy-c 25 (`n2`, `n4`), greedy-a 18 (`n1`, `n5`), hawk-b 14 (`n6`,
   one kill), hawk-d 8 (`n3`, one kill). Twelve captures, seven slugs fired, two hits, three

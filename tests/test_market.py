@@ -344,6 +344,64 @@ class EngineRoundTests(unittest.TestCase):
             self.assertTrue(fatal)
         self.assertEqual(market.parse_move("x" * 70000)[1], "file larger than 65536 bytes")
 
+    def test_contract_cap_refuses_a_sixth_contract_for_either_side(self):
+        firms = {n: make_firm(self.rules) for n in ("ann", "bob", "cat")}
+        five = [dict(self.contract(due=6), id="ann-%d" % i, buyer="cat") for i in range(1, 6)]
+        offer = {"id": "ann-6", "seller": "ann", "deliver": "parts", "qty": 1, "price": 10.0, "due": 6, "offered": 1}
+        state = self.state_with(2, firms, contracts_open=five, offers_open=[offer])
+        result, _ = self.resolve(state, {"bob": {"accept": ["ann-6"]}})
+        self.assertEqual(result["contracts"]["accepted"], [])
+        self.assertEqual(result["contracts"]["rejected"][0]["reason"], "seller already has 5 open contracts")
+        five = [dict(self.contract(due=6), id="cat-%d" % i, seller="cat", buyer="bob") for i in range(1, 6)]
+        state = self.state_with(2, firms, contracts_open=five, offers_open=[offer])
+        result, _ = self.resolve(state, {"bob": {"accept": ["ann-6"]}})
+        self.assertEqual(result["contracts"]["rejected"][0]["reason"], "buyer already has 5 open contracts")
+
+    def test_both_sides_default_pay_what_they_have(self):
+        firms = {"ann": make_firm(self.rules, cash=10.0), "bob": make_firm(self.rules, cash=5.0),
+                 "cat": make_firm(self.rules)}
+        state = self.state_with(3, firms, contracts_open=[self.contract(due=3)])  # 4 parts at 30: value 120
+        result, nxt = self.resolve(state, {})
+        self.assertEqual(result["deliveries"][0]["status"], "both_default")
+        self.assertEqual([d["side"] for d in result["defaults"]], ["seller", "buyer"])
+        # the penalty is 24 each way; ann pays the 10 it has, then bob pays the 15 it now holds
+        self.assertAlmostEqual(nxt["firms"]["ann"]["cash"], 15.0)
+        self.assertAlmostEqual(nxt["firms"]["bob"]["cash"], 0.0)
+        self.assertAlmostEqual(nxt["firms"]["ann"]["reputation"], 0.8)
+        self.assertAlmostEqual(nxt["firms"]["bob"]["reputation"], 0.8)
+
+    def test_sell_eaten_by_production_is_dropped_at_clearing(self):
+        self.rules["p_disaster"] = 0.0
+        firms = {"ann": make_firm(self.rules, cash=500.0, facilities={"factory": 1},
+                                  inventory={"ore": 8, "fuel": 4, "grain": 1}),
+                 "bob": make_firm(self.rules)}
+        state = self.state_with(2, firms)
+        result, nxt = self.resolve(state, {"ann": {"orders": [{"side": "sell", "good": "ore", "qty": 8, "limit": 1.0}]}})
+        reasons = [p["reason"] for p in result["invalid"]["ann"]]
+        self.assertTrue(any("after production and deliveries" in r for r in reasons), reasons)
+        self.assertEqual(nxt["firms"]["ann"]["inventory"]["parts"], 4)
+        self.assertEqual(nxt["firms"]["ann"]["inventory"]["ore"], 0)
+
+    def test_buy_is_dropped_at_clearing_after_a_penalty(self):
+        firms = {"ann": make_firm(self.rules, inventory={"parts": 4}), "bob": make_firm(self.rules, cash=30.0),
+                 "cat": make_firm(self.rules)}
+        state = self.state_with(3, firms, contracts_open=[self.contract(due=3)])
+        result, nxt = self.resolve(state, {"bob": {"orders": [{"side": "buy", "good": "ore", "qty": 5, "limit": 5.0}]}})
+        self.assertEqual(result["deliveries"][0]["status"], "buyer_default")
+        reasons = [p["reason"] for p in result["invalid"]["bob"]]
+        self.assertTrue(any("cash after deliveries and penalties is 6.00" in r for r in reasons), reasons)
+
+    def test_standings_tie_is_broken_by_name(self):
+        firms = {n: make_firm(self.rules) for n in ("cat", "ann", "bob")}
+        result, _ = self.resolve(self.state_with(2, firms), {})
+        self.assertEqual([s["player"] for s in result["standings"]], ["ann", "bob", "cat"])
+        self.assertEqual(len({s["score"] for s in result["standings"]}), 1)
+
+    def test_pool_above_its_start_does_not_regenerate(self):
+        firms = {"ann": make_firm(self.rules)}
+        result, nxt = self.resolve(self.state_with(2, firms, pools={"ore": 3100, "fuel": 1990}), {})
+        self.assertEqual(nxt["pools"], {"ore": 3100, "fuel": 2000})
+
     def test_net_worth_formula(self):
         firm = make_firm(self.rules, cash=500.0, inventory={"ore": 10}, pending_builds={"farm": 1})
         state = self.state_with(1, {"ann": firm})
@@ -569,27 +627,48 @@ class CommandTests(unittest.TestCase):
         code, out = self.run_cli("verify", self.dir)
         self.assertEqual(code, 0, out)
 
-    def test_late_join_enters_with_starting_cash(self):
+    def test_late_join_waits_until_it_moves_and_never_blocks(self):
         self.play(4, upto=2)
         code, out = self.run_cli("join", self.dir, "--player", "late-c")
         self.assertEqual(code, 0)
         player = json.loads((Path(self.dir) / "players" / "late-c.json").read_text())
         self.assertEqual(player["joined"], 3)
-        code, out = self.run_cli("resolve", self.dir, "3")
-        self.assertEqual(code, 1)
-        self.assertIn("late-c", out)
-        for n in ("mer-a", "hoard-b", "late-c"):
+        for n in ("mer-a", "hoard-b"):
             self.assertEqual(self.run_cli("bot", self.dir, "3", "--player", n)[0], 0)
+        # a joined player that has not moved does not block the round and is not absent
         code, out = self.run_cli("resolve", self.dir, "3")
         self.assertEqual(code, 0, out)
         result = json.loads((Path(self.dir) / "rounds" / "003" / "result.json").read_text())
-        self.assertEqual(result["joined"], ["late-c"])
+        self.assertEqual(result["waiting"], ["late-c"])
+        self.assertEqual(result["absent"], [])
+        self.assertEqual(result["joined"], [])
         state4 = json.loads((Path(self.dir) / "rounds" / "004" / "state.json").read_text())
-        self.assertIn("late-c", state4["firms"])
-        self.assertEqual(len(state4["firms"]["late-c"]["net_worth_history"]), 1)
-        self.assertEqual(len(state4["firms"]["mer-a"]["net_worth_history"]), 3)
+        self.assertNotIn("late-c", state4["firms"])
+        for n in ("mer-a", "hoard-b", "late-c"):
+            self.assertEqual(self.run_cli("bot", self.dir, "4", "--player", n)[0], 0)
+        code, out = self.run_cli("resolve", self.dir, "4")
+        self.assertEqual(code, 0, out)
+        result = json.loads((Path(self.dir) / "rounds" / "004" / "result.json").read_text())
+        self.assertEqual(result["joined"], ["late-c"])
+        self.assertEqual(result["waiting"], [])
+        state5 = json.loads((Path(self.dir) / "rounds" / "005" / "state.json").read_text())
+        self.assertIn("late-c", state5["firms"])
+        self.assertEqual(len(state5["firms"]["late-c"]["net_worth_history"]), 1)
+        self.assertEqual(len(state5["firms"]["mer-a"]["net_worth_history"]), 4)
         code, out = self.run_cli("verify", self.dir)
         self.assertEqual(code, 0, out)
+
+    def test_book_command_prints_ladders_and_a_clearing(self):
+        self.play(3, upto=1)
+        for n in ("mer-a", "hoard-b"):
+            self.assertEqual(self.run_cli("bot", self.dir, "2", "--player", n)[0], 0)
+        code, out = self.run_cli("book", self.dir, "2")
+        self.assertEqual(code, 0, out)
+        for g in GOODS:
+            self.assertIn("\n%s  (consumers want" % g, out)
+        self.assertIn("bids:", out)
+        self.assertIn("asks:", out)
+        self.assertIn("would clear", out)
 
     def test_join_refuses_bad_names_and_finished_matches(self):
         self.play(1)

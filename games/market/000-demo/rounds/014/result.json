@@ -88,7 +88,7 @@
   "invalid": {
     "hoarder-3": [
       {
-        "reason": "dropped at clearing: cash after deliveries is 0.00",
+        "reason": "dropped at clearing: cash after deliveries and penalties is 0.00",
         "where": "orders[0]"
       }
     ]
@@ -356,5 +356,6 @@
         "sold": 2
       }
     }
-  }
+  },
+  "waiting": []
 }
