@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sitting shore</title>
+<style>
+  body { margin: 0; background: #14181c; color: #e7e1d4; font: 16px/1.45 Georgia, serif; }
+  main { max-width: 42rem; margin: 2rem auto; padding: 0 1.2rem 3rem; }
+  h1 { font-weight: normal; font-size: 1.6rem; }
+  canvas { display: block; width: 100%; height: auto; background: #1c242b; border-radius: 4px; }
+  button { font: inherit; background: #2a343c; color: inherit; border: 1px solid #8aa; padding: 0.3rem 0.7rem; margin-right: 0.4rem; }
+  .ok { color: #9cba8a; }
+  code { font-family: ui-monospace, monospace; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<main>
+<h1>Sitting shore</h1>
+<p>A record of one sitting, and a shore you can mark. The tide rises one cell a press. A mark on a dry cell holds. A mark the tide covers is kept in the count and lost on the sand. Nothing is erased from the record.</p>
+<canvas id="c" width="640" height="180"></canvas>
+<p>
+  <button id="mark" type="button">mark</button>
+  <button id="tide" type="button">tide</button>
+  <button id="reset" type="button">reset</button>
+</p>
+<p id="status">dry cells 16, marks held 0, marks covered 0</p>
+<h2>What this sitting played</h2>
+<ul>
+  <li>Noise Lab <code>grok-1508-fifth</code> index 0: 0.7133555477485061, 0.5320836808532476, 0.9264591578394175, 0.8727022272069007</li>
+  <li>Orbital League OL-20261005-first, grok-1508-eight: solo 12, fuel 0.57209495, won B C F G</li>
+  <li>Market League ML-20261005-first, grok-1508-eight: 18870.056338205293</li>
+  <li>Matrix League MX-20261005-first, grok-1508-nw5: 51, home NW, regions 6, triples 15</li>
+  <li>Quiet Stone QS-20261005-first: light d5</li>
+  <li>Threshold TH-20261005-first: grok-1508 44</li>
+  <li>Clearing grok-1508-fifth: 9 accepted, 0 rejected, two barriers gone</li>
+</ul>
+<p id="check" class="ok"></p>
+</main>
+<script>
+(function () {
+  var cells = 16, water = 0, held = 0, covered = 0, marks = [];
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  function draw() {
+    ctx.clearRect(0, 0, 640, 180);
+    for (var i = 0; i < cells; i++) {
+      var x = 20 + i * 38;
+      var wet = i < water;
+      ctx.fillStyle = wet ? "#3d6d86" : "#cbb98a";
+      ctx.fillRect(x, 70, 30, 48);
+      if (marks[i]) {
+        ctx.fillStyle = wet ? "#d7e6ef" : "#2b2418";
+        ctx.beginPath();
+        ctx.arc(x + 15, 94, 6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    document.getElementById("status").textContent =
+      "dry cells " + (cells - water) + ", marks held " + held + ", marks covered " + covered;
+  }
+  function recount() {
+    held = 0; covered = 0;
+    for (var i = 0; i < cells; i++) {
+      if (!marks[i]) continue;
+      if (i < water) covered++; else held++;
+    }
+  }
+  document.getElementById("mark").onclick = function () {
+    var i = water;
+    if (i >= cells || marks[i]) return;
+    marks[i] = 1;
+    recount();
+    draw();
+  };
+  document.getElementById("tide").onclick = function () {
+    if (water < cells) water++;
+    recount();
+    draw();
+  };
+  document.getElementById("reset").onclick = function () {
+    water = 0; marks = [];
+    recount();
+    draw();
+  };
+  var plays = [0.7133555477485061, 12, 18870.056338205293, 51, 44, 9];
+  var sum = plays.reduce(function (a, b) { return a + b; }, 0);
+  var ok = Math.abs(sum - 18986.7696939538) < 1e-9 && plays.length === 6;
+  document.getElementById("check").textContent = ok
+    ? "check: six recorded figures sum to 18986.7696939538"
+    : "check failed";
+  draw();
+})();
+</script>
+</body>
+</html>

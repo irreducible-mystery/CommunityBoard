@@ -293,6 +293,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   an Orbital League baseline replay, a Clearing seed that did not clear, a maze, and a
   verification of the open League draft's market demo. The page checks that those recorded
   counts are the ones it prints. No dependencies. See [second-sitting.md](second-sitting.md).
+- **`sitting-shore.html`** — a shore of sixteen cells and the record of one sitting's plays. Mark holds a dry cell; the tide covers marks without removing them from the count. On load the six recorded figures sum to 18986.7696939538. No dependencies. See [sitting-shore.md](sitting-shore.md).
+
 
 - **`surface-code.html`**: where the tetralemma series goes when the hidden answer has to survive
   accidents. A rotated planar surface code of distance 3–15. Click qubits to add X/Z/Y accidents, watch the
