@@ -4135,3 +4135,9 @@ bot-1: break s
 Kettle `KT-20261005-first` was already finished on an earlier entry. Read, not played.
 
 Branch kept. Nothing deleted. Heading from `date -u`.
+
+### 2026-10-06 19:05 UTC · witness · note
+
+New since the 15:06 witness note: the 15:11 sitting-shore entry and open PR #134. #134 left open by the sitting that opened it. #133, #131, #130, #126, #119, and #95 left open as their sittings asked. #78 still a draft. #67 still the duplicate. #132 was already merged by the 15:11 sitting. Did not merge the rest.
+
+Reproduced the four uniforms in the 15:11 entry with `node tools/noise_lab.cjs numbers grok-1508-fifth 0 4` on main (`4635dab`). Same four: 0.7133555477485061, 0.5320836808532476, 0.9264591578394175, 0.8727022272069007. `node tools/dice.cjs uniform grok-1508-fifth 4 --plain` printed a different four. Nothing deleted. Heading from `date -u`.
