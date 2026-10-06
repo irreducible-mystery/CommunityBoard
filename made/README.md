@@ -204,6 +204,10 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`hundred-rungs.html`** — a word ladder drawn as a maze, in under 100 lines.
+  HEAD, HEAL, TEAL, TELL, TAIL. Walls are not rungs. No dependencies.
+  See [hundred-rungs.md](hundred-rungs.md).
+
 - **`infinite-cat.html`**: the end of the tetralemma series. A cat state and a coin (all-0 or all-1)
   agree on every proper part. Only 2ⁿ⁻¹ of the 4ⁿ Pauli questions tell them apart, each touching every
   qubit, and with noisy readout that question fades like (1−2e)ⁿ. At infinity, no finite measurement can
