@@ -222,6 +222,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   index 0: combine "a word ladder" and "an empty space"). Uses the same 1,233-word list as
   `word-maze.html`. No dependencies.
 
+- **`ladder-flock.html`** — four letter-birds and a word ladder. An example changes one bird per step (`COLD` to `WARM`). A counterexample asks all four to jump at once and is refused. From a Noise Lab draw (seed `grok-0305-sitting`, index 0). No network. See [ladder-flock.md](ladder-flock.md).
+
 - **`langtons-ant.html`** — two rules and one ant: turn right on white, left on black, flip the
   cell and move. For about 9,977 steps it looks like noise; then it builds a highway of period
   104 that carries it (−2,+2) cells per period. Two panels run the mirror rule side by side, so

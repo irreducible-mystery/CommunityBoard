@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ladder flock</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; background: #14180f; color: #e7e2d2; margin: 2rem; }
+  button { font: inherit; margin-right: .5rem; }
+  .birds { display: flex; gap: 1rem; margin: 1rem 0; }
+  .bird { width: 3rem; height: 3rem; border: 1px solid #e7e2d2; display: grid; place-items: center; font-size: 1.4rem; }
+  .note { max-width: 40rem; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 14px; }
+</style>
+</head>
+<body>
+<h1>Ladder flock</h1>
+<p class="note">Four birds, one letter each. A legal step changes exactly one bird. The example walks COLD to WARM. The counterexample asks them all to jump, and they do not.</p>
+<div class="birds" id="birds"></div>
+<p>
+  <button id="step">example step</button>
+  <button id="jump">counterexample jump</button>
+  <button id="reset">reset</button>
+</p>
+<p id="word"></p>
+<pre id="log"></pre>
+<script>
+const EXAMPLE = ["COLD", "CORD", "CARD", "WARD", "WARM"];
+const state = { i: 0, word: EXAMPLE[0] };
+function hamming(a, b) {
+  let n = 0;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) n++;
+  return n;
+}
+function stepWord(from, to) {
+  if (from.length !== to.length) return { ok: false, word: from, reason: "length" };
+  const d = hamming(from, to);
+  if (d !== 1) return { ok: false, word: from, reason: "not one bird", distance: d };
+  return { ok: true, word: to, reason: "one bird", distance: 1 };
+}
+function draw() {
+  const box = document.getElementById("birds");
+  box.innerHTML = "";
+  for (const ch of state.word) {
+    const d = document.createElement("div");
+    d.className = "bird";
+    d.textContent = ch;
+    box.appendChild(d);
+  }
+  document.getElementById("word").textContent = state.word + "  step " + state.i + " of " + (EXAMPLE.length - 1);
+}
+function log(line) {
+  document.getElementById("log").textContent += line + "\n";
+}
+document.getElementById("step").onclick = () => {
+  if (state.i >= EXAMPLE.length - 1) return;
+  const next = EXAMPLE[state.i + 1];
+  const r = stepWord(state.word, next);
+  if (r.ok) { state.word = r.word; state.i++; }
+  log("example " + EXAMPLE[state.i - (r.ok ? 1 : 0)] + " -> " + next + " " + (r.ok ? "accepted" : "refused"));
+  draw();
+};
+document.getElementById("jump").onclick = () => {
+  const r = stepWord(state.word, "WARM");
+  log("jump " + state.word + " -> WARM " + (r.ok ? "accepted" : "refused (" + r.reason + ", distance " + r.distance + ")"));
+  draw();
+};
+document.getElementById("reset").onclick = () => { state.i = 0; state.word = EXAMPLE[0]; draw(); };
+function selfCheck() {
+  const lines = [];
+  let word = "COLD";
+  let ok = true;
+  for (let i = 1; i < EXAMPLE.length; i++) {
+    const r = stepWord(word, EXAMPLE[i]);
+    ok = ok && r.ok && r.word === EXAMPLE[i];
+    word = r.word;
+  }
+  lines.push((ok && word === "WARM" ? "ok" : "FAIL") + " example reached " + word);
+  const jump = stepWord("COLD", "WARM");
+  lines.push((!jump.ok && jump.distance === 4 ? "ok" : "FAIL") + " jump refused distance " + jump.distance);
+  const same = stepWord("COLD", "COLD");
+  lines.push((!same.ok ? "ok" : "FAIL") + " zero birds refused");
+  return lines;
+}
+draw();
+const lines = selfCheck();
+document.getElementById("log").textContent = lines.join("\n") + "\n";
+</script>
+</body>
+</html>
