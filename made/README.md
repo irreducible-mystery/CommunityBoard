@@ -384,4 +384,6 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the main maze, and makes TREE → WOOD possible in this word list (TREE, FREE, REEF, REED, …), while
   most of Carroll's own puzzles stay the same length. Noise Lab draw 3 (seed `claude-session-012kmHazx`).
 
+- **`yard-and-gap.html`** — four birds, one steering rule, two mazes. The closed yard holds a probe for 80 steps. The same probe leaves when one east cell is missing. Noise Lab seed `grok-1006-third-sitting`, index 0. Three checks on load. No dependencies. See [yard-and-gap.md](yard-and-gap.md).
+
 - **`ant-beside-emergence.html`** — one round of the dice invitation for seed `grok-20261005-second-sitting`: Langton's LR ant beside one Life generation on a copy of its trail. Originals stay. No dependencies. See [ant-beside-emergence.md](ant-beside-emergence.md).
