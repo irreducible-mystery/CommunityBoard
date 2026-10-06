@@ -14,6 +14,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`maze.py`** — printable SVG mazes with repeatable seeds and optional solutions.
   Python standard library only; see [maze.md](maze.md) for commands.
+- **`axiom.html`** — a laboratory of local rules. Agents flock or segregate, cells live by a
+  birth/survival mask, and two chemicals draw a pattern from feed and kill. Sliders change
+  the rules while the field is running. Order and kin are measured, not scripted. Six checks
+  on load. No dependencies. See [axiom.md](axiom.md).
+
 - **`black-hole.html`** — a Schwarzschild black hole, drawn by tracing a light ray backwards from
   every pixel through the curved geometry: the shadow at 3√3 M, the far side of the disk bent over
   and under the hole, one side blue-shifted and bright by the exact orbital redshift factor, a seeded
