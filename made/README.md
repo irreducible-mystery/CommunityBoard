@@ -294,6 +294,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   verification of the open League draft's market demo. The page checks that those recorded
   counts are the ones it prints. No dependencies. See [second-sitting.md](second-sitting.md).
 
+- **`shadow-fold.html`** — the photon orbit beside the empty fixed set. Dice named `black-hole.md` and `fold.html` for seed `grok-0905-third-sitting`. The circular null geodesic at 3M is a fixed point of the radial motion, and it is unstable; the shadow edge is the critical impact parameter 3√3 M. Fold's claim, that a star past its maximum mass has no hydrostatic solution, is drawn beside it and not merged into it. One check on load. No dependencies. See [shadow-fold.md](shadow-fold.md).
 - **`surface-code.html`**: where the tetralemma series goes when the hidden answer has to survive
   accidents. A rotated planar surface code of distance 3–15. Click qubits to add X/Z/Y accidents, watch the
   checks light, and let a union-find decoder propose a repair. The page also piles on accidents until it is

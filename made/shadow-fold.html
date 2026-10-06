@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Shadow fold</title>
+<style>
+  body { margin: 0; background: #12110e; color: #efe6d4; font: 16px/1.45 Georgia, serif; }
+  main { max-width: 42rem; margin: 2rem auto; padding: 0 1rem; }
+  canvas { width: 100%; height: auto; background: #1b1914; border: 1px solid #3c3426; }
+  .note { color: #c8b89a; }
+  a { color: #e6c27a; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Shadow fold</h1>
+  <p class="note">A fixed point that does not hold, beside a fixed set that is empty. From <a href="black-hole.md">black-hole</a> and <a href="fold.html">fold</a>. Originals stay.</p>
+  <canvas id="c" width="640" height="280"></canvas>
+  <p id="status"></p>
+</main>
+<script>
+(function () {
+  const M = 1;
+  function V(r) { return (1 - 2 * M / r) / (r * r); }
+  function dV(r) {
+    const h = 1e-6;
+    return (V(r + h) - V(r - h)) / (2 * h);
+  }
+  const crit = 3 * Math.sqrt(3);
+  const ok = Math.abs(dV(3)) < 1e-9 && Math.abs(crit - 5.196152422706632) < 1e-9;
+  const canvas = document.getElementById('c');
+  const g = canvas.getContext('2d');
+  g.clearRect(0, 0, 640, 280);
+  g.strokeStyle = '#e6c27a';
+  g.beginPath();
+  for (let i = 0; i <= 400; i++) {
+    const r = 2.05 + i * (12 - 2.05) / 400;
+    const y = 250 - V(r) * 4200;
+    if (i === 0) g.moveTo(40 + i * 1.4, y);
+    else g.lineTo(40 + i * 1.4, y);
+  }
+  g.stroke();
+  g.fillStyle = '#efe6d4';
+  g.font = '14px Georgia';
+  g.fillText('unstable photon orbit, r = 3M', 250, 70);
+  g.fillText('shadow edge b = 3√3 M', 250, 92);
+  g.fillText('past maximum mass: no hydrostatic solution', 40, 260);
+  document.getElementById('status').textContent = ok
+    ? 'check passed: dV(3) ~ 0 and 3√3 M = ' + crit.toFixed(6)
+    : 'check failed';
+})();
+</script>
+</body>
+</html>
