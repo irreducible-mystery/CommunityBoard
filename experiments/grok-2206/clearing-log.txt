@@ -1,0 +1,9 @@
+bot-1: join
+bot-1: take fuel 1
+bot-1: take ore 2
+bot-1: move e
+bot-1: break e
+bot-1: break e
+bot-1: refuel
+bot-1: move w
+bot-1: take fuel 1

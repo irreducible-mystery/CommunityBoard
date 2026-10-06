@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Blank corridor</title>
+<style>
+  body { font: 16px/1.4 ui-sans-serif, system-ui, sans-serif; background: #f4f1ea; color: #1c1915; margin: 2rem; }
+  canvas { background: #fff; border: 1px solid #1c1915; image-rendering: pixelated; cursor: pointer; }
+  p { max-width: 38rem; }
+  #log { font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<h1>Blank corridor</h1>
+<p>A maze and an empty space. The pale square is not a room you enter. The corridor goes around it. What was not done is listed under the board.</p>
+<canvas id="c" width="360" height="360"></canvas>
+<p id="log"></p>
+<script>
+const N = 9, CELL = 40;
+// 1 wall, 0 walk, 2 hole (empty, not a step)
+const grid = [
+  [1,1,1,1,1,1,1,1,1],
+  [1,0,0,0,1,0,0,0,1],
+  [1,0,1,0,1,0,1,0,1],
+  [1,0,1,2,2,2,1,0,1],
+  [1,0,1,2,2,2,1,0,1],
+  [1,0,1,2,2,2,1,0,1],
+  [1,0,0,0,1,0,0,0,1],
+  [1,1,1,0,0,0,1,1,1],
+  [1,1,1,1,0,1,1,1,1],
+];
+const start = [1,1], end = [4,8];
+let at = start.slice();
+const checks = [];
+function holeCells() {
+  const cells = [];
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grid[y][x] === 2) cells.push([x,y]);
+  return cells;
+}
+function walkable(x, y) { return grid[y] && grid[y][x] === 0; }
+function reaches(from, to) {
+  const q = [from], seen = new Set([from.join()]);
+  const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+  while (q.length) {
+    const [x,y] = q.shift();
+    if (x === to[0] && y === to[1]) return true;
+    for (const [dx,dy] of dirs) {
+      const n = [x+dx, y+dy];
+      const k = n.join();
+      if (walkable(n[0], n[1]) && !seen.has(k)) { seen.add(k); q.push(n); }
+    }
+  }
+  return false;
+}
+checks.push(["hole is empty of path cells", holeCells().every(([x,y]) => grid[y][x] === 2)]);
+checks.push(["hole is not a step", holeCells().every(([x,y]) => !walkable(x,y))]);
+checks.push(["start reaches end around the hole", reaches(start, end)]);
+checks.push(["a step into the hole is ignored", !walkable(4,4)]);
+const failed = checks.filter(([,ok]) => !ok);
+const log = document.getElementById("log");
+log.textContent = checks.map(([name, ok]) => (ok ? "ok  " : "FAIL ") + name).join("\n")
+  + (failed.length ? "\n" + failed.length + " failed" : "\n4 checks passed");
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+function draw() {
+  ctx.clearRect(0,0,360,360);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    ctx.fillStyle = grid[y][x] === 1 ? "#1c1915" : grid[y][x] === 2 ? "#e7e2d6" : "#fff";
+    ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
+    ctx.strokeStyle = "#d9d3c7";
+    ctx.strokeRect(x*CELL, y*CELL, CELL, CELL);
+  }
+  ctx.fillStyle = "#2f6f4e";
+  ctx.fillRect(end[0]*CELL+8, end[1]*CELL+8, 24, 24);
+  ctx.fillStyle = "#9a3b2f";
+  ctx.beginPath();
+  ctx.arc(at[0]*CELL+20, at[1]*CELL+20, 10, 0, Math.PI*2);
+  ctx.fill();
+}
+draw();
+canvas.addEventListener("click", (ev) => {
+  const r = canvas.getBoundingClientRect();
+  const x = Math.floor((ev.clientX - r.left) / CELL);
+  const y = Math.floor((ev.clientY - r.top) / CELL);
+  const adj = Math.abs(x - at[0]) + Math.abs(y - at[1]) === 1;
+  if (adj && walkable(x, y)) at = [x, y];
+  draw();
+});
+</script>
+</body>
+</html>

@@ -27,6 +27,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One
   parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
 
+- **`blank-corridor.html`** — a corridor around a three-by-three hole. The hole is empty and not a step. Noise Lab seed `grok-2206-seventh`: a maze and an empty space; the note says what was not done. Four checks on load. No dependencies. See [blank-corridor.md](blank-corridor.md).
+
 - **`chsh.html`** — the CHSH game, the simplest Bell test. A referee sends two bits; Alice and Bob,
   who may not talk, must answer so that `a XOR b = x AND y`. Ordinary shared randomness tops out at
   3/4; a shared singlet reaches `cos²(π/8) = 0.8536…`, the Tsirelson bound. Four direction sliders,
