@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Reader rung</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; background: #f4f1ea; color: #1c1915; margin: 2rem auto; max-width: 40rem; padding: 0 1rem; }
+  h1 { font-weight: normal; letter-spacing: 0.04em; }
+  .rooms { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 1rem 0; }
+  .room { border: 1px solid #1c1915; padding: 0.6rem 0.4rem; letter-spacing: 0.18em; background: #fff; }
+  .room.here { background: #1c1915; color: #f4f1ea; }
+  .room span.open { text-decoration: underline; }
+  label { display: block; margin: 1rem 0; }
+  button { font: inherit; margin-right: 0.4rem; }
+  #note { min-height: 3rem; }
+</style>
+</head>
+<body>
+<h1>Reader rung</h1>
+<p>Five rooms, one ladder: COLD → CORD → CARD → WARD → WARM. The slider is the only parameter. It chooses which letter column is the open door. A step may change only that column, and only into the next room's word.</p>
+<div class="rooms" id="rooms"></div>
+<label>Open column <input id="door" type="range" min="0" max="4" value="2"> <span id="doorlabel">2</span></label>
+<p>
+  <button id="next" type="button">Step through the door</button>
+  <button id="back" type="button">Step back</button>
+</p>
+<p id="note"></p>
+<script>
+const LADDER = ["COLD", "CORD", "CARD", "WARD", "WARM"];
+let at = 0;
+let door = 2;
+
+function differsBy(a, b) {
+  if (a.length !== b.length) return -1;
+  let n = 0, col = -1;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) { n++; col = i; }
+  return n === 1 ? col : -1;
+}
+
+function draw() {
+  const rooms = document.getElementById("rooms");
+  rooms.textContent = "";
+  LADDER.forEach((word, i) => {
+    const el = document.createElement("div");
+    el.className = "room" + (i === at ? " here" : "");
+    word.split("").forEach((ch, c) => {
+      const s = document.createElement("span");
+      if (c === door) s.className = "open";
+      s.textContent = ch;
+      el.appendChild(s);
+    });
+    rooms.appendChild(el);
+  });
+  document.getElementById("doorlabel").textContent = String(door);
+  const note = document.getElementById("note");
+  if (at === LADDER.length - 1) note.textContent = "WARM. The door is still only one column.";
+  else {
+    const col = differsBy(LADDER[at], LADDER[at + 1]);
+    note.textContent = col === door
+      ? "The next room uses this door."
+      : "The next room changes column " + col + ", not " + door + ".";
+  }
+}
+
+function step(dir) {
+  const nxt = at + dir;
+  if (nxt < 0 || nxt >= LADDER.length) return;
+  const col = differsBy(LADDER[at], LADDER[nxt]);
+  if (col !== door) {
+    document.getElementById("note").textContent = "That step changes column " + col + ". The door is " + door + ".";
+    return;
+  }
+  at = nxt;
+  draw();
+}
+
+document.getElementById("door").addEventListener("input", (e) => {
+  const n = Number(e.target.value);
+  door = n >= 0 && n <= 4 ? n : door;
+  draw();
+});
+document.getElementById("next").addEventListener("click", () => step(1));
+document.getElementById("back").addEventListener("click", () => step(-1));
+
+const checks = [];
+for (let i = 0; i < LADDER.length - 1; i++) checks.push(differsBy(LADDER[i], LADDER[i + 1]) >= 0);
+checks.push((() => { const bad = 9; return !(bad >= 0 && bad <= 4); })());
+if (checks.some(ok => !ok)) document.getElementById("note").textContent = "A load check failed.";
+draw();
+</script>
+</body>
+</html>
