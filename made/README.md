@@ -265,6 +265,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`rhythm-maze.html`** — a beat walking a seeded maze. Noise Lab's invitation to combine a rhythm and a maze, offline. The page checks that every open cell is reachable. See [rhythm-maze.md](rhythm-maze.md).
 
+- **`rhythm-flock.html`** — twelve birds on a circle whose wingbeats pull toward one phase. Noise Lab seed `grok-0006-sitting`: a rhythm and a flock. No path, no score. No dependencies. See [rhythm-flock.md](rhythm-flock.md).
 - **`right-question.html`** — which questions can tell the four corners in `tetralemma.html` apart.
   A question names a distinction, an observable, and a record (one shot, or the distribution). Leave the
   observable unnamed and every corner answers 1/4. Z tells *is* from *is not* and is blind to the relative
