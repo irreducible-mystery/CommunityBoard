@@ -133,6 +133,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and CLI tested under Node (`node tools/orbit_league.cjs`). No dependencies.
   See [orbital-league.md](orbital-league.md).
 
+- **`empty-pulse.html`** — one beat in an otherwise empty room. Noise Lab seed `grok-0506-sitting`: an empty space and a rhythm, at most 100 lines. See [empty-pulse.md](empty-pulse.md).
+
 - **`empty-set.html`**: an empty set that grows. Start from `{}` and press Grow; each step
   builds one new set from what is already there, and it becomes the counting numbers. Two
   rules side by side: *keep everything* (von Neumann, `3 = {0, 1, 2}`), where the set gains

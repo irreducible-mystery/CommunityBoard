@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Empty pulse</title></head>
+<body>
+<p>An empty room. A rhythm is a count, not a picture. One beat every 48 ticks. Nothing else is placed.</p>
+<pre id="out"></pre>
+<script>
+'use strict';
+function beats(ticks, period) {
+  let n = 0;
+  for (let t = 1; t <= ticks; t++) if (t % period === 0) n++;
+  return n;
+}
+const checks = [
+  ['400 ticks, period 48', beats(400, 48) === 8],
+  ['zero ticks', beats(0, 48) === 0],
+  ['period is the only object', beats(48, 48) === 1],
+  ['no beat off the grid', beats(47, 48) === 0]
+];
+const failed = checks.filter(function (row) { return !row[1]; });
+document.getElementById('out').textContent = failed.length
+  ? 'fail ' + failed.map(function (row) { return row[0]; }).join(', ')
+  : 'ok ' + checks.length;
+</script>
+</body>
+</html>
