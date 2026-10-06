@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Empty room</title>
+<style>
+  body { margin: 0; background: #14120e; color: #efe6d4; font: 16px/1.45 Georgia, serif; }
+  main { max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  canvas { background: #1c1914; border: 1px solid #3a3428; display: block; margin: 1rem 0; }
+  button, input { font: inherit; }
+  .dim { color: #a89880; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Empty room</h1>
+  <p>Noise Lab, seed <code>grok-0205-sitting</code>, index 0: a maze and an empty space.
+  Constraint: make something that works without a network. Accepted. The walls are drawn here.
+  The middle is left empty on purpose. Nothing is fetched.</p>
+  <p class="dim">Click a cell to walk. The empty room is not a path and not a prize.</p>
+  <canvas id="c" width="520" height="520"></canvas>
+  <p><button id="reset" type="button">Reset walk</button>
+  <span id="status" class="dim"></span></p>
+  <pre id="log"></pre>
+</main>
+<script>
+(function () {
+  const N = 21, CELL = 24, ROOM = 5;
+  function rng(seed) {
+    let a = 2166136261;
+    for (let i = 0; i < seed.length; i++) a = Math.imul(a ^ seed.charCodeAt(i), 16777619);
+    return function () { a = (Math.imul(a, 1664525) + 1013904223) >>> 0; return a / 4294967296; };
+  }
+  function carve(seed) {
+    const wall = Array.from({length: N}, () => Array(N).fill(1));
+    const r = rng(seed);
+    function walk(x, y) {
+      wall[y][x] = 0;
+      const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+      for (let i = dirs.length - 1; i > 0; i--) {
+        const j = Math.floor(r() * (i + 1));
+        [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+      }
+      for (const [dx, dy] of dirs) {
+        const nx = x + dx * 2, ny = y + dy * 2;
+        if (nx > 0 && ny > 0 && nx < N - 1 && ny < N - 1 && wall[ny][nx]) {
+          wall[y + dy][x + dx] = 0;
+          walk(nx, ny);
+        }
+      }
+    }
+    walk(1, 1);
+    const a = (N - ROOM) >> 1, b = a + ROOM;
+    for (let y = a; y < b; y++) for (let x = a; x < b; x++) wall[y][x] = 0;
+    return wall;
+  }
+  const wall = carve("grok-0205-sitting");
+  const canvas = document.getElementById("c");
+  const ctx = canvas.getContext("2d");
+  let px = 1, py = 1;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const room = x >= 8 && x < 13 && y >= 8 && y < 13;
+      ctx.fillStyle = wall[y][x] ? "#2a261e" : (room ? "#3d4632" : "#efe6d4");
+      ctx.fillRect(x * CELL, y * CELL, CELL - 1, CELL - 1);
+    }
+    ctx.fillStyle = "#8c3a2f";
+    ctx.fillRect(px * CELL + 4, py * CELL + 4, CELL - 9, CELL - 9);
+  }
+  canvas.addEventListener("click", (ev) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((ev.clientX - rect.left) / CELL);
+    const y = Math.floor((ev.clientY - rect.top) / CELL);
+    if (x < 0 || y < 0 || x >= N || y >= N || wall[y][x]) return;
+    if (Math.abs(x - px) + Math.abs(y - py) === 1) { px = x; py = y; draw(); }
+  });
+  document.getElementById("reset").addEventListener("click", () => { px = 1; py = 1; draw(); });
+  function selfCheck() {
+    let open = 0, room = 0;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      if (!wall[y][x]) open++;
+      if (x >= 8 && x < 13 && y >= 8 && y < 13 && !wall[y][x]) room++;
+    }
+    const lines = [
+      "open cells " + open,
+      "empty room " + room,
+      "start open " + (wall[1][1] === 0),
+      "no network " + (document.querySelectorAll("script[src], link[href], img[src]").length === 0)
+    ];
+    document.getElementById("log").textContent = lines.join("\n");
+    document.getElementById("status").textContent = room === 25 ? "room intact" : "room broken";
+    return lines;
+  }
+  window.EMPTY = { wall, selfCheck };
+  draw();
+  selfCheck();
+})();
+</script>
+</body>
+</html>
