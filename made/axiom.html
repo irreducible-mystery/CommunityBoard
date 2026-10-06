@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Axiom</title>
+<style>
+  :root {
+    --bg: #10140f;
+    --elev: #1a2118;
+    --subtle: #242e22;
+    --fg: #e6eadf;
+    --muted: #8d9786;
+    --line: #2e3a2c;
+    --accent: #d6f25c;
+    --accent-fg: #1a2208;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+  body {
+    font: 15px/1.45 "IBM Plex Sans", "Segoe UI", sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+  h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 500; }
+  h1 { font-size: 1.6rem; font-style: italic; margin: 0; }
+  button { font: inherit; color: inherit; background: var(--subtle); border: 0; border-radius: 8px; cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+  header, .status {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 8px 12px; border-bottom: 1px solid var(--line);
+  }
+  header .models, .tools { display: flex; gap: 4px; background: var(--subtle); padding: 4px; border-radius: 10px; }
+  header .models button, .tools button, .presets button { height: 40px; padding: 0 12px; }
+  header .spacer { margin-left: auto; display: flex; gap: 4px; }
+  .status { font-size: 0.92rem; }
+  .status .nums { display: flex; gap: 14px; margin-left: auto; font-variant-numeric: tabular-nums; }
+  .status .nums span { color: var(--muted); }
+  .status .nums b { color: var(--fg); font-weight: 600; }
+  .stage { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  @media (min-width: 960px) { .stage { flex-direction: row; } }
+  canvas { flex: 1; min-height: 180px; width: 100%; touch-action: none; display: block; }
+  aside {
+    width: 100%; max-height: 42dvh; overflow: auto; background: var(--elev);
+    border-top: 1px solid var(--line); padding: 12px 14px 20px;
+  }
+  @media (min-width: 960px) {
+    aside { width: 340px; max-height: none; border-top: 0; border-left: 1px solid var(--line); }
+  }
+  .presets { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; }
+  .presets button { flex: 0 0 auto; }
+  h2 { margin: 8px 0 4px; font-size: 1.25rem; font-style: italic; }
+  p.note { margin: 0 0 8px; color: var(--muted); font-size: 0.9rem; }
+  label.dial { display: flex; flex-direction: column; gap: 2px; padding: 4px 0; font-size: 0.9rem; }
+  label.dial span { display: flex; justify-content: space-between; }
+  label.dial b { color: var(--muted); font-weight: 500; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .seg { display: flex; gap: 4px; margin: 6px 0; }
+  .seg button { flex: 1; height: 36px; }
+  .mask { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin: 4px 0 8px; }
+  .mask button { height: 36px; }
+  h3 { margin: 14px 0 4px; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Axiom</h1>
+  <div class="models" id="models" role="group" aria-label="Model"></div>
+  <div class="spacer">
+    <button type="button" id="pause" aria-label="Pause">Pause</button>
+    <button type="button" id="speed" aria-label="Simulation speed">1×</button>
+    <button type="button" id="reseed">Reseed</button>
+  </div>
+</header>
+<div class="status">
+  <div id="line">The field is settling.</div>
+  <div class="nums" id="nums"></div>
+</div>
+<div class="stage">
+  <canvas id="field" aria-label="Simulation field. Drag to stir or seed."></canvas>
+  <aside id="panel"></aside>
+</div>
+<script>
+"use strict";
+const WORLD_W = 1000, WORLD_H = 640, MAX = 1000;
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const wrapDelta = (d, span) => d > span * 0.5 ? d - span : d < -span * 0.5 ? d + span : d;
+function mulberry(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function lifeNotation(born, stay) {
+  const digits = (mask) => {
+    let s = "";
+    for (let i = 0; i <= 8; i++) if (mask & (1 << i)) s += i;
+    return s || "none";
+  };
+  return "B" + digits(born) + "/S" + digits(stay);
+}
+const B = (ds) => ds.reduce((m, d) => m | (1 << d), 0);
+
+const PRESETS = [
+  { id: "murmur", model: "agents", name: "Murmur", line: "Match your neighbors and a cloud learns one direction.", rules: { count: 520, species: 1, majority: 1, align: 1.05, cohere: 0.55, separate: 0.85, noise: 0.08, center: 0, swirl: 0, flee: 0, chase: 0, preference: 0, sense: 52, space: 18, speed: 160, turn: 4.2, boundary: "wrap", seed: "random" } },
+  { id: "threshold", model: "agents", name: "Threshold", line: "Alignment against noise. Slide noise up and the flock forgets.", rules: { count: 680, species: 1, majority: 1, align: 1, cohere: 0, separate: 0.12, noise: 0.16, center: 0, swirl: 0, flee: 0, chase: 0, preference: 0, sense: 34, space: 12, speed: 140, turn: 5.5, boundary: "wrap", seed: "random" } },
+  { id: "mill", model: "agents", name: "Mill", line: "Pull together without agreeing, and the group turns into a wheel.", rules: { count: 360, species: 1, majority: 1, align: 0.12, cohere: 1.35, separate: 0.9, noise: 0.04, center: 0, swirl: 0, flee: 0, chase: 0, preference: 0, sense: 78, space: 22, speed: 170, turn: 2.6, boundary: "wrap", seed: "random" } },
+  { id: "gas", model: "agents", name: "Gas", line: "The only rule is don't crowd me.", rules: { count: 480, species: 1, majority: 1, align: 0, cohere: 0, separate: 1.5, noise: 0.2, center: 0, swirl: 0, flee: 0, chase: 0, preference: 0, sense: 42, space: 36, speed: 130, turn: 5, boundary: "wrap", seed: "random" } },
+  { id: "hunt", model: "agents", name: "Hunt", line: "The many flock and flee. The few only chase.", rules: { count: 440, species: 2, majority: 0.86, align: 0.95, cohere: 0.7, separate: 0.75, noise: 0.06, center: 0, swirl: 0, flee: 1.35, chase: 1.4, preference: 0, sense: 58, space: 16, speed: 155, turn: 4.8, boundary: "wrap", seed: "random" } },
+  { id: "blocks", model: "agents", name: "Blocks", line: "A mild wish to be among your own. The map splits anyway.", rules: { count: 720, species: 2, majority: 0.5, align: 0, cohere: 0, separate: 0, noise: 0, center: 0, swirl: 0, flee: 0, chase: 0, preference: 0.62, sense: 46, space: 16, speed: 0, turn: 1, boundary: "wrap", seed: "random" } },
+  { id: "ring", model: "agents", name: "Ring", line: "Fall inward, drift sideways. A ring is the compromise.", rules: { count: 520, species: 1, majority: 1, align: 0.15, cohere: 0.05, separate: 0.45, noise: 0.03, center: 0.9, swirl: 1.15, flee: 0, chase: 0, preference: 0, sense: 40, space: 14, speed: 155, turn: 2.4, boundary: "soft", seed: "annulus" } },
+  { id: "drift", model: "agents", name: "Drift", line: "No rule but wander. This is the control.", rules: { count: 400, species: 1, majority: 1, align: 0, cohere: 0, separate: 0, noise: 1, center: 0, swirl: 0, flee: 0, chase: 0, preference: 0, sense: 40, space: 16, speed: 120, turn: 6, boundary: "wrap", seed: "random" } },
+  { id: "life", model: "cells", name: "Life", line: "Born on three, stay on two or three.", rules: { born: B([3]), stay: B([2, 3]), density: 0.14, edge: "wrap", seed: "glider" } },
+  { id: "highlife", model: "cells", name: "HighLife", line: "Life, plus a birth on six.", rules: { born: B([3, 6]), stay: B([2, 3]), density: 0.08, edge: "wrap", seed: "soup" } },
+  { id: "maze", model: "cells", name: "Maze", line: "Stay almost anywhere. A block grows into corridors.", rules: { born: B([3]), stay: B([1, 2, 3, 4, 5]), density: 0.04, edge: "wrap", seed: "blob" } },
+  { id: "coral", model: "cells", name: "Coral", line: "Hard to be born, easy to persist.", rules: { born: B([3]), stay: B([4, 5, 6, 7, 8]), density: 0.02, edge: "wrap", seed: "blob" } },
+  { id: "seeds", model: "cells", name: "Seeds", line: "Nothing survives a generation. The picture is only births.", rules: { born: B([2]), stay: 0, density: 0.06, edge: "wrap", seed: "soup" } },
+  { id: "stain-coral", model: "stain", name: "Coral", line: "Two chemicals and a reaction. The reef is not drawn.", rules: { feed: 0.0545, kill: 0.062, diffuse: 1, edge: "wrap" } },
+  { id: "mitosis", model: "stain", name: "Mitosis", line: "Convex edges grow. Spots divide.", rules: { feed: 0.0367, kill: 0.0649, diffuse: 1, edge: "wrap" } },
+  { id: "spots", model: "stain", name: "Spots", line: "Feed a little less and the stain breaks into islands.", rules: { feed: 0.03, kill: 0.062, diffuse: 1, edge: "wrap" } },
+  { id: "stain-maze", model: "stain", name: "Maze", line: "A thinner feed turns islands into corridors.", rules: { feed: 0.029, kill: 0.057, diffuse: 1, edge: "wrap" } },
+  { id: "stripes", model: "stain", name: "Stripes", line: "Drop the kill rate and the spots stretch into bands.", rules: { feed: 0.026, kill: 0.055, diffuse: 1, edge: "wrap" } },
+  { id: "worms", model: "stain", name: "Worms", line: "More feed, and the pattern crawls.", rules: { feed: 0.046, kill: 0.063, diffuse: 1, edge: "wrap" } }
+];
+
+function Agents() {
+  const x = new Float32Array(MAX), y = new Float32Array(MAX), vx = new Float32Array(MAX), vy = new Float32Array(MAX);
+  const sp = new Uint8Array(MAX);
+  const heads = new Int32Array(8192), next = new Int32Array(MAX);
+  heads.fill(-1);
+  const walls = new Uint8Array(80 * 50);
+  const pins = [];
+  let n = 0, rand = Math.random, mode = 1, maj = 1, cols = 1, rows = 1, cell = 40;
+  const api = { x, y, vx, vy, sp, walls, pins, get n() { return n; }, pointerOn: false, pointerX: 0, pointerY: 0, tool: "stir", order: 0, kin: null, near: 0 };
+  function wallAt(wx, wy) {
+    if (wx < 0 || wy < 0 || wx >= WORLD_W || wy >= WORLD_H) return false;
+    const cx = Math.min(79, (wx / WORLD_W * 80) | 0);
+    const cy = Math.min(49, (wy / WORLD_H * 50) | 0);
+    return walls[cy * 80 + cx] === 1;
+  }
+  api.wallAt = wallAt;
+  api.paintWall = (wx, wy, value) => {
+    const cx = wx / WORLD_W * 80, cy = wy / WORLD_H * 50;
+    for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+      const xx = Math.round(cx + ox), yy = Math.round(cy + oy);
+      if (xx < 0 || yy < 0 || xx >= 80 || yy >= 50) continue;
+      walls[yy * 80 + xx] = value;
+    }
+  };
+  api.dropPin = (wx, wy) => { pins.push({ x: wx, y: wy }); if (pins.length > 6) pins.shift(); };
+  api.clearMarks = () => { walls.fill(0); pins.length = 0; };
+  api.reseed = (rules, r) => {
+    rand = r || rand;
+    n = Math.max(0, Math.min(MAX, Math.round(rules.count)));
+    mode = rules.species; maj = rules.majority;
+    const cx = WORLD_W / 2, cy = WORLD_H / 2;
+    for (let i = 0; i < n; i++) {
+      const cut = rules.species === 1 ? 1 : rules.majority;
+      sp[i] = i / n < cut ? 0 : 1;
+      let px = rand() * WORLD_W, py = rand() * WORLD_H, ang = rand() * Math.PI * 2;
+      if (rules.seed === "annulus") {
+        const rr = 170 + Math.sqrt(rand()) * 80, a = rand() * Math.PI * 2;
+        px = cx + Math.cos(a) * rr; py = cy + Math.sin(a) * rr; ang = a + Math.PI / 2;
+      }
+      x[i] = px; y[i] = py;
+      const spd = Math.max(0, rules.speed);
+      vx[i] = Math.cos(ang) * spd; vy[i] = Math.sin(ang) * spd;
+    }
+  };
+  function rebuild(sense, wrap) {
+    cell = sense;
+    cols = Math.max(1, Math.ceil(WORLD_W / sense));
+    rows = Math.max(1, Math.ceil(WORLD_H / sense));
+    const need = cols * rows;
+    heads.fill(-1, 0, need);
+    for (let i = 0; i < n; i++) {
+      let cx = Math.floor(x[i] / sense), cy = Math.floor(y[i] / sense);
+      if (wrap) { cx = ((cx % cols) + cols) % cols; cy = ((cy % rows) + rows) % rows; }
+      else { cx = clamp(cx, 0, cols - 1); cy = clamp(cy, 0, rows - 1); }
+      const c = cy * cols + cx;
+      next[i] = heads[c]; heads[c] = i;
+    }
+  }
+  api.step = (rules, dt) => {
+    dt = dt || 1 / 60;
+    const want = Math.max(0, Math.min(MAX, Math.round(rules.count)));
+    if (rules.species !== mode) { api.reseed(rules); }
+    else {
+      if (rules.species === 2 && Math.abs(rules.majority - maj) > 0.0001) {
+        maj = rules.majority;
+        for (let i = 0; i < n; i++) sp[i] = i / n < rules.majority ? 0 : 1;
+      }
+      while (n < want) {
+        const i = n++;
+        x[i] = rand() * WORLD_W; y[i] = rand() * WORLD_H;
+        const ang = rand() * Math.PI * 2, spd = Math.max(0, rules.speed);
+        vx[i] = Math.cos(ang) * spd; vy[i] = Math.sin(ang) * spd;
+        sp[i] = rules.species === 1 || rand() < rules.majority ? 0 : 1;
+      }
+      if (n > want) n = want;
+    }
+    if (!n) { api.order = 0; api.kin = null; return; }
+    const wrap = rules.boundary === "wrap";
+    const sense = Math.max(12, rules.sense);
+    rebuild(sense, wrap);
+    let sumUx = 0, sumUy = 0, kinSum = 0, kinN = 0, nearSum = 0;
+    const unhappy = [];
+    const sense2 = sense * sense, space2 = rules.space * rules.space;
+    for (let i = 0; i < n; i++) {
+      const species = sp[i], hunter = species === 1 && rules.species === 2;
+      const px = x[i], py = y[i];
+      let sx = 0, sy = 0, ax = 0, ay = 0, alignN = 0, cx = 0, cy = 0, cn = 0, sepX = 0, sepY = 0, same = 0, seen = 0, foeX = 0, foeY = 0, foeN = 0;
+      const bx = Math.floor(px / cell), by = Math.floor(py / cell);
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+        let gx = bx + ox, gy = by + oy;
+        if (wrap) { gx = ((gx % cols) + cols) % cols; gy = ((gy % rows) + rows) % rows; }
+        else if (gx < 0 || gy < 0 || gx >= cols || gy >= rows) continue;
+        const key = gy * cols + gx;
+        if (key < 0 || key >= heads.length) continue;
+        let j = heads[key];
+        while (j !== -1) {
+          if (j !== i) {
+            let dx = x[j] - px, dy = y[j] - py;
+            if (wrap) { dx = wrapDelta(dx, WORLD_W); dy = wrapDelta(dy, WORLD_H); }
+            const d2 = dx * dx + dy * dy;
+            if (d2 < sense2 && d2 > 1e-4) {
+              seen++;
+              const kin = sp[j] === species;
+              if (kin) same++;
+              if (kin || rules.species === 1) { ax += vx[j]; ay += vy[j]; alignN++; cx += dx; cy += dy; cn++; }
+              else { foeX += dx; foeY += dy; foeN++; }
+              if (d2 < space2) { const d = Math.sqrt(d2); sepX -= dx / d; sepY -= dy / d; }
+            }
+          }
+          j = next[j];
+        }
+      }
+      nearSum += seen;
+      if (rules.species === 2 && seen > 0) { kinSum += same / seen; kinN++; }
+      if (rules.preference > 0.05 && seen > 0 && same / seen < rules.preference) unhappy.push(i);
+      const alignW = hunter ? rules.align * 0.15 : rules.align;
+      const cohereW = hunter ? rules.cohere * 0.1 : rules.cohere;
+      if (alignN && alignW) { const m = Math.hypot(ax, ay) || 1; sx += alignW * ax / m; sy += alignW * ay / m; }
+      if (cn && cohereW) { const m = Math.hypot(cx, cy) || 1; sx += cohereW * cx / m; sy += cohereW * cy / m; }
+      if (rules.separate) { const m = Math.hypot(sepX, sepY); if (m) { sx += rules.separate * sepX / m; sy += rules.separate * sepY / m; } }
+      if (!hunter && foeN && rules.flee) { const m = Math.hypot(foeX, foeY) || 1; sx -= rules.flee * foeX / m; sy -= rules.flee * foeY / m; }
+      if (hunter && foeN && rules.chase) { const m = Math.hypot(foeX, foeY) || 1; sx += rules.chase * foeX / m; sy += rules.chase * foeY / m; }
+      const toCx = WORLD_W / 2 - px, toCy = WORLD_H / 2 - py, cd = Math.hypot(toCx, toCy) || 1;
+      if (rules.center) { sx += rules.center * toCx / cd; sy += rules.center * toCy / cd; }
+      if (rules.swirl) { sx += rules.swirl * -toCy / cd; sy += rules.swirl * toCx / cd; }
+      if (rules.boundary === "soft") {
+        const margin = 80;
+        if (px < margin) sx += (margin - px) / margin * 1.6;
+        if (px > WORLD_W - margin) sx -= (px - (WORLD_W - margin)) / margin * 1.6;
+        if (py < margin) sy += (margin - py) / margin * 1.6;
+        if (py > WORLD_H - margin) sy -= (py - (WORLD_H - margin)) / margin * 1.6;
+      }
+      const pull = (tx, ty, sign, radius, weight) => {
+        const dx = tx - px, dy = ty - py, d = Math.hypot(dx, dy);
+        if (d < radius && d > 1) { const fall = 1 - d / radius; sx += sign * dx / d * weight * fall; sy += sign * dy / d * weight * fall; }
+      };
+      if (api.pointerOn && (api.tool === "stir" || api.tool === "call")) pull(api.pointerX, api.pointerY, api.tool === "call" ? 1 : -1, 150, 2.4);
+      for (const pin of pins) pull(pin.x, pin.y, 1, 170, 1.15);
+      const heading = Math.atan2(vy[i], vx[i] || 1);
+      if (wallAt(px + Math.cos(heading) * 26, py + Math.sin(heading) * 26)) {
+        sx += Math.cos(heading + 1.4) * 2.2; sy += Math.sin(heading + 1.4) * 2.2;
+      }
+      let desired = Math.hypot(sx, sy) > 0.04 ? Math.atan2(sy, sx) : heading;
+      const maxTurn = Math.max(0.2, rules.turn) * dt;
+      let delta = desired - heading;
+      if (delta > Math.PI) delta -= Math.PI * 2;
+      if (delta < -Math.PI) delta += Math.PI * 2;
+      delta = clamp(delta, -maxTurn, maxTurn);
+      const ang = heading + delta + (rand() - 0.5) * rules.noise * 16 * dt;
+      const speed = Math.max(0, rules.speed) * (hunter ? 1.12 : 1);
+      vx[i] = Math.cos(ang) * speed; vy[i] = Math.sin(ang) * speed;
+      let nx = px + vx[i] * dt, ny = py + vy[i] * dt;
+      if (wrap) { nx = ((nx % WORLD_W) + WORLD_W) % WORLD_W; ny = ((ny % WORLD_H) + WORLD_H) % WORLD_H; }
+      else if (rules.boundary === "bounce") {
+        if (nx < 0) { nx = 0; vx[i] = Math.abs(vx[i]); } else if (nx > WORLD_W) { nx = WORLD_W; vx[i] = -Math.abs(vx[i]); }
+        if (ny < 0) { ny = 0; vy[i] = Math.abs(vy[i]); } else if (ny > WORLD_H) { ny = WORLD_H; vy[i] = -Math.abs(vy[i]); }
+      } else { nx = clamp(nx, 0, WORLD_W); ny = clamp(ny, 0, WORLD_H); }
+      if (!wallAt(nx, ny)) { x[i] = nx; y[i] = ny; }
+      const um = Math.hypot(vx[i], vy[i]) || 1;
+      sumUx += vx[i] / um; sumUy += vy[i] / um;
+    }
+    if (rules.preference > 0.05 && unhappy.length) {
+      const budget = Math.min(unhappy.length, Math.max(8, Math.ceil(n * 0.1)));
+      for (let k = 0; k < budget; k++) {
+        const pick = unhappy[(rand() * unhappy.length) | 0];
+        x[pick] = rand() * WORLD_W; y[pick] = rand() * WORLD_H;
+      }
+    }
+    api.order = Math.hypot(sumUx, sumUy) / n;
+    api.kin = rules.species === 2 && kinN ? kinSum / kinN : null;
+    api.near = Math.min(1, nearSum / n / 10);
+  };
+  api.useRand = (r) => { rand = r; };
+  return api;
+}
+
+function Cells() {
+  const w = 192, h = 108;
+  let a = new Uint8Array(w * h), b = new Uint8Array(w * h);
+  const api = { w, h, get a() { return a; }, alive: 0, changed: 0 };
+  api.reseed = (rules, rand) => {
+    rand = rand || Math.random;
+    a.fill(0);
+    if (rules.seed === "blob") {
+      const cx = (w / 2) | 0, cy = (h / 2) | 0, rad = 7;
+      for (let y = cy - rad; y <= cy + rad; y++) for (let x = cx - rad; x <= cx + rad; x++) {
+        if ((x - cx) * (x - cx) + (y - cy) * (y - cy) <= rad * rad && rand() > 0.25) a[y * w + x] = 1;
+      }
+    } else {
+      for (let i = 0; i < a.length; i++) if (rand() < rules.density) a[i] = 1;
+    }
+    if (rules.seed === "glider") {
+      const pts = [[9, 8], [10, 9], [8, 10], [9, 10], [10, 10]];
+      for (const p of pts) a[p[1] * w + p[0]] = 1;
+    }
+  };
+  api.plantBlinker = () => {
+    a.fill(0);
+    a[19 * w + 20] = 1; a[20 * w + 20] = 1; a[21 * w + 20] = 1;
+  };
+  api.step = (rules) => {
+    const wrap = rules.edge === "wrap";
+    let alive = 0, changed = 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      let n = 0;
+      for (let oy = -1; oy <= 1; oy++) for (let ox = -1; ox <= 1; ox++) {
+        if (!ox && !oy) continue;
+        let xx = x + ox, yy = y + oy;
+        if (wrap) { xx = (xx + w) % w; yy = (yy + h) % h; }
+        else if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue;
+        if (a[yy * w + xx] > 0) n++;
+      }
+      const i = y * w + x, age = a[i];
+      let next = 0;
+      if (age > 0) next = rules.stay & (1 << n) ? Math.min(12, age + 1) : 0;
+      else next = rules.born & (1 << n) ? 1 : 0;
+      b[i] = next;
+      if (next) alive++;
+      if ((age > 0) !== (next > 0)) changed++;
+    }
+    const swap = a; a = b; b = swap;
+    api.alive = alive; api.changed = changed;
+  };
+  api.paint = (nx, ny, live) => {
+    const cx = Math.floor(nx * w), cy = Math.floor(ny * h);
+    for (let oy = -2; oy <= 2; oy++) for (let ox = -2; ox <= 2; ox++) {
+      if (ox * ox + oy * oy > 6) continue;
+      const x = cx + ox, y = cy + oy;
+      if (x < 0 || y < 0 || x >= w || y >= h) continue;
+      a[y * w + x] = live ? 1 : 0;
+    }
+  };
+  return api;
+}
+
+function Stain() {
+  const w = 160, h = 90, n = w * h;
+  let A = new Float32Array(n), B = new Float32Array(n), A2 = new Float32Array(n), B2 = new Float32Array(n);
+  A.fill(1);
+  const api = { w, h, get a() { return A; }, get b() { return B; }, meanB: 0 };
+  api.reseed = (rand) => {
+    rand = rand || Math.random;
+    A.fill(1); B.fill(0);
+    for (let s = 0; s < 7; s++) {
+      const cx = (0.15 + rand() * 0.7) * w, cy = (0.15 + rand() * 0.7) * h, rad = 3 + rand() * 3.5;
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const dx = x - cx, dy = y - cy;
+        if (dx * dx + dy * dy <= rad * rad) {
+          const i = y * w + x;
+          A[i] = 0.5; B[i] = 1;
+        }
+      }
+    }
+  };
+  function at(src, x, y, wrap, empty) {
+    if (wrap) { x = (x + w) % w; y = (y + h) % h; }
+    else if (x < 0 || y < 0 || x >= w || y >= h) return empty;
+    return src[y * w + x];
+  }
+  function lap(src, x, y, wrap, empty) {
+    return at(src, x - 1, y - 1, wrap, empty) * 0.05 + at(src, x, y - 1, wrap, empty) * 0.2 + at(src, x + 1, y - 1, wrap, empty) * 0.05
+      + at(src, x - 1, y, wrap, empty) * 0.2 + at(src, x + 1, y, wrap, empty) * 0.2
+      + at(src, x - 1, y + 1, wrap, empty) * 0.05 + at(src, x, y + 1, wrap, empty) * 0.2 + at(src, x + 1, y + 1, wrap, empty) * 0.05
+      - src[y * w + x];
+  }
+  api.step = (rules, iters) => {
+    const da = rules.diffuse, db = 0.5 * rules.diffuse, f = rules.feed, k = rules.kill, wrap = rules.edge === "wrap";
+    let sA = A, sB = B, dA = A2, dB = B2;
+    for (let iter = 0; iter < (iters || 8); iter++) {
+      for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        const i = y * w + x, av = sA[i], bv = sB[i], abb = av * bv * bv;
+        dA[i] = clamp(av + (da * lap(sA, x, y, wrap, 1) - abb + f * (1 - av)), 0, 1);
+        dB[i] = clamp(bv + (db * lap(sB, x, y, wrap, 0) + abb - (f + k) * bv), 0, 1);
+      }
+      const tA = sA, tB = sB; sA = dA; sB = dB; dA = tA; dB = tB;
+    }
+    A = sA; B = sB; A2 = dA; B2 = dB;
+    let sum = 0; for (let i = 0; i < n; i++) sum += B[i];
+    api.meanB = sum / n;
+  };
+  api.paint = (nx, ny) => {
+    const cx = nx * w, cy = ny * h, rad = 3.2;
+    for (let y = Math.max(0, cy - rad); y <= Math.min(h - 1, cy + rad); y++)
+      for (let x = Math.max(0, cx - rad); x <= Math.min(w - 1, cx + rad); x++) {
+        const dx = x - cx, dy = y - cy;
+        if (dx * dx + dy * dy <= rad * rad) { const i = (y | 0) * w + (x | 0); A[i] *= 0.45; B[i] = Math.min(1, B[i] + 0.85); }
+      }
+  };
+  return api;
+}
+
+function dist(ax, ay, bx, by) {
+  return Math.hypot(wrapDelta(ax - bx, WORLD_W), wrapDelta(ay - by, WORLD_H));
+}
+
+function selfCheck() {
+  const notes = [];
+  const fail = (m) => notes.push("FAIL " + m);
+  const ok = (m) => notes.push("ok " + m);
+  const alignedRules = { count: 180, species: 1, majority: 1, align: 1.2, cohere: 0, separate: 0, noise: 0, center: 0, swirl: 0, flee: 0, chase: 0, preference: 0, sense: 48, space: 16, speed: 100, turn: 5, boundary: "wrap", seed: "random" };
+  const flock = Agents();
+  flock.reseed(alignedRules, mulberry(2));
+  for (let i = 0; i < flock.n; i++) { flock.vx[i] = 100; flock.vy[i] = 0; }
+  for (let s = 0; s < 160; s++) flock.step(alignedRules);
+  if (flock.order < 0.95) fail("aligned flock lost order (" + flock.order.toFixed(3) + ")");
+  else ok("aligned flock held order " + flock.order.toFixed(3));
+
+  const noisy = Object.assign({}, alignedRules, { count: 220, align: 0, noise: 1, speed: 120, turn: 6, sense: 36 });
+  const gas = Agents();
+  gas.reseed(noisy, mulberry(4));
+  for (let s = 0; s < 200; s++) gas.step(noisy);
+  if (gas.order > 0.3) fail("noise did not break order (" + gas.order.toFixed(3) + ")");
+  else ok("noise kept order low " + gas.order.toFixed(3));
+
+  const pairRules = Object.assign({}, alignedRules, { count: 2, align: 0, separate: 1.8, sense: 100, space: 70, speed: 100, turn: 8 });
+  const pair = Agents();
+  pair.reseed(pairRules, mulberry(5));
+  pair.x[0] = 470; pair.y[0] = 320; pair.x[1] = 500; pair.y[1] = 320;
+  pair.vx[0] = 100; pair.vy[0] = 0; pair.vx[1] = 100; pair.vy[1] = 0;
+  for (let s = 0; s < 90; s++) pair.step(pairRules);
+  const apart = dist(pair.x[0], pair.y[0], pair.x[1], pair.y[1]);
+  if (apart < 40) fail("separation did not open the pair (" + apart.toFixed(1) + ")");
+  else ok("separation opened the pair to " + apart.toFixed(1));
+
+  const blocks = PRESETS.find((p) => p.id === "blocks").rules;
+  const folk = Agents();
+  folk.reseed(blocks, mulberry(7));
+  folk.step(blocks);
+  const startKin = folk.kin || 0;
+  for (let s = 0; s < 500; s++) folk.step(blocks);
+  const endKin = folk.kin || 0;
+  if (endKin < startKin + 0.08) fail("schelling did not segregate (" + startKin.toFixed(3) + " to " + endKin.toFixed(3) + ")");
+  else ok("schelling kin " + startKin.toFixed(3) + " to " + endKin.toFixed(3));
+
+  const cells = Cells();
+  cells.plantBlinker();
+  const life = { born: 1 << 3, stay: (1 << 2) | (1 << 3), edge: "void" };
+  cells.step(life);
+  const on = (x, y) => cells.a[y * cells.w + x] > 0;
+  const horizontal = on(19, 20) && on(20, 20) && on(21, 20) && !on(20, 19) && !on(20, 21);
+  cells.step(life);
+  const vertical = on(20, 19) && on(20, 20) && on(20, 21) && !on(19, 20) && !on(21, 20);
+  if (!horizontal || !vertical) fail("blinker did not oscillate");
+  else ok("blinker period 2");
+
+  const stain = Stain();
+  stain.reseed(mulberry(9));
+  const coral = { feed: 0.0545, kill: 0.062, diffuse: 1, edge: "wrap" };
+  for (let s = 0; s < 24; s++) stain.step(coral, 8);
+  let finite = true, peak = 0;
+  for (let i = 0; i < stain.b.length; i++) {
+    if (!Number.isFinite(stain.b[i]) || !Number.isFinite(stain.a[i])) finite = false;
+    if (stain.b[i] > peak) peak = stain.b[i];
+  }
+  if (!finite) fail("gray-scott produced a non-finite value");
+  else if (stain.meanB < 0.008 || stain.meanB > 0.75 || peak < 0.35) fail("gray-scott did not hold a pattern (mean " + stain.meanB.toFixed(3) + ")");
+  else ok("gray-scott mean " + stain.meanB.toFixed(3) + " peak " + peak.toFixed(3));
+
+  return { ok: notes.every((n) => n.startsWith("ok")), notes };
+}
+
+const api = { selfCheck, Agents, Cells, Stain, PRESETS };
+if (typeof globalThis !== "undefined") globalThis.AXIOM = api;
+
+function boot() {
+  const report = selfCheck();
+  const checkLine = report.ok
+    ? report.notes.length + " checks ok."
+    : report.notes.filter((n) => n.startsWith("FAIL")).join(" ");
+  const canvas = document.getElementById("field");
+  const ctx = canvas.getContext("2d");
+  const agents = Agents();
+  const cells = Cells();
+  const stain = Stain();
+  let model = "agents";
+  let presetId = "murmur";
+  let rules = Object.assign({}, PRESETS[0].rules);
+  let paused = false, speed = 1, tool = "stir";
+  agents.reseed(rules);
+  cells.reseed(PRESETS.find((p) => p.id === "life").rules);
+  stain.reseed();
+  let cellRules = Object.assign({}, PRESETS.find((p) => p.id === "life").rules);
+  let stainRules = Object.assign({}, PRESETS.find((p) => p.id === "stain-coral").rules);
+  let reading = { order: 0, kin: null, pop: 0, activity: 0 };
+
+  const modelsEl = document.getElementById("models");
+  ["agents", "cells", "stain"].forEach((id) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = id[0].toUpperCase() + id.slice(1);
+    b.dataset.model = id;
+    b.addEventListener("click", () => { model = id; tool = id === "agents" ? "stir" : "plant"; renderPanel(); });
+    modelsEl.appendChild(b);
+  });
+  document.getElementById("pause").addEventListener("click", () => {
+    paused = !paused;
+    document.getElementById("pause").textContent = paused ? "Play" : "Pause";
+  });
+  document.getElementById("speed").addEventListener("click", () => {
+    speed = speed === 1 ? 2 : speed === 2 ? 4 : 1;
+    document.getElementById("speed").textContent = speed + "×";
+  });
+  document.getElementById("reseed").addEventListener("click", () => reseed());
+  window.addEventListener("keydown", (e) => {
+    const tag = e.target && e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (e.code === "Space") { e.preventDefault(); paused = !paused; document.getElementById("pause").textContent = paused ? "Play" : "Pause"; }
+    else if (e.key === "r" || e.key === "R") reseed();
+    else if (e.key === "1") { model = "agents"; renderPanel(); }
+    else if (e.key === "2") { model = "cells"; renderPanel(); }
+    else if (e.key === "3") { model = "stain"; renderPanel(); }
+  });
+
+  function reseed() {
+    if (model === "agents") agents.reseed(rules);
+    else if (model === "cells") cells.reseed(cellRules);
+    else stain.reseed();
+  }
+  function applyPreset(id) {
+    const p = PRESETS.find((x) => x.id === id);
+    presetId = id; model = p.model;
+    if (p.model === "agents") { rules = Object.assign({}, p.rules); agents.reseed(rules); }
+    else if (p.model === "cells") { cellRules = Object.assign({}, p.rules); cells.reseed(cellRules); }
+    else { stainRules = Object.assign({}, p.rules); stain.reseed(); }
+    tool = p.model === "agents" ? "stir" : "plant";
+    renderPanel();
+  }
+  function dirty() {
+    const p = PRESETS.find((x) => x.id === presetId);
+    if (!p || p.model !== model) return true;
+    const cur = model === "agents" ? rules : model === "cells" ? cellRules : stainRules;
+    return Object.keys(p.rules).some((k) => cur[k] !== p.rules[k]);
+  }
+  function narrate() {
+    if (model === "agents") {
+      if (rules.preference > 0.2 && (reading.kin || 0) > 0.72) return "A mild preference has hardened into neighborhoods.";
+      if (reading.order > 0.72 && rules.align > 0.35 && rules.noise < 0.45) return "Local agreement became one direction.";
+      if (reading.order < 0.22 && rules.noise > 0.55) return "Noise is winning. The shared direction fell apart.";
+      if (rules.center > 0.35 && rules.swirl > 0.4) return "Falling in and sliding sideways is holding a ring.";
+      if (rules.species === 2 && rules.chase > 0.4 && rules.preference < 0.05) return "Prey agree with prey. Hunters only chase.";
+      if (reading.order > 0.45) return "A drift of order is taking hold.";
+      return "Still local. Nothing global has settled yet.";
+    }
+    if (model === "cells") {
+      if (reading.pop < 192 * 108 * 0.008) return "This rule starves. Almost nothing is left alive.";
+      if (reading.activity > 0.2) return "The field is still boiling.";
+      if (reading.activity < 0.004 && reading.pop > 0) return "A still life. The rule and the picture agree.";
+      return "The census is whatever this birth and survival rule permits.";
+    }
+    if (reading.activity < 0.012) return "Chemical B died out. Seed the field, or raise the feed.";
+    if (reading.activity > 0.55) return "B flooded the dish. Kill is too weak to carve it back.";
+    return "Feed and kill are drawing a pattern nobody sketched.";
+  }
+  function dial(parent, label, obj, key, min, max, step, fmt) {
+    const lab = document.createElement("label");
+    lab.className = "dial";
+    const top = document.createElement("span");
+    const name = document.createElement("span");
+    name.textContent = label;
+    const val = document.createElement("b");
+    const input = document.createElement("input");
+    input.type = "range"; input.min = min; input.max = max; input.step = step; input.value = obj[key];
+    const show = () => { val.textContent = (fmt || ((n) => Number(n).toFixed(2)))(obj[key]); };
+    show();
+    input.addEventListener("input", () => { obj[key] = Number(input.value); show(); renderHead(); });
+    top.appendChild(name); top.appendChild(val); lab.appendChild(top); lab.appendChild(input);
+    parent.appendChild(lab);
+  }
+  function seg(parent, label, value, options, on) {
+    const wrap = document.createElement("div");
+    const cap = document.createElement("div");
+    cap.textContent = label; cap.style.marginTop = "8px";
+    wrap.appendChild(cap);
+    const row = document.createElement("div");
+    row.className = "seg";
+    options.forEach((o) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = o.name; b.setAttribute("aria-pressed", String(value === o.id));
+      b.addEventListener("click", () => on(o.id));
+      row.appendChild(b);
+    });
+    wrap.appendChild(row); parent.appendChild(wrap);
+  }
+  function renderHead() {
+    document.querySelectorAll("#models button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.model === model)));
+  }
+  function renderPanel() {
+    renderHead();
+    const panel = document.getElementById("panel");
+    panel.innerHTML = "";
+    const presets = document.createElement("div");
+    presets.className = "presets";
+    PRESETS.filter((p) => p.model === model).forEach((p) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = p.name;
+      b.setAttribute("aria-pressed", String(p.id === presetId && !dirty()));
+      b.addEventListener("click", () => applyPreset(p.id));
+      presets.appendChild(b);
+    });
+    panel.appendChild(presets);
+    const h = document.createElement("h2");
+    const pset = PRESETS.find((p) => p.id === presetId);
+    h.textContent = dirty() ? "Edited" : (pset && pset.model === model ? pset.name : "Axiom");
+    panel.appendChild(h);
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = (pset && pset.model === model ? pset.line : "") + " Sliders rewrite the living field. Reseed starts over.";
+    panel.appendChild(note);
+    if (model === "agents") {
+      const h3 = document.createElement("h3"); h3.textContent = "Rules"; panel.appendChild(h3);
+      dial(panel, "Align", rules, "align", 0, 2, 0.05);
+      dial(panel, "Cohere", rules, "cohere", 0, 2, 0.05);
+      dial(panel, "Separate", rules, "separate", 0, 2, 0.05);
+      dial(panel, "Noise", rules, "noise", 0, 1, 0.01);
+      dial(panel, "Center", rules, "center", 0, 1.5, 0.05);
+      dial(panel, "Swirl", rules, "swirl", 0, 1.5, 0.05);
+      dial(panel, "Preference", rules, "preference", 0, 0.9, 0.01);
+      if (rules.species === 2) { dial(panel, "Flee", rules, "flee", 0, 2, 0.05); dial(panel, "Chase", rules, "chase", 0, 2, 0.05); }
+      const h4 = document.createElement("h3"); h4.textContent = "Constraints"; panel.appendChild(h4);
+      dial(panel, "Sense", rules, "sense", 16, 160, 1, (n) => String(Math.round(n)));
+      dial(panel, "Spacing", rules, "space", 8, 70, 1, (n) => String(Math.round(n)));
+      dial(panel, "Speed", rules, "speed", 0, 280, 5, (n) => String(Math.round(n)));
+      dial(panel, "Turn", rules, "turn", 0.4, 10, 0.1);
+      dial(panel, "Count", rules, "count", 40, 900, 10, (n) => String(Math.round(n)));
+      seg(panel, "Edge", rules.boundary, [{ id: "wrap", name: "Wrap" }, { id: "bounce", name: "Bounce" }, { id: "soft", name: "Soft" }], (v) => { rules.boundary = v; renderPanel(); });
+      seg(panel, "Kinds", rules.species === 1 ? "one" : "two", [{ id: "one", name: "One" }, { id: "two", name: "Two" }], (v) => {
+        rules.species = v === "one" ? 1 : 2;
+        if (v === "two" && rules.majority > 0.99) rules.majority = 0.5;
+        renderPanel();
+      });
+      if (rules.species === 2) dial(panel, "Balance", rules, "majority", 0.15, 0.9, 0.01);
+      const tools = document.createElement("div");
+      tools.className = "tools";
+      [["stir", "Stir"], ["call", "Call"], ["pin", "Pin"], ["wall", "Wall"], ["wipe", "Wipe"]].forEach(([id, name]) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.textContent = name; b.setAttribute("aria-pressed", String(tool === id));
+        b.addEventListener("click", () => { tool = id; renderPanel(); });
+        tools.appendChild(b);
+      });
+      const clear = document.createElement("button");
+      clear.type = "button"; clear.textContent = "Clear marks";
+      clear.addEventListener("click", () => agents.clearMarks());
+      tools.appendChild(clear);
+      const h5 = document.createElement("h3"); h5.textContent = "Field"; panel.appendChild(h5);
+      panel.appendChild(tools);
+    } else if (model === "cells") {
+      const h3 = document.createElement("h3"); h3.textContent = "Rules " + lifeNotation(cellRules.born, cellRules.stay); panel.appendChild(h3);
+      ["born", "stay"].forEach((key) => {
+        const cap = document.createElement("div");
+        cap.textContent = key === "born" ? "Born with this many neighbors" : "Stay alive with this many";
+        panel.appendChild(cap);
+        const row = document.createElement("div");
+        row.className = "mask";
+        for (let i = 0; i <= 8; i++) {
+          const b = document.createElement("button");
+          b.type = "button"; b.textContent = String(i);
+          b.setAttribute("aria-pressed", String((cellRules[key] & (1 << i)) !== 0));
+          b.addEventListener("click", () => { cellRules[key] ^= 1 << i; renderPanel(); });
+          row.appendChild(b);
+        }
+        panel.appendChild(row);
+      });
+      dial(panel, "Seed density", cellRules, "density", 0.01, 0.6, 0.01);
+      seg(panel, "Edge", cellRules.edge, [{ id: "wrap", name: "Wrap" }, { id: "void", name: "Void" }], (v) => { cellRules.edge = v; renderPanel(); });
+      seg(panel, "Brush", tool === "kill" ? "kill" : "plant", [{ id: "plant", name: "Plant" }, { id: "kill", name: "Kill" }], (v) => { tool = v; renderPanel(); });
+    } else {
+      const h3 = document.createElement("h3"); h3.textContent = "Rules"; panel.appendChild(h3);
+      dial(panel, "Feed", stainRules, "feed", 0.008, 0.09, 0.001, (n) => Number(n).toFixed(3));
+      dial(panel, "Kill", stainRules, "kill", 0.03, 0.075, 0.001, (n) => Number(n).toFixed(3));
+      dial(panel, "Spread", stainRules, "diffuse", 0.35, 1.6, 0.05);
+      seg(panel, "Edge", stainRules.edge, [{ id: "wrap", name: "Wrap" }, { id: "void", name: "Void" }], (v) => { stainRules.edge = v; renderPanel(); });
+    }
+  }
+
+  function fit() {
+    const r = canvas.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const bw = Math.max(1, Math.floor(r.width * dpr)), bh = Math.max(1, Math.floor(r.height * dpr));
+    if (canvas.width !== bw || canvas.height !== bh) { canvas.width = bw; canvas.height = bh; }
+    return { r, dpr };
+  }
+  function worldFrom(ev) {
+    const r = canvas.getBoundingClientRect();
+    const scale = Math.min(r.width / WORLD_W, r.height / WORLD_H);
+    const ox = (r.width - WORLD_W * scale) / 2, oy = (r.height - WORLD_H * scale) / 2;
+    return { x: (ev.clientX - r.left - ox) / scale, y: (ev.clientY - r.top - oy) / scale, inside: true, scale, ox, oy, r };
+  }
+  function paintAt(p, phase) {
+    if (p.x < 0 || p.y < 0 || p.x > WORLD_W || p.y > WORLD_H) return;
+    if (model === "agents") {
+      agents.tool = tool; agents.pointerX = p.x; agents.pointerY = p.y;
+      agents.pointerOn = tool === "stir" || tool === "call";
+      if (tool === "wall") agents.paintWall(p.x, p.y, 1);
+      if (tool === "wipe") agents.paintWall(p.x, p.y, 0);
+      if (tool === "pin" && phase === "down") agents.dropPin(p.x, p.y);
+    } else if (model === "cells") cells.paint(p.x / WORLD_W, p.y / WORLD_H, tool !== "kill");
+    else stain.paint(p.x / WORLD_W, p.y / WORLD_H);
+  }
+  canvas.addEventListener("pointerdown", (e) => { canvas.setPointerCapture(e.pointerId); paintAt(worldFrom(e), "down"); });
+  canvas.addEventListener("pointermove", (e) => { if (canvas.hasPointerCapture(e.pointerId)) paintAt(worldFrom(e), "move"); });
+  canvas.addEventListener("pointerup", () => { agents.pointerOn = false; });
+  canvas.addEventListener("pointercancel", () => { agents.pointerOn = false; });
+
+  let scratch = null;
+  function blit(imageW, imageH, paint) {
+    if (!scratch) scratch = document.createElement("canvas");
+    if (scratch.width !== imageW || scratch.height !== imageH) { scratch.width = imageW; scratch.height = imageH; }
+    const sctx = scratch.getContext("2d");
+    const img = sctx.createImageData(imageW, imageH);
+    paint(img.data);
+    sctx.putImageData(img, 0, 0);
+    return scratch;
+  }
+  function draw() {
+    const { r, dpr } = fit();
+    if (r.width < 2) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const scale = Math.min(r.width / WORLD_W, r.height / WORLD_H);
+    const ox = (r.width - WORLD_W * scale) / 2, oy = (r.height - WORLD_H * scale) / 2;
+    if (model === "agents") {
+      ctx.fillStyle = "rgba(16,20,15,0.2)";
+      ctx.fillRect(0, 0, r.width, r.height);
+    } else {
+      ctx.fillStyle = "#10140f";
+      ctx.fillRect(0, 0, r.width, r.height);
+    }
+    ctx.save();
+    ctx.beginPath(); ctx.rect(ox, oy, WORLD_W * scale, WORLD_H * scale); ctx.clip();
+    if (model === "agents") {
+      ctx.fillStyle = "rgba(141,151,134,0.7)";
+      const cw = WORLD_W / 80 * scale, ch = WORLD_H / 50 * scale;
+      for (let i = 0; i < agents.walls.length; i++) if (agents.walls[i]) {
+        const cx = i % 80, cy = (i / 80) | 0;
+        ctx.fillRect(ox + cx * cw, oy + cy * ch, cw + 0.4, ch + 0.4);
+      }
+      ctx.strokeStyle = "#d6f25c";
+      agents.pins.forEach((pin) => { ctx.beginPath(); ctx.arc(ox + pin.x * scale, oy + pin.y * scale, 14 * scale, 0, Math.PI * 2); ctx.stroke(); });
+      const dots = rules.speed < 1;
+      ctx.lineWidth = 1.7; ctx.lineCap = "round";
+      [0, 1].forEach((species) => {
+        ctx.beginPath();
+        let any = false;
+        for (let i = 0; i < agents.n; i++) if (agents.sp[i] === species) {
+          const sx = ox + agents.x[i] * scale, sy = oy + agents.y[i] * scale;
+          if (dots) { ctx.moveTo(sx + 2.4, sy); ctx.arc(sx, sy, 2.4, 0, Math.PI * 2); }
+          else {
+            const ang = Math.atan2(agents.vy[i], agents.vx[i] || 1), c = Math.cos(ang), s = Math.sin(ang);
+            ctx.moveTo(sx - c * 3, sy - s * 3); ctx.lineTo(sx + c * 9, sy + s * 9);
+          }
+          any = true;
+        }
+        if (!any) return;
+        if (dots) { ctx.fillStyle = species ? "#e6eadf" : "#d6f25c"; ctx.fill(); }
+        else { ctx.strokeStyle = species ? "#e6eadf" : "#d6f25c"; ctx.stroke(); }
+      });
+    } else if (model === "cells") {
+      const img = blit(cells.w, cells.h, (data) => {
+        const a = cells.a;
+        for (let i = 0; i < a.length; i++) {
+          const age = a[i], o = i * 4;
+          if (!age) { data[o] = 16; data[o + 1] = 20; data[o + 2] = 15; }
+          else if (age === 1) { data[o] = 230; data[o + 1] = 234; data[o + 2] = 223; }
+          else { data[o] = 214; data[o + 1] = 242; data[o + 2] = 92; }
+          data[o + 3] = 255;
+        }
+      });
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, ox, oy, WORLD_W * scale, WORLD_H * scale);
+    } else {
+      const img = blit(stain.w, stain.h, (data) => {
+        const b = stain.b;
+        for (let i = 0; i < b.length; i++) {
+          const t = Math.min(1, b[i] * 1.7), o = i * 4;
+          let R, G, Bl;
+          if (t < 0.45) { const u = t / 0.45; R = 16 + 62 * u; G = 20 + 72 * u; Bl = 15 + 47 * u; }
+          else { const u = (t - 0.45) / 0.55; R = 78 + (214 - 78) * u; G = 92 + (242 - 92) * u; Bl = 62 + (92 - 62) * u; }
+          data[o] = R; data[o + 1] = G; data[o + 2] = Bl; data[o + 3] = 255;
+        }
+      });
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, ox, oy, WORLD_W * scale, WORLD_H * scale);
+    }
+    ctx.restore();
+    ctx.strokeStyle = "#2e3a2c";
+    ctx.strokeRect(ox + 0.5, oy + 0.5, WORLD_W * scale - 1, WORLD_H * scale - 1);
+  }
+
+  let acc = 0, last = performance.now(), hud = 0;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (!paused) {
+      acc += dt * speed;
+      let guard = 0;
+      while (acc >= 1 / 60 && guard++ < 8) {
+        if (model === "agents") { agents.step(rules); reading = { order: agents.order, kin: agents.kin, pop: agents.n, activity: agents.order }; }
+        else if (model === "cells") { cells.step(cellRules); const total = cells.w * cells.h; reading = { order: cells.alive / total, kin: null, pop: cells.alive, activity: cells.changed / total }; }
+        else { stain.step(stainRules, 8); reading = { order: stain.meanB, kin: null, pop: Math.round(stain.meanB * stain.b.length), activity: stain.meanB }; }
+        acc -= 1 / 60;
+      }
+    }
+    draw();
+    hud += dt;
+    if (hud > 0.2) {
+      hud = 0;
+      const nums = document.getElementById("nums");
+      if (model === "agents") nums.innerHTML = "<span>Order <b>" + reading.order.toFixed(2) + "</b></span><span>" + (reading.kin == null ? "Near" : "Kin") + " <b>" + (reading.kin == null ? agents.near : reading.kin).toFixed(2) + "</b></span><span>Count <b>" + reading.pop + "</b></span>";
+      else if (model === "cells") nums.innerHTML = "<span>Alive <b>" + reading.pop + "</b></span><span>Rule <b>" + lifeNotation(cellRules.born, cellRules.stay) + "</b></span>";
+      else nums.innerHTML = "<span>Cover <b>" + Math.round(reading.activity * 100) + "</b></span><span>Feed <b>" + stainRules.feed.toFixed(3) + "</b></span><span>Kill <b>" + stainRules.kill.toFixed(3) + "</b></span>";
+      document.getElementById("line").textContent = checkLine + " " + narrate();
+    }
+    requestAnimationFrame(frame);
+  }
+  renderPanel();
+  document.getElementById("line").textContent = checkLine;
+  requestAnimationFrame(frame);
+}
+
+if (typeof document !== "undefined") boot();
+</script>
+</body>
+</html>
