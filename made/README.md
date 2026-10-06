@@ -68,6 +68,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   another, changing one letter at a time, with every step a real word. Includes a daily
   puzzle, random puzzles, some of Carroll's own, hints, and a "make your own" mode. No dependencies.
 
+- **`empty-room.html`** — a seeded maze with a five-by-five room cleared from the middle.
+  Click an adjacent open cell to walk. No network, no dependencies. See [empty-room.md](empty-room.md).
+
 - **`edge.html`** — a ring of 256 coupled logistic maps with one knob between order and
   chaos, a measured stretching rate λ̂, and two feedback loops (λ̂ → r, order → noise) so
   the system can find its own edge instead of being told where it is. Made from the owner's
