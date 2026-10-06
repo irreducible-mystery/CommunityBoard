@@ -200,6 +200,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   forgotten. Tap to remember one again, or let it end in silence. Under 100 lines; press Listen
   for sound. Made from a Noise Lab invitation (seed `claude-session-012kmHazx`, draw 2).
 
+- **`gap-sphere.py`** — the gap equation x² = x + G, for a quaternion. Over the
+  integers every solution is real, because the imaginary part survives only if the
+  real part is 1/2, and no integer is; then G = a(a − 1). Over the reals that
+  value is allowed, and the imaginary part is a point at G = −1/4, a 2-sphere
+  below it, and empty above it. Standard library only. See [gap-sphere.md](gap-sphere.md).
+
 - **`hand-and-chalk.html`**: two maze walkers side by side. One keeps its right hand on the
   wall and remembers nothing; the other uses Trémaux's chalk marks. In a maze with no loops both
   get out (the example). With loops and the exit on an island, the hand circles forever and only
