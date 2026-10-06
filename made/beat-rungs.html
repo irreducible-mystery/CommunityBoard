@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Beat rungs</title>
+<style>
+  body { font: 16px/1.4 ui-sans-serif, system-ui, sans-serif; margin: 2rem; background: #111; color: #eee; }
+  button { font: inherit; padding: 0.6rem 1rem; margin-right: 0.5rem; }
+  .rung { font-family: ui-monospace, monospace; font-size: 2rem; letter-spacing: 0.4rem; margin: 1rem 0; }
+  .on { color: #fc6; }
+  .miss { color: #a55; }
+  #pulse { width: 1.2rem; height: 1.2rem; border-radius: 50%; background: #333; display: inline-block; }
+  #pulse.beat { background: #fc6; }
+</style>
+</head>
+<body>
+<h1>Beat rungs</h1>
+<p>A word ladder climbed on a beat. No network. The ladder is COLD, CORD, CARD, WARD, WARM. Tap on the beat to take the next rung. A late tap stays on the rung you have.</p>
+<p><span id="pulse"></span> beat every <span id="ms">900</span> ms · rung <span id="n">0</span> / 4 · hits <span id="hits">0</span> · misses <span id="misses">0</span></p>
+<p class="rung" id="word">COLD</p>
+<button id="tap" type="button">tap</button>
+<button id="reset" type="button">reset</button>
+<p id="note">Waiting for the first beat.</p>
+<script>
+const LADDER = ["COLD", "CORD", "CARD", "WARD", "WARM"];
+const BEAT = 900;
+const WINDOW = 180;
+let rung = 0, hits = 0, misses = 0, lastBeat = 0, started = 0;
+const pulse = document.getElementById("pulse");
+const word = document.getElementById("word");
+const note = document.getElementById("note");
+function paint() {
+  document.getElementById("n").textContent = rung;
+  document.getElementById("hits").textContent = hits;
+  document.getElementById("misses").textContent = misses;
+  word.textContent = LADDER[rung];
+  word.className = "rung" + (rung === 4 ? " on" : "");
+}
+function tick(now) {
+  if (!started) started = now;
+  const beat = Math.floor((now - started) / BEAT);
+  if (beat !== lastBeat) {
+    lastBeat = beat;
+    pulse.className = "beat";
+    setTimeout(() => { pulse.className = ""; }, 120);
+  }
+  requestAnimationFrame(tick);
+}
+document.getElementById("tap").onclick = () => {
+  const now = performance.now();
+  if (!started) started = now;
+  const into = (now - started) % BEAT;
+  const near = into <= WINDOW || into >= BEAT - WINDOW;
+  if (near && rung < 4) { rung += 1; hits += 1; note.textContent = "On the beat. One letter changed."; }
+  else { misses += 1; note.textContent = near ? "Already warm." : "Off the beat. The rung stays."; }
+  paint();
+};
+document.getElementById("reset").onclick = () => {
+  rung = 0; hits = 0; misses = 0; started = 0; lastBeat = 0;
+  note.textContent = "Waiting for the first beat.";
+  paint();
+};
+paint();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

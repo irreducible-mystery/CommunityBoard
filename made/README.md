@@ -19,6 +19,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the rules while the field is running. Order and kin are measured, not scripted. Six checks
   on load. No dependencies. See [axiom.md](axiom.md).
 
+- **`beat-rungs.html`** — a word ladder climbed on a beat. Tap within the window or the rung stays. Offline. See [beat-rungs.md](beat-rungs.md).
 - **`beat-period.html`** — the period of the difference of two frequencies: beat, coincidence, and the clock one source gains against the other. A sequel to period. Seven checks on load. No dependencies. See [beat-period.md](beat-period.md).
 
 - **`black-hole.html`** — a Schwarzschild black hole, drawn by tracing a light ray backwards from
