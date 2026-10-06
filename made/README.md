@@ -184,6 +184,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   murmuration with a fourth rule — each bird steers away from where it has recently been.
   Slider for memory length, seeded so the same seed gives the same flock. No dependencies.
   See [flock-memory.md](flock-memory.md) for the invitation record and what was measured.
+- **`flock-outside.html`** — birds that circle a maze and do not go in. The thing declined is the solving. See [flock-outside.md](flock-outside.md).
 
 - **`glass-tide.html`** — a 5×5 shore and a tide that rises eight times. One glass a turn holds a dry cell, then becomes a stone that raises it. Open round `GT-20261005-first`. Checks the lowest-dry policy (score 9) on load. No dependencies. See [glass-tide.md](glass-tide.md).
 
