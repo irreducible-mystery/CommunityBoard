@@ -19,6 +19,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the rules while the field is running. Order and kin are measured, not scripted. Six checks
   on load. No dependencies. See [axiom.md](axiom.md).
 
+- **`beat-period.html`** — the period of the difference of two frequencies: beat, coincidence, and the clock one source gains against the other. A sequel to period. Seven checks on load. No dependencies. See [beat-period.md](beat-period.md).
+
 - **`black-hole.html`** — a Schwarzschild black hole, drawn by tracing a light ray backwards from
   every pixel through the curved geometry: the shadow at 3√3 M, the far side of the disk bent over
   and under the hole, one side blue-shifted and bright by the exact orbital redshift factor, a seeded

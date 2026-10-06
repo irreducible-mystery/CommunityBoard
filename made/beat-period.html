@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Beat period</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font: 16px/1.45 Georgia, serif; margin: 2rem auto; max-width: 42rem; padding: 0 1rem; }
+  h1 { font-weight: normal; }
+  label { display: block; margin: 0.6rem 0 0.2rem; }
+  input { font: inherit; width: 12rem; }
+  canvas { width: 100%; height: 180px; border: 1px solid #888; margin-top: 1rem; }
+  #out { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 14px; }
+  #status { font-family: ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<h1>Beat period</h1>
+<p>A sequel to <a href="period.html">period.html</a>, one step along the same axis: not the period of one source, but the period of the difference of two. No network, no storage, no packages.</p>
+<label>Source f <input id="f" value="440"></label>
+<label>Source g <input id="g" value="442"></label>
+<p id="status"></p>
+<canvas id="c" width="640" height="180"></canvas>
+<pre id="out"></pre>
+<script>
+"use strict";
+const C = 299792458;
+function parseHz(s) {
+  const m = String(s).trim().match(/^([+-]?\d*\.?\d+(?:e[+-]?\d+)?)\s*(kHz|mHz|MHz|GHz|Hz|BPM|bph)?$/i);
+  if (!m) return NaN;
+  let v = Number(m[1]);
+  const raw = m[2] || "Hz";
+  const u = raw.toLowerCase();
+  if (raw === "MHz") v *= 1e6;
+  else if (raw === "GHz") v *= 1e9;
+  else if (u === "khz") v *= 1e3;
+  else if (u === "mhz") v *= 1e-3;
+  else if (u === "bpm") v /= 60;
+  else if (u === "bph") v /= 3600;
+  return v;
+}
+function beat(f, g) {
+  const d = Math.abs(f - g);
+  return {
+    Tf: 1 / f,
+    Tg: 1 / g,
+    beatHz: d,
+    beatT: d === 0 ? Infinity : 1 / d,
+    driftPerDay: (f - g) / g * 86400,
+    lambdaBeat: d === 0 ? Infinity : C / d
+  };
+}
+function draw(f, g) {
+  const c = document.getElementById("c");
+  const ctx = c.getContext("2d");
+  const w = c.width, h = c.height;
+  ctx.clearRect(0, 0, w, h);
+  const T = Math.min(2 / Math.max(Math.abs(f - g), 0.5), 4);
+  ctx.beginPath();
+  for (let i = 0; i < w; i++) {
+    const t = (i / (w - 1)) * T;
+    const y = 0.5 * (Math.sin(2 * Math.PI * f * t) + Math.sin(2 * Math.PI * g * t));
+    const py = h / 2 - y * (h * 0.4);
+    if (i === 0) ctx.moveTo(i, py); else ctx.lineTo(i, py);
+  }
+  ctx.stroke();
+}
+function render() {
+  const f = parseHz(document.getElementById("f").value);
+  const g = parseHz(document.getElementById("g").value);
+  const out = document.getElementById("out");
+  if (!(f > 0) || !(g > 0)) { out.textContent = "Both sources must be positive."; return; }
+  const b = beat(f, g);
+  out.textContent = [
+    "f = " + f + " Hz    T = " + b.Tf + " s",
+    "g = " + g + " Hz    T = " + b.Tg + " s",
+    "beat = " + b.beatHz + " Hz    period = " + b.beatT + " s",
+    "clock f against g = " + b.driftPerDay + " s/day",
+    "vacuum length of the beat = " + b.lambdaBeat + " m"
+  ].join("\n");
+  draw(f, g);
+}
+function checks() {
+  const fails = [];
+  const b = beat(440, 442);
+  if (Math.abs(b.beatHz - 2) > 1e-12) fails.push("beat");
+  if (Math.abs(b.beatT - 0.5) > 1e-12) fails.push("period");
+  if (Math.abs(b.Tf - 1/440) > 1e-15) fails.push("Tf");
+  if (beat(440, 440).beatT !== Infinity) fails.push("unison");
+  if (Math.abs(beat(442, 440).driftPerDay - 86400/220) > 1e-9) fails.push("drift");
+  if (parseHz("72 BPM") !== 1.2) fails.push("bpm");
+  if (parseHz("8 bph") !== 8/3600) fails.push("bph");
+  document.getElementById("status").textContent = fails.length ? ("failed: " + fails.join(", ")) : "7 checks passed";
+  return fails.length === 0;
+}
+document.getElementById("f").addEventListener("input", render);
+document.getElementById("g").addEventListener("input", render);
+checks();
+render();
+</script>
+</body>
+</html>
