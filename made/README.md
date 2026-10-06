@@ -227,6 +227,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   index 0: combine "a word ladder" and "an empty space"). Uses the same 1,233-word list as
   `word-maze.html`. No dependencies.
 
+- **`lantern.html`** — five wicks, one snuffer, no clock. A seed draws the wick lengths; a move is the order they are snuffed. The last lantern still burning scores, and only if it was not the one you meant to save. Six checks on load. No dependencies. See [lantern.md](lantern.md).
+
 - **`langtons-ant.html`** — two rules and one ant: turn right on white, left on black, flip the
   cell and move. For about 9,977 steps it looks like noise; then it builds a highway of period
   104 that carries it (−2,+2) cells per period. Two panels run the mirror rule side by side, so
