@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Rhythm flock</title>
+<style>
+  body { margin: 0; background: #10140f; color: #e6ecd8; font: 15px/1.45 Georgia, serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 28px 20px 48px; }
+  canvas { width: 100%; height: auto; background: #0c100c; border: 1px solid #2a3324; display: block; }
+  p { color: #c5d0b4; }
+  .muted { color: #8b977c; font-size: 13px; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px; color: #d7e2c4; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Rhythm flock</h1>
+  <p>Twelve birds on a circle. Their wingbeats pull toward one another. Nothing is given a path, and nothing is removed when it falls out of time.</p>
+  <canvas id="c" width="640" height="360"></canvas>
+  <p class="muted">Noise Lab seed <code>grok-0006-sitting</code>, index 0: a rhythm and a flock. Chosen not to do: pathfinding, a score, a maze, a winner.</p>
+  <p id="log"></p>
+</main>
+<script>
+(function () {
+  const N = 12;
+  const birds = [];
+  for (let i = 0; i < N; i++) {
+    birds.push({ a: (Math.PI * 2 * i) / N, phase: (Math.PI * 2 * i) / N, r: 120 });
+  }
+  function step(k) {
+    const pull = 0.08;
+    const mean = birds.reduce((s, b) => s + Math.sin(b.phase), 0) / N;
+    const meanC = birds.reduce((s, b) => s + Math.cos(b.phase), 0) / N;
+    const target = Math.atan2(mean, meanC);
+    birds.forEach((b) => {
+      let d = target - b.phase;
+      while (d > Math.PI) d -= Math.PI * 2;
+      while (d < -Math.PI) d += Math.PI * 2;
+      b.phase += pull * d + 0.04;
+      b.a += 0.01;
+    });
+    const order = Math.hypot(mean, meanC);
+    return order;
+  }
+  function selfCheck() {
+    const start = birds.map((b) => b.phase);
+    let last = 0;
+    for (let i = 0; i < 200; i++) last = step(i);
+    const spread = Math.max(...birds.map((b) => b.phase)) - Math.min(...birds.map((b) => b.phase));
+    const okOrder = last > 0.85;
+    const okMoved = birds.some((b, i) => Math.abs(b.phase - start[i]) > 0.2);
+    return { okOrder, okMoved, last, spread, line: (okOrder && okMoved) ? '2 checks ok.' : 'checks failed.' };
+  }
+  const report = selfCheck();
+  document.getElementById('log').textContent = report.line + ' order ' + report.last.toFixed(3);
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  function draw() {
+    step(0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = '#243024';
+    ctx.beginPath();
+    ctx.arc(320, 180, 120, 0, Math.PI * 2);
+    ctx.stroke();
+    birds.forEach((b) => {
+      const x = 320 + Math.cos(b.a) * b.r;
+      const y = 180 + Math.sin(b.a) * b.r;
+      const bright = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(b.phase));
+      ctx.fillStyle = 'rgba(214, 196, 120, ' + bright.toFixed(3) + ')';
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  if (typeof window !== 'undefined') draw();
+  if (typeof module !== 'undefined') module.exports = { selfCheck };
+})();
+</script>
+</body>
+</html>
