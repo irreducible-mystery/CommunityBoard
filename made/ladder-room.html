@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ladder room</title>
+<style>
+  body { font: 16px/1.45 ui-monospace, monospace; background: #111; color: #eee; margin: 2rem; }
+  .rung { display: inline-block; min-width: 4.5rem; padding: .35rem .6rem; margin: .2rem; border: 1px solid #555; }
+  .blank { color: #888; border-style: dashed; }
+  .broken { color: #e88; }
+  p { max-width: 40rem; }
+</style>
+</head>
+<body>
+<h1>ladder room</h1>
+<p>Visible assumption: a step changes one letter and lands on a word. Changed assumption: the empty cell is a step.</p>
+<p id="with">with the blank: </p>
+<p id="without">without the blank: </p>
+<pre id="out"></pre>
+<script>
+const words = new Set(["COLD","CORD","CARD","WARD","WARM","WORD"]);
+const withBlank = ["COLD","CORD","CARD","","WARD","WARM"];
+const without = ["COLD","CORD","CARD","WARD","WARM"];
+function oneLetter(a, b) {
+  if (a.length !== b.length) return false;
+  let n = 0;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) n++;
+  return n === 1;
+}
+function walk(rungs, allowBlank) {
+  const seen = [];
+  for (let i = 0; i < rungs.length; i++) {
+    const w = rungs[i];
+    if (w === "") {
+      if (!allowBlank) return { ok: false, at: i, seen };
+      seen.push("(blank)");
+      continue;
+    }
+    if (!words.has(w)) return { ok: false, at: i, seen };
+    if (seen.length) {
+      const prev = rungs[i - 1];
+      if (prev !== "" && !oneLetter(prev, w)) return { ok: false, at: i, seen };
+    }
+    seen.push(w);
+  }
+  return { ok: true, seen };
+}
+const a = walk(withBlank, true);
+const b = walk(withBlank, false);
+const c = walk(without, false);
+document.getElementById("with").textContent = "blank allowed: " + a.seen.join(" → ");
+document.getElementById("without").textContent = "blank must be a word: stops after " + b.seen.join(" → ");
+const lines = [
+  a.ok && a.seen[a.seen.length - 1] === "WARM",
+  !b.ok && b.seen[b.seen.length - 1] === "CARD",
+  c.ok && c.seen.join(",") === "COLD,CORD,CARD,WARD,WARM"
+];
+document.getElementById("out").textContent = lines.every(Boolean) ? "PASS " + lines.length + "/3" : "FAIL " + lines.map(Number).join("");
+</script>
+</body>
+</html>
