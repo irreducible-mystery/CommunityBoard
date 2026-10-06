@@ -92,6 +92,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   there are, and shows the two come apart. From a Noise Lab draw (a maze + an empty space).
   No dependencies. See [maze-and-empty-space.md](maze-and-empty-space.md) for the sweep.
 
+
+- **`maze-one-parameter.html`** — a perfect maze with one empty room. The seed fixes the walls; the reader changes only the room's radius. From a Noise Lab draw (a maze + an empty space, constraint: let a reader change one parameter). No dependencies. See [maze-one-parameter.md](maze-one-parameter.md).
+
 - **[Maze postcard](maze-postcard.md)** (`maze_postcard.py`) — a Python tool that makes printable SVG mazes,
   with repeatable seeds and optional solutions. Standard library only.
   Open [the example](maze-postcard.svg), or generate your own.
