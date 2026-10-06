@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pendulum</title>
+<style>
+  body { font: 16px/1.45 ui-serif, Georgia, serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; color: #1c1917; background: #faf7f2; }
+  h1 { font-weight: 500; }
+  canvas { background: #fff; border: 1px solid #e7e5e4; display: block; margin: 1rem 0; }
+  textarea { width: 100%; min-height: 8rem; font: 14px/1.4 ui-monospace, monospace; }
+  .out { font-variant-numeric: tabular-nums; }
+  .ok { color: #3f6212; }
+  .bad { color: #9f1239; }
+</style>
+</head>
+<body>
+<h1>Pendulum</h1>
+<p>A shared bob. Angle and velocity start at 0. Each impulse is an integer from -3 to 3. Velocity gains the impulse, angle gains the velocity, then velocity keeps four fifths. Eight accepted impulses close the round. Score is 8 minus the angle rounded, if the angle is still inside 8 of zero. Otherwise 0. A bad line stays and does not move the bob.</p>
+<p>Open round <code>PD-20261006-first</code>. Paste a block. The page does not write anywhere.</p>
+<canvas id="c" width="480" height="200"></canvas>
+<textarea id="box" spellcheck="false">pendulum PD-20261006-first
+</textarea>
+<p class="out" id="out"></p>
+<p class="out" id="check"></p>
+<script>
+function step(state, impulse) {
+  state.v += impulse;
+  state.a += state.v;
+  state.v *= 0.8;
+}
+function replay(text) {
+  const lines = text.split(/\n/).map(s => s.trim()).filter(Boolean);
+  const state = { a: 0, v: 0 };
+  const seen = new Set();
+  const log = [];
+  let accepted = 0;
+  for (const line of lines) {
+    if (line.startsWith("pendulum ")) { log.push(line); continue; }
+    const m = line.match(/^([A-Za-z0-9._-]+):\s*(-?\d+)\s*$/);
+    if (!m) { log.push("REJ  " + line + "   not a move"); continue; }
+    const name = m[1], n = Number(m[2]);
+    if (seen.has(name) || n < -3 || n > 3 || !Number.isInteger(n)) {
+      log.push("REJ  " + line);
+      continue;
+    }
+    seen.add(name);
+    if (accepted >= 8) { log.push("REJ  " + line + "   round closed"); continue; }
+    step(state, n);
+    accepted += 1;
+    log.push("ok   " + line + "   angle " + state.a.toFixed(3) + "  v " + state.v.toFixed(3));
+  }
+  const score = Math.abs(state.a) < 8 ? 8 - Math.round(Math.abs(state.a)) : 0;
+  return { state, accepted, score, log };
+}
+function draw(a) {
+  const c = document.getElementById("c");
+  const g = c.getContext("2d");
+  g.clearRect(0, 0, c.width, c.height);
+  const pivot = [240, 28];
+  const L = 140;
+  const x = pivot[0] + Math.sin(a) * L;
+  const y = pivot[1] + Math.cos(a) * L;
+  g.strokeStyle = "#44403c";
+  g.beginPath();
+  g.moveTo(pivot[0] - 40, pivot[1]);
+  g.lineTo(pivot[0] + 40, pivot[1]);
+  g.moveTo(pivot[0], pivot[1]);
+  g.lineTo(x, y);
+  g.stroke();
+  g.fillStyle = "#1c1917";
+  g.beginPath();
+  g.arc(x, y, 12, 0, Math.PI * 2);
+  g.fill();
+}
+function show() {
+  const r = replay(document.getElementById("box").value);
+  document.getElementById("out").textContent =
+    r.log.join("\n") + "\naccepted " + r.accepted + "  angle " + r.state.a.toFixed(3) + "  score " + r.score;
+  draw(r.state.a);
+}
+document.getElementById("box").addEventListener("input", show);
+const check = replay("pendulum check\n1: 1\n2: -1\n3: 1\n4: -1\n5: 1\n6: -1\n7: 1\n8: -1");
+const pass = Math.abs(check.state.a - 1.8496) < 1e-3 && check.score === 6 && check.accepted === 8;
+document.getElementById("check").textContent =
+  (pass ? "check ok" : "check failed") + "  angle " + check.state.a.toFixed(4) + "  score " + check.score;
+document.getElementById("check").className = pass ? "ok" : "bad";
+show();
+</script>
+</body>
+</html>
