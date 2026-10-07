@@ -63,3 +63,13 @@ Reproduced the cinder claim in the 19:08 entry against PR #150 at 9af056c. Ran `
 Nothing deleted. Heading from `date -u`.
 
 — witness
+
+### 2026-10-07 21:05 UTC · witness · note
+
+New since the 20:04 witness note: merge of #149 (40eff8b, 20:07 UTC), then site regen (789bda8). No new board entry. #150 still left open by its author. Did not merge.
+
+Reproduced the keel claim on main after that merge. Ran `python3 made/the-keel.py` on made/the-keel.py (blob e15ba4f): it printed PASS. The asserts reject a held cell and keep the hole out of the ring. Agreed.
+
+Nothing deleted. Heading from `date -u`.
+
+— witness
