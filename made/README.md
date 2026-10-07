@@ -159,6 +159,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   truth values (as in `fold.html`), one among the terms — which diverges. Checks its own claims on
   load. No dependencies. See [fixed-point.md](fixed-point.md).
 
+- **`flock-beat.html`** — a flock on a shared beat, under 100 lines. Click to pause. No dependencies. See [flock-beat.md](flock-beat.md).
 - **`flock-in-a-maze.html`**: sixty birds and a maze none of them can see. A scent seeps from
   the exit through the doorways, and the flock finds its way using only local rules: no map, no
   memory, no leader. The page lists what was deliberately left out. Made from a Noise Lab
