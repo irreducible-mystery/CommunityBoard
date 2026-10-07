@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Anti</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: #0e0d0b; color: #ece6dc; }
+  body { font: 15px/1.45 "Segoe UI", sans-serif; }
+  h1 { font: italic 1.7rem/1.15 Georgia, "Times New Roman", serif; font-weight: 500; margin: 0; }
+  button, input { font: inherit; color: inherit; }
+  button { background: #2a2622; border: 0; border-radius: 8px; height: 40px; padding: 0 12px; cursor: pointer; }
+  button[aria-pressed="true"] { background: #f4e7c5; color: #1a120c; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 16px 14px 32px; }
+  .lede { margin: 8px 0 0; max-width: 68ch; color: #c9c0b4; }
+  #checks { margin: 12px 0 0; color: #a89b8c; font-size: 0.92rem; }
+  #checks.bad { color: #ff8d82; }
+  .nums { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 12px 0 0; font-variant-numeric: tabular-nums; }
+  .nums span { color: #a89b8c; }
+  .nums b { color: #ece6dc; font-weight: 600; }
+  #line { margin: 6px 0 10px; min-height: 1.45em; }
+  canvas { width: 100%; height: auto; background: #141210; image-rendering: pixelated; touch-action: none; display: block; border-radius: 4px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+  .group { display: flex; flex-wrap: wrap; gap: 4px; background: #1c1916; padding: 4px; border-radius: 10px; }
+  label.dial { display: flex; flex-direction: column; gap: 2px; min-width: 140px; font-size: 0.88rem; color: #c9c0b4; }
+  label.dial span { display: flex; justify-content: space-between; }
+  input[type="range"] { width: 100%; accent-color: #f4e7c5; }
+  #blurb { margin: 8px 0 0; color: #a89b8c; }
+  .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <h1>The Anti</h1>
+    <span style="margin-left:auto;display:flex;gap:6px">
+      <button type="button" id="pause">Pause</button>
+      <button type="button" id="speed">1×</button>
+      <button type="button" id="reseed">Reseed</button>
+    </span>
+  </div>
+  <p class="lede">One field. Life against a second Life, or against Seeds. Langton’s right-on-white ant against the left-on-white ant. A flock against the other flock’s heading. Fireflies with the sign of the coupling flipped. The engines are the ones already on this board; nothing is loaded from them, and the originals stay. The only new rule is what a cell does when both sides want it.</p>
+  <p id="checks">Checking.</p>
+  <div class="nums" id="nums"></div>
+  <p id="line">The field is settling.</p>
+  <canvas id="field" width="120" height="72" aria-label="Shared field. Drag to drop cells of the selected side."></canvas>
+  <div class="row" id="presets"></div>
+  <p id="blurb"></p>
+  <div class="row">
+    <div class="group" id="laws" role="group" aria-label="Law when both sides want the cell"></div>
+    <div class="group" id="rules" role="group" aria-label="Rule used by the anti"></div>
+  </div>
+  <div class="row">
+    <div class="group" id="engines" role="group" aria-label="Engines"></div>
+    <div class="group" id="drops" role="group" aria-label="Brush"></div>
+  </div>
+  <div class="row">
+    <label class="dial">Oppose <span><b id="opposeOut">1</b></span><input id="oppose" type="range" min="0" max="1" step="0.05" value="1"></label>
+    <label class="dial">Enmity <span><b id="enmityOut">0</b></span><input id="enmity" type="range" min="0" max="6" step="0.1" value="0"></label>
+    <label class="dial">Noise <span><b id="noiseOut">0.08</b></span><input id="noise" type="range" min="0" max="1" step="0.02" value="0.08"></label>
+  </div>
+</div>
+<script id="engine">
+"use strict";
+const TAU = 2 * Math.PI;
+const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0];
+const GW = 120, GH = 72;
+
+function mulberry(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function lifeOn(on, n) { return (on && (n === 2 || n === 3)) || (!on && n === 3); }
+function seedsOn(on, n) { return !on && n === 2; }
+function turnOf(rule, black) { return rule === "RL" ? (black ? -1 : 1) : (black ? 1 : -1); }
+function resolve(tw, aw, law) {
+  if (tw && aw) {
+    if (law === "predate") return { side: 2, scar: false };
+    if (law === "resist") return { side: 1, scar: false };
+    return { side: 0, scar: true };
+  }
+  if (tw) return { side: 1, scar: false };
+  if (aw) return { side: 2, scar: false };
+  return { side: 0, scar: false };
+}
+function orderPhase(th) {
+  let c = 0, s = 0;
+  for (let i = 0; i < th.length; i++) { c += Math.cos(th[i]); s += Math.sin(th[i]); }
+  return { r: Math.hypot(c, s) / th.length, psi: Math.atan2(s, c) };
+}
+function wrapAng(d) { while (d > Math.PI) d -= TAU; while (d < -Math.PI) d += TAU; return d; }
+
+function stepCells(side, scar, W, H, antiRule, law, extra) {
+  const next = new Uint8Array(W * H);
+  const nextScar = new Uint8Array(W * H);
+  const useCells = !extra || extra.cells !== false;
+  let made = 0;
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      const i = y * W + x;
+      let nt = 0, na = 0;
+      if (useCells) {
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            if (!dx && !dy) continue;
+            const v = side[((y + dy + H) % H) * W + ((x + dx + W) % W)];
+            if (v === 1) nt++;
+            else if (v === 2) na++;
+          }
+        }
+      }
+      let tw = useCells && lifeOn(side[i] === 1, nt);
+      let aw = useCells && (antiRule === "seeds" ? seedsOn(side[i] === 2, na) : lifeOn(side[i] === 2, na));
+      if (extra) {
+        if (extra.tw && extra.tw[i]) tw = true;
+        if (extra.aw && extra.aw[i]) aw = true;
+        if (extra.clearT && extra.clearT[i]) tw = false;
+        if (extra.clearA && extra.clearA[i]) aw = false;
+      }
+      const r = resolve(tw, aw, law);
+      if (r.scar) { nextScar[i] = 40; made++; }
+      else if (r.side) next[i] = r.side;
+      else if (scar[i]) nextScar[i] = scar[i] - 1;
+    }
+  }
+  return { side: next, scar: nextScar, made };
+}
+
+function stepFlock(st) {
+  const { x, y, vx, vy, kind, n, W, H, sense, speed, noise, rnd } = st;
+  const oppose = st.oppose || 0;
+  const sense2 = sense * sense;
+  const nx = st.nx, ny = st.ny;
+  for (let i = 0; i < n; i++) {
+    let sx = 0, sy = 0, ox = 0, oy = 0, ns = 0, no = 0, px = 0, py = 0;
+    for (let j = 0; j < n; j++) {
+      if (i === j) continue;
+      let dx = x[j] - x[i], dy = y[j] - y[i];
+      if (dx > W / 2) dx -= W; else if (dx < -W / 2) dx += W;
+      if (dy > H / 2) dy -= H; else if (dy < -H / 2) dy += H;
+      const d2 = dx * dx + dy * dy;
+      if (d2 > sense2) continue;
+      if (kind[j] === kind[i]) {
+        sx += vx[j]; sy += vy[j]; ns++;
+        if (d2 < 36) { px -= dx; py -= dy; }
+      } else { ox += vx[j]; oy += vy[j]; no++; }
+    }
+    let hx = vx[i], hy = vy[i];
+    if (ns) { hx += sx / ns; hy += sy / ns; }
+    if (no && oppose) { hx -= oppose * ox / no; hy -= oppose * oy / no; }
+    hx += px * 0.15; hy += py * 0.15;
+    const ang = Math.atan2(hy, hx) + (rnd() - 0.5) * noise;
+    nx[i] = Math.cos(ang) * speed;
+    ny[i] = Math.sin(ang) * speed;
+  }
+  for (let i = 0; i < n; i++) {
+    vx[i] = nx[i]; vy[i] = ny[i];
+    x[i] = (x[i] + vx[i] + W) % W;
+    y[i] = (y[i] + vy[i] + H) % H;
+  }
+}
+
+function stepPair(thA, omA, thB, omB, K, E, dt) {
+  const oA = orderPhase(thA), oB = orderPhase(thB);
+  const KA = K * oA.r, KB = -Math.abs(K) * oB.r;
+  for (let i = 0; i < thA.length; i++) {
+    thA[i] += dt * (omA[i] + KA * Math.sin(oA.psi - thA[i]) + E * Math.sin(oB.psi + Math.PI - thA[i]));
+    thB[i] += dt * (omB[i] + KB * Math.sin(oB.psi - thB[i]) + E * Math.sin(oA.psi + Math.PI - thB[i]));
+  }
+  return { a: oA, b: oB };
+}
+
+function langton(rule, steps) {
+  const g = new Map();
+  let x = 0, y = 0, d = 0;
+  for (let i = 0; i < steps; i++) {
+    const k = x + "," + y, black = g.get(k) === 1;
+    d = (d + turnOf(rule, black) + 4) & 3;
+    g.set(k, black ? 0 : 1);
+    x += DX[d]; y += DY[d];
+  }
+  return [x, y, d];
+}
+
+function war(antiRule, law, steps, seed) {
+  const W = 80, H = 48, rnd = mulberry(seed);
+  let side = new Uint8Array(W * H), scar = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (rnd() < 0.22) side[y * W + x] = x < W / 2 ? 1 : 2;
+  }
+  let scarsMade = 0;
+  for (let s = 0; s < steps; s++) {
+    const r = stepCells(side, scar, W, H, antiRule, law);
+    side = r.side; scar = r.scar; scarsMade += r.made;
+  }
+  let thing = 0, anti = 0, front = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const i = y * W + x;
+    if (side[i] === 1) thing++;
+    else if (side[i] === 2) anti++;
+    if (side[i] === 1 && side[y * W + ((x + 1) % W)] === 2) front++;
+  }
+  return { thing, anti, front, scarsMade };
+}
+
+function flockTrial(oppose, steps) {
+  const n = 80, W = 200, H = 120, rnd = mulberry(3);
+  const st = {
+    x: new Float64Array(n), y: new Float64Array(n), vx: new Float64Array(n), vy: new Float64Array(n),
+    kind: new Uint8Array(n), nx: new Float64Array(n), ny: new Float64Array(n),
+    n, W, H, sense: 80, speed: 2.2, noise: 0.05, oppose, rnd
+  };
+  for (let i = 0; i < n; i++) {
+    st.kind[i] = i < 40 ? 1 : 2;
+    const ang = rnd() * TAU;
+    st.vx[i] = Math.cos(ang); st.vy[i] = Math.sin(ang);
+    st.x[i] = (st.kind[i] === 1 ? 0.25 : 0.75) * W + (rnd() - 0.5) * 30;
+    st.y[i] = H * 0.5 + (rnd() - 0.5) * 40;
+  }
+  for (let s = 0; s < steps; s++) stepFlock(st);
+  function pol(k) {
+    let c = 0, s = 0, m = 0;
+    for (let i = 0; i < n; i++) if (st.kind[i] === k) {
+      c += st.vx[i] / 2.2; s += st.vy[i] / 2.2; m++;
+    }
+    return { r: Math.hypot(c, s) / m, psi: Math.atan2(s, c) };
+  }
+  const a = pol(1), b = pol(2);
+  return { rA: a.r, rB: b.r, dot: Math.cos(a.psi - b.psi) };
+}
+
+function flyTrial(E) {
+  const N = 48, dt = 0.05, T = 12, rnd = mulberry(2);
+  const thA = new Float64Array(N), omA = new Float64Array(N);
+  const thB = new Float64Array(N), omB = new Float64Array(N);
+  for (let i = 0; i < N; i++) {
+    thA[i] = rnd() * TAU; omA[i] = 1;
+    thB[i] = rnd() * TAU; omB[i] = 1;
+  }
+  const steps = Math.round(T / dt);
+  for (let s = 0; s < steps; s++) stepPair(thA, omA, thB, omB, 3, E, dt);
+  const a = orderPhase(thA), b = orderPhase(thB);
+  return { rA: a.r, rB: b.r, gap: Math.abs(wrapAng(a.psi - b.psi)) };
+}
+
+function selfCheck() {
+  const notes = [];
+  const ok = (m) => notes.push("ok " + m);
+  const fail = (m) => notes.push("FAIL " + m);
+
+  const W = 12, H = 12;
+  let side = new Uint8Array(W * H), scar = new Uint8Array(W * H);
+  side[6 * W + 5] = 1; side[6 * W + 6] = 1; side[6 * W + 7] = 1;
+  let gen = stepCells(side, scar, W, H, "life", "annul");
+  const at = (g, x, y) => g.side[y * W + x] === 1;
+  const vertical = at(gen, 6, 5) && at(gen, 6, 6) && at(gen, 6, 7) && !at(gen, 5, 6) && !at(gen, 7, 6);
+  gen = stepCells(gen.side, gen.scar, W, H, "life", "annul");
+  const back = at(gen, 5, 6) && at(gen, 6, 6) && at(gen, 7, 6) && !at(gen, 6, 5) && !at(gen, 6, 7);
+  if (!vertical || !back) fail("blinker did not oscillate");
+  else ok("blinker period 2");
+
+  const S = 7;
+  let sd = new Uint8Array(S * S), sc = new Uint8Array(S * S);
+  sd[3 * S + 3] = 2;
+  let g1 = stepCells(sd, sc, S, S, "seeds", "annul");
+  sd = new Uint8Array(S * S); sd[3 * S + 3] = 2; sd[3 * S + 4] = 2;
+  let g2 = stepCells(sd, sc, S, S, "seeds", "annul");
+  sd = new Uint8Array(S * S); sd[3 * S + 2] = 2; sd[3 * S + 4] = 2;
+  let g3 = stepCells(sd, sc, S, S, "seeds", "annul");
+  const loneDies = g1.side[3 * S + 3] === 0;
+  const pairDies = g2.side[3 * S + 3] === 0 && g2.side[3 * S + 4] === 0;
+  const births = g3.side[3 * S + 3] === 2 && g3.side[3 * S + 2] === 0 && g3.side[3 * S + 4] === 0;
+  if (!loneDies || !pairDies || !births) fail("seeds did not keep its rule");
+  else ok("seeds: a lone cell dies, a pair dies, exactly two neighbors birth");
+
+  const a = resolve(true, true, "annul"), p = resolve(true, true, "predate"), r = resolve(true, true, "resist");
+  if (!(a.scar && a.side === 0 && p.side === 2 && !p.scar && r.side === 1 && !r.scar)) fail("the three laws disagreed with themselves");
+  else ok("annul scars, predate gives the cell to the anti, resist gives it to the thing");
+
+  const ditch = war("life", "annul", 60, 5);
+  if (ditch.thing !== 267 || ditch.anti !== 125 || ditch.front !== 0 || ditch.scarsMade !== 16) {
+    fail("life against life did not open a gap (" + ditch.thing + " / " + ditch.anti + " front " + ditch.front + " scars " + ditch.scarsMade + ")");
+  } else ok("life against life, annul, 60 steps: thing 267, anti 125, front 0, 16 scars");
+
+  const flood = war("seeds", "annul", 30, 5);
+  if (flood.thing !== 146 || flood.anti !== 588) fail("seeds did not flood (" + flood.thing + " / " + flood.anti + ")");
+  else ok("life against seeds, 30 steps: thing 146, anti 588");
+
+  const apart = flockTrial(0, 200), face = flockTrial(1, 200);
+  if (!(apart.rA > 0.95 && apart.rB > 0.95 && face.rA > 0.95 && face.rB > 0.95 && apart.dot > -0.5 && face.dot < -0.9)) {
+    fail("flocks did not oppose (" + apart.dot.toFixed(3) + " to " + face.dot.toFixed(3) + ")");
+  } else ok("flock dot " + apart.dot.toFixed(3) + " with no cross term, " + face.dot.toFixed(3) + " when each steers against the other");
+
+  const free = flyTrial(0), locked = flyTrial(4);
+  if (!(free.rA > 0.99 && free.rB < 0.05 && locked.rA > 0.99 && locked.rB > 0.99 && Math.abs(locked.gap - Math.PI) < 0.05)) {
+    fail("fireflies did not split (" + free.rA.toFixed(3) + "/" + free.rB.toFixed(3) + ", enmity " + locked.rB.toFixed(3) + " gap " + locked.gap.toFixed(3) + ")");
+  } else ok("coupling +3 locks, −3 does not; enmity 4 locks the anti a half-turn away");
+
+  const rl = langton("RL", 12), lr = langton("LR", 12);
+  if (rl[0] !== -2 || rl[1] !== 0 || rl[2] !== 0 || lr[0] !== 2 || lr[1] !== 0 || lr[2] !== 0) fail("ants left the published first twelve steps");
+  else ok("RL after 12 steps is (−2, 0), LR is (2, 0)");
+
+  return { ok: notes.every((n) => n.startsWith("ok")), notes };
+}
+
+const PRESETS = [
+  { id: "front", name: "Front", law: "annul", anti: "life", cells: true, ants: true, flocks: true, flies: true, oppose: 1, enmity: 0, noise: 0.08, soup: true,
+    blurb: "Both sides run Life. Where they both want a cell, both lose it. The ants and the flocks keep walking into that." },
+  { id: "ditch", name: "Ditch", law: "annul", anti: "life", cells: true, ants: false, flocks: false, flies: false, oppose: 0, enmity: 0, noise: 0, soup: true,
+    blurb: "Cells only. Annihilation is the whole meeting. The load check says this soup opens a gap: both remain, the front goes to zero." },
+  { id: "predate", name: "Predate", law: "predate", anti: "life", cells: true, ants: true, flocks: true, flies: true, oppose: 1, enmity: 0, noise: 0.08, soup: true,
+    blurb: "Same engines. A contested cell goes to the anti." },
+  { id: "resist", name: "Resist", law: "resist", anti: "life", cells: true, ants: true, flocks: true, flies: true, oppose: 1, enmity: 0, noise: 0.08, soup: true,
+    blurb: "A contested cell stays with the thing." },
+  { id: "flood", name: "Flood", law: "annul", anti: "seeds", cells: true, ants: false, flocks: false, flies: false, oppose: 0, enmity: 0, noise: 0, soup: true,
+    blurb: "The anti is Seeds: born on two neighbors, nothing stays. It does not hold still, and on the checked soup it covers more than Life." },
+  { id: "half", name: "Half-turn", law: "annul", anti: "life", cells: false, ants: false, flocks: true, flies: true, oppose: 1, enmity: 4, noise: 0.02, soup: false,
+    blurb: "No cells. Headings oppose. Enmity gives the negatively coupled fireflies a phase to lock against." }
+];
+
+const api = { selfCheck, stepCells, resolve, stepFlock, stepPair, langton, PRESETS };
+if (typeof globalThis !== "undefined") globalThis.ANTI = api;
+
+function boot() {
+  const report = selfCheck();
+  const checks = document.getElementById("checks");
+  checks.textContent = report.ok
+    ? report.notes.length + " checks ok."
+    : report.notes.filter((n) => n.startsWith("FAIL")).join(" ");
+  if (!report.ok) checks.className = "bad";
+
+  const canvas = document.getElementById("field");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const img = ctx.createImageData(GW, GH);
+  const pix = img.data;
+
+  const state = {
+    side: new Uint8Array(GW * GH),
+    scar: new Uint8Array(GW * GH),
+    law: "annul",
+    anti: "life",
+    cells: true,
+    ants: true,
+    flocks: true,
+    flies: true,
+    oppose: 1,
+    enmity: 0,
+    noise: 0.08,
+    soup: true,
+    drop: 1,
+    paused: false,
+    speed: 1,
+    preset: "front",
+    rng: mulberry(11),
+    tick: 0
+  };
+
+  const flock = {
+    n: 72,
+    x: new Float64Array(72), y: new Float64Array(72), vx: new Float64Array(72), vy: new Float64Array(72),
+    kind: new Uint8Array(72), nx: new Float64Array(72), ny: new Float64Array(72),
+    W: GW, H: GH, sense: 20, speed: 0.42
+  };
+  for (let i = 0; i < 72; i++) flock.kind[i] = i < 36 ? 1 : 2;
+
+  const FN = 36;
+  const thA = new Float64Array(FN), omA = new Float64Array(FN);
+  const thB = new Float64Array(FN), omB = new Float64Array(FN);
+  const ants = [
+    { x: 40, y: 36, d: 1, rule: "RL", kind: 1 },
+    { x: 80, y: 36, d: 3, rule: "LR", kind: 2 }
+  ];
+  let flyA = { r: 0, psi: 0 }, flyB = { r: 0, psi: 0 };
+  let line = "The field is settling.";
+
+  function reseed() {
+    state.rng = mulberry(1000 + (state.tick % 997) + Math.floor(state.rng() * 10000));
+    state.side.fill(0); state.scar.fill(0);
+    if (state.soup) {
+      for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+        if (state.rng() < 0.28) state.side[y * GW + x] = x < GW / 2 ? 1 : 2;
+      }
+    }
+    for (let i = 0; i < flock.n; i++) {
+      const ang = state.rng() * TAU;
+      flock.vx[i] = Math.cos(ang) * flock.speed;
+      flock.vy[i] = Math.sin(ang) * flock.speed;
+      flock.x[i] = (flock.kind[i] === 1 ? 0.28 : 0.72) * GW + (state.rng() - 0.5) * 16;
+      flock.y[i] = GH * 0.5 + (state.rng() - 0.5) * 24;
+    }
+    for (let i = 0; i < FN; i++) {
+      thA[i] = state.rng() * TAU; omA[i] = 1;
+      thB[i] = state.rng() * TAU; omB[i] = 1;
+    }
+    ants[0].x = 42; ants[0].y = 36; ants[0].d = 1;
+    ants[1].x = 78; ants[1].y = 36; ants[1].d = 3;
+    flyA = orderPhase(thA); flyB = orderPhase(thB);
+  }
+
+  function counts() {
+    let thing = 0, anti = 0, scar = 0, front = 0;
+    for (let y = 0; y < GH; y++) for (let x = 0; x < GW; x++) {
+      const i = y * GW + x, v = state.side[i];
+      if (v === 1) thing++;
+      else if (v === 2) anti++;
+      if (state.scar[i]) scar++;
+      if (v === 1 && state.side[y * GW + ((x + 1) % GW)] === 2) front++;
+    }
+    let c1 = 0, s1 = 0, n1 = 0, c2 = 0, s2 = 0, n2 = 0;
+    for (let i = 0; i < flock.n; i++) {
+      const h = Math.hypot(flock.vx[i], flock.vy[i]) || 1;
+      if (flock.kind[i] === 1) { c1 += flock.vx[i] / h; s1 += flock.vy[i] / h; n1++; }
+      else { c2 += flock.vx[i] / h; s2 += flock.vy[i] / h; n2++; }
+    }
+    const o1 = { r: Math.hypot(c1, s1) / n1, psi: Math.atan2(s1, c1) };
+    const o2 = { r: Math.hypot(c2, s2) / n2, psi: Math.atan2(s2, c2) };
+    return { thing, anti, scar, front, ordA: o1.r, ordB: o2.r, dot: Math.cos(o1.psi - o2.psi), rA: flyA.r, rB: flyB.r, gap: Math.abs(wrapAng(flyA.psi - flyB.psi)) };
+  }
+
+  function narrate(m) {
+    if (state.flies && m.rA > 0.9 && m.rB > 0.9 && m.gap > 2.7) return "Enmity gave the anti a phase to oppose. The two clocks locked a half-turn apart.";
+    if (state.flies && m.rA > 0.9 && m.rB < 0.25) return "The thing locked phase. The anti, with the coupling flipped, did not.";
+    if (state.flocks && m.dot < -0.75 && m.ordA > 0.75 && m.ordB > 0.75) return "Both flocks are ordered. Their headings face opposite ways.";
+    if (state.anti === "seeds" && state.cells && m.anti > m.thing * 1.5 && m.thing > 8) return "Seeds keeps nothing, and it still covers more ground than Life.";
+    if (state.law === "annul" && state.cells && m.front === 0 && m.thing > 40 && m.anti > 40 && m.scar === 0) return "Annihilation opened a gap. Both sides remain, and they are not touching.";
+    if (m.scar > 24) return "The blue is scar. Neither rule has a name for it. It is only what happens when both wanted the cell.";
+    if (state.law === "predate" && m.anti > m.thing * 1.35 && m.anti > 30) return "Ties go to the anti. It is taking the contested cells.";
+    if (state.law === "resist" && m.front > 0) return "Ties go to the thing. The front is still a place.";
+    return "The field is the argument. The numbers are counted, not scripted.";
+  }
+
+  function stepAnt(ant, clearT, clearA, tw, aw) {
+    const i = ant.y * GW + ant.x;
+    const black = state.side[i] === ant.kind;
+    ant.d = (ant.d + turnOf(ant.rule, black) + 4) & 3;
+    if (black) {
+      if (ant.kind === 1) clearT[i] = 1; else clearA[i] = 1;
+    } else if (ant.kind === 1) tw[i] = 1; else aw[i] = 1;
+    ant.x = (ant.x + DX[ant.d] + GW) % GW;
+    ant.y = (ant.y + DY[ant.d] + GH) % GH;
+  }
+
+  function stepWorld() {
+    state.tick++;
+    if (state.flocks) {
+      flock.oppose = state.oppose;
+      flock.noise = state.noise;
+      flock.rnd = state.rng;
+      stepFlock(flock);
+    }
+    if (state.flies) {
+      stepPair(thA, omA, thB, omB, 3, state.enmity, 0.05);
+      flyA = orderPhase(thA); flyB = orderPhase(thB);
+    }
+    if ((state.tick % 6) !== 0) return;
+    const tw = new Uint8Array(GW * GH), aw = new Uint8Array(GW * GH);
+    const clearT = new Uint8Array(GW * GH), clearA = new Uint8Array(GW * GH);
+    if (state.ants) { stepAnt(ants[0], clearT, clearA, tw, aw); stepAnt(ants[1], clearT, clearA, tw, aw); }
+    if (state.flocks) {
+      for (let i = 0; i < flock.n; i++) {
+        const x = flock.x[i] | 0, y = flock.y[i] | 0;
+        if (x < 0 || y < 0 || x >= GW || y >= GH) continue;
+        const k = y * GW + x;
+        if (flock.kind[i] === 1) tw[k] = 1; else aw[k] = 1;
+      }
+    }
+    const extra = { cells: state.cells, tw, aw, clearT, clearA };
+    const r = stepCells(state.side, state.scar, GW, GH, state.anti, state.law, extra);
+    state.side = r.side; state.scar = r.scar;
+    if ((state.tick % 30) === 0) line = narrate(counts());
+  }
+
+  function draw() {
+    const s = state.side, c = state.scar, d = pix;
+    for (let i = 0; i < s.length; i++) {
+      const o = i * 4;
+      const v = s[i];
+      if (v === 1) { d[o] = 244; d[o + 1] = 231; d[o + 2] = 197; }
+      else if (v === 2) { d[o] = 255; d[o + 1] = 77; d[o + 2] = 58; }
+      else if (c[i]) {
+        const t = c[i] / 40;
+        d[o] = 20 + (143 - 20) * t;
+        d[o + 1] = 18 + (212 - 18) * t;
+        d[o + 2] = 16 + (255 - 16) * t;
+      } else { d[o] = 20; d[o + 1] = 18; d[o + 2] = 16; }
+      d[o + 3] = 255;
+    }
+    if (state.ants) {
+      for (let a = 0; a < 2; a++) {
+        const i = (ants[a].y * GW + ants[a].x) * 4;
+        d[i] = 255; d[i + 1] = 255; d[i + 2] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    if (state.flocks) {
+      ctx.fillStyle = "#f4e7c5";
+      for (let i = 0; i < flock.n; i++) {
+        if (flock.kind[i] !== 1) continue;
+        ctx.fillRect(flock.x[i], flock.y[i], 1.4, 1.4);
+      }
+      ctx.fillStyle = "#ffd0c8";
+      for (let i = 0; i < flock.n; i++) {
+        if (flock.kind[i] !== 2) continue;
+        ctx.fillRect(flock.x[i], flock.y[i], 1.4, 1.4);
+      }
+    }
+    if (state.flies) {
+      const cx = GW - 16, cy = 16, rad = 11;
+      ctx.strokeStyle = "#3a342c";
+      ctx.beginPath(); ctx.arc(cx, cy, rad, 0, TAU); ctx.stroke();
+      for (let i = 0; i < FN; i++) {
+        ctx.fillStyle = "#f4e7c5";
+        ctx.fillRect(cx + Math.cos(thA[i]) * rad, cy + Math.sin(thA[i]) * rad, 1.3, 1.3);
+        ctx.fillStyle = "#ff4d3a";
+        ctx.fillRect(cx + Math.cos(thB[i]) * rad, cy + Math.sin(thB[i]) * rad, 1.3, 1.3);
+      }
+    }
+  }
+
+  function paint(ev) {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((ev.clientX - rect.left) / rect.width) * GW;
+    const y = ((ev.clientY - rect.top) / rect.height) * GH;
+    const cx = x | 0, cy = y | 0, which = state.drop;
+    for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+      if (dx * dx + dy * dy > 6) continue;
+      const xx = cx + dx, yy = cy + dy;
+      if (xx < 0 || yy < 0 || xx >= GW || yy >= GH) continue;
+      const i = yy * GW + xx;
+      state.side[i] = which; state.scar[i] = 0;
+    }
+  }
+
+  function fmt(n) { return n.toFixed(2); }
+  function hud() {
+    const m = counts();
+    const order = state.flocks ? fmt(m.dot) : "—";
+    const sync = state.flies ? fmt(m.rA) + " / " + fmt(m.rB) : "—";
+    document.getElementById("nums").innerHTML =
+      "<span>Thing <b>" + m.thing + "</b></span>" +
+      "<span>Anti <b>" + m.anti + "</b></span>" +
+      "<span>Scar <b>" + m.scar + "</b></span>" +
+      "<span>Front <b>" + m.front + "</b></span>" +
+      "<span>Headings <b>" + order + "</b></span>" +
+      "<span>Sync <b>" + sync + "</b></span>";
+    document.getElementById("line").textContent = line;
+  }
+
+  function press(container, value, attr) {
+    for (const b of container.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b.dataset[attr] === value));
+  }
+  function renderControls() {
+    press(document.getElementById("presets"), state.preset, "id");
+    press(document.getElementById("laws"), state.law, "law");
+    press(document.getElementById("rules"), state.anti, "rule");
+    for (const b of document.getElementById("engines").querySelectorAll("button")) {
+      b.setAttribute("aria-pressed", String(!!state[b.dataset.engine]));
+    }
+    press(document.getElementById("drops"), String(state.drop), "drop");
+    document.getElementById("oppose").value = String(state.oppose);
+    document.getElementById("enmity").value = String(state.enmity);
+    document.getElementById("noise").value = String(state.noise);
+    document.getElementById("opposeOut").textContent = state.oppose.toFixed(2);
+    document.getElementById("enmityOut").textContent = state.enmity.toFixed(1);
+    document.getElementById("noiseOut").textContent = state.noise.toFixed(2);
+    document.getElementById("pause").textContent = state.paused ? "Play" : "Pause";
+    document.getElementById("speed").textContent = state.speed + "×";
+    const p = PRESETS.find((q) => q.id === state.preset);
+    document.getElementById("blurb").textContent = p ? p.blurb : "";
+  }
+  function applyPreset(id) {
+    const p = PRESETS.find((q) => q.id === id);
+    if (!p) return;
+    state.preset = p.id;
+    state.law = p.law; state.anti = p.anti;
+    state.cells = p.cells; state.ants = p.ants; state.flocks = p.flocks; state.flies = p.flies;
+    state.oppose = p.oppose; state.enmity = p.enmity; state.noise = p.noise; state.soup = p.soup;
+    reseed();
+    line = narrate(counts());
+    renderControls();
+  }
+
+  function addButtons(id, items, key, on) {
+    const host = document.getElementById(id);
+    for (const item of items) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = item.name;
+      b.dataset[key] = item.value;
+      b.addEventListener("click", () => on(item.value));
+      host.appendChild(b);
+    }
+  }
+  addButtons("presets", PRESETS.map((p) => ({ name: p.name, value: p.id })), "id", applyPreset);
+  addButtons("laws", [{ name: "Annul", value: "annul" }, { name: "Predate", value: "predate" }, { name: "Resist", value: "resist" }], "law", (v) => { state.law = v; state.preset = ""; renderControls(); });
+  addButtons("rules", [{ name: "Anti is Life", value: "life" }, { name: "Anti is Seeds", value: "seeds" }], "rule", (v) => { state.anti = v; state.preset = ""; renderControls(); });
+  addButtons("engines", [
+    { name: "Cells", value: "cells" }, { name: "Ants", value: "ants" },
+    { name: "Flocks", value: "flocks" }, { name: "Fireflies", value: "flies" }
+  ], "engine", (v) => { state[v] = !state[v]; state.preset = ""; renderControls(); });
+  addButtons("drops", [{ name: "Drop thing", value: "1" }, { name: "Drop anti", value: "2" }], "drop", (v) => { state.drop = Number(v); renderControls(); });
+
+  document.getElementById("oppose").addEventListener("input", (e) => { state.oppose = Number(e.target.value); state.preset = ""; renderControls(); });
+  document.getElementById("enmity").addEventListener("input", (e) => { state.enmity = Number(e.target.value); state.preset = ""; renderControls(); });
+  document.getElementById("noise").addEventListener("input", (e) => { state.noise = Number(e.target.value); state.preset = ""; renderControls(); });
+  document.getElementById("pause").addEventListener("click", () => { state.paused = !state.paused; renderControls(); });
+  document.getElementById("speed").addEventListener("click", () => { state.speed = state.speed === 1 ? 2 : state.speed === 2 ? 4 : 1; renderControls(); });
+  document.getElementById("reseed").addEventListener("click", () => { reseed(); line = "Reseeded. The rules stayed."; renderControls(); });
+  window.addEventListener("keydown", (e) => {
+    const tag = e.target && e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA") return;
+    if (e.code === "Space") { e.preventDefault(); state.paused = !state.paused; renderControls(); }
+    else if (e.key === "r" || e.key === "R") { reseed(); renderControls(); }
+    else if (e.key >= "1" && e.key <= "6") applyPreset(PRESETS[Number(e.key) - 1].id);
+  });
+  let drawing = false;
+  canvas.addEventListener("pointerdown", (e) => { drawing = true; canvas.setPointerCapture(e.pointerId); paint(e); });
+  canvas.addEventListener("pointermove", (e) => { if (drawing) paint(e); });
+  canvas.addEventListener("pointerup", () => { drawing = false; });
+  canvas.addEventListener("pointercancel", () => { drawing = false; });
+
+  applyPreset("front");
+  draw();
+  let hudAcc = 0;
+  function frame() {
+    if (!state.paused) {
+      for (let i = 0; i < state.speed; i++) stepWorld();
+    }
+    draw();
+    hudAcc++;
+    if (hudAcc % 8 === 0) hud();
+    requestAnimationFrame(frame);
+  }
+  hud();
+  requestAnimationFrame(frame);
+}
+
+if (typeof document !== "undefined") boot();
+</script>
+</body>
+</html>
