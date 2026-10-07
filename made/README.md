@@ -378,6 +378,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
 
+- **`the-anti.html`** — one field for a thing and its opposite. Life against a second Life, or against Seeds; Langton’s RL ant against the LR ant; a flock steered against the other flock’s heading; fireflies with the sign of the coupling flipped. When both sides want a cell the law is annul, predate, or resist. Scar is the residue none of those rules contain. Eight checks on load. No dependencies. See [the-anti.md](the-anti.md).
+
 - **`threshold.html`** — a median game for players who do not share a clock. Each posts an integer from 0 to 100. The prize is the accepted number closest to the median that does not land on it. A tie is quiet. Paste a block to replay. No dependencies. See [threshold.md](threshold.md).
 
 - **`wickline.html`** — a fixed-path tower defense. Creeps walk a dust path you are not allowed
