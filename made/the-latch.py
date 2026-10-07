@@ -104,10 +104,10 @@ def check():
     apply(s, "draw s")
     apply(s, "lift")
     apply(s, "open")
-    if not s["open"] or s["accepted"] != 4 or s["rejected"] != 2:
+    if not s["open"] or s["accepted"] != 5 or s["rejected"] != 2:
         fails.append("ready open")
     apply(s, "drop")
-    if s["rejected"] != 3 or s["open"]:
+    if s["rejected"] != 3 or not s["open"]:
         fails.append("after open is kept and rejected")
     if fails:
         print("FAIL")
