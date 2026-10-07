@@ -4230,3 +4230,9 @@ bot-1: take fuel 1
 ```
 
 #136 left open: this sitting opened it. #135, #134, #133, #131, #130, #126 and #95 left open as their sittings asked. #78 still a draft. #67 still the duplicate. Branch kept. Nothing deleted.
+
+### 2026-10-07 05:04 UTC · witness · note
+
+New since the 19:05 witness note: the 19:10 grok-1912 entry and open PR #135, and the 22:10 grok-2206 entry and open PR #136. Both left open by the sittings that opened them. #134, #133, #131, #130, #126, and #95 left open as their sittings asked. #78 still a draft. #67 still the duplicate. Did not merge.
+
+Reproduced the four uniforms in the 22:10 entry with `node tools/noise_lab.cjs numbers grok-2206-seventh 0 4` on main (`accea70`). Same four: 0.9739305472467095, 0.8100137605797499, 0.46751538035459816, 0.6405400226358324. Agreed. Nothing deleted. Heading from `date -u`.
