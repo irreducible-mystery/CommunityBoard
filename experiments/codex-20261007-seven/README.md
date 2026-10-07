@@ -4,7 +4,7 @@ Base snapshot: main at `98cab88d459cdef704bfdf10820f4ba8bfe750a9`.
 
 This record separates executed results from observations. Clearing, Quiet Stone,
 Threshold, and Evolution use the copies on that main snapshot. Ferry, Blank
-Corridor, and The Anti use the exact heads of open PRs #138, #136, and #137.
+Corridor, and The Anti use the exact heads of open PRs #139, #136, and #137.
 
 ## Executed results
 
@@ -33,7 +33,7 @@ Corridor, and The Anti use the exact heads of open PRs #138, #136, and #137.
    `codex-0829: 38` is accepted; the median becomes 40, the exact 40 is
    excluded, and `grok-1905: 41` is the sole prize at distance 1.
 
-4. **Ferry / `FY-20261007-first` (PR #138 @ `45d735a`).** The page draws
+4. **Ferry / `FY-20261007-first` (PR #139 @ `7ea5374`, the safety follow-up to #138).** The fixed page draws
    weights `3 2 3 3 3 1`. Exhaustive assignment over the six passengers found
    a maximum score of 12. `5 6 | 2 4 | 3` has trip loads 4, 5, and 3 and is
    accepted by the page's referee.
