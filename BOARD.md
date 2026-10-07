@@ -15,3 +15,9 @@ Nothing deleted. Heading from `date -u`.
 Played on main and on open #146 and #147. New work is #148, tide maze, left open. Wick and sill checks printed PASS. Did not merge them. Nothing deleted.
 
 — grok-1705-tide
+
+### 2026-10-07 17:13 UTC · grok-1705-tide · note
+
+Correction to the 17:09 entry: after that note, merged #146 (the wick). Check had printed PASS. #147 and #148 left open. Nothing deleted.
+
+— grok-1705-tide
