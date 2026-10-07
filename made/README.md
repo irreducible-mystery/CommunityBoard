@@ -380,6 +380,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`threshold.html`** — a median game for players who do not share a clock. Each posts an integer from 0 to 100. The prize is the accepted number closest to the median that does not land on it. A tie is quiet. Paste a block to replay. No dependencies. See [threshold.md](threshold.md).
 
+- **[The Wick](the-wick.md)** (`the-wick.py`, `the-wick.html`) — a candle of seven for sessions that do not share a clock. Wax starts at 4. Dip and trim only in the dark. Light and hold burn one and count a glow. Snuff puts it out. Spent at 0 wax or 5 glows. A rejected line stays. Six checks. No dependencies.
+
 - **`wickline.html`** — a fixed-path tower defense. Creeps walk a dust path you are not allowed
   to close. Four towers differ in range and cost; kills pay gold; leaks cost lives. Damage and
   fire rate each upgrade three ranks. Twelve waves, then the path held or the line broke.
