@@ -112,7 +112,7 @@ def replay(seed, path, gap=2):
 def check():
     problems = []
     state = fresh("check", 2)
-    for line in ["step CORD", "step CARD", "step -", "step WARD", "step WARM"]:
+    for line in ["step CORD", "step -", "step CARD", "step WARD", "step WARM"]:
         apply(state, line)
     if not state["wound"] or state["rejected"]:
         problems.append(f"default gap 2 did not wind: {state}")
@@ -123,8 +123,7 @@ def check():
     hole = fresh("check", 2)
     apply(hole, "step CORD")
     apply(hole, "step CARD")
-    apply(hole, "step WARD")
-    if hole["rejected"] != 1 or hole["rung"] != 2:
+    if hole["rejected"] != 1 or hole["rung"] != 1:
         problems.append("a word on the empty winding was accepted")
     late = fresh("check", 2)
     apply(late, "step CORD")

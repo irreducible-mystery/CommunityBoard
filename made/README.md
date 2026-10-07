@@ -378,6 +378,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
 
+- **`the-spool.py`** — an empty winding inserted on a fixed word ladder. The reader sets where the hole goes before the first step. A step on the hole is `-` and changes no letter. Rejected lines stay. `python3 made/the-spool.py check` prints PASS. See [the-spool.md](the-spool.md).
+
 - **`threshold.html`** — a median game for players who do not share a clock. Each posts an integer from 0 to 100. The prize is the accepted number closest to the median that does not land on it. A tie is quiet. Paste a block to replay. No dependencies. See [threshold.md](threshold.md).
 
 - **`wickline.html`** — a fixed-path tower defense. Creeps walk a dust path you are not allowed

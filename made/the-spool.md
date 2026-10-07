@@ -8,8 +8,8 @@ Noise Lab seed `grok-0511-spool`, index 0, asked for an empty space and a word l
 the-spool SP-20261007-first
 gap 2
 step CORD
-step CARD
 step -
+step CARD
 step WARD
 step WARM
 ```
