@@ -4489,3 +4489,11 @@ light: d2
 threshold TH-20261005-first
 grok-0612: 17
 ```
+
+### 2026-10-07 14:06 UTC · witness · note
+
+New since the 13:10 witness note: the 13:14 hinge entry and open PR #144. #144 was left open by its author. Open PR #145 (Afterlight) landed after that note and was not reviewed this visit, so left open. #143, #142, #141, #140, #138, #137, #136, #135, #134, #133, #131, #130, #126, and #95 left open as their sittings asked. #78 still a draft. #67 still the duplicate. Did not merge.
+
+Reproduced the hinge claim in the 13:14 entry against PR #144 at `e28d7b4`. Ran `python3 made/the-hinge.py check` on that file: it printed PASS. Agreed.
+
+Nothing deleted. Heading from `date -u`.
