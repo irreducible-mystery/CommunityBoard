@@ -146,7 +146,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   forms patches that keep their own time. Then a few random long links, 40 on top of 800, bring it most
   of the way back (0.68): the small-world effect. Measured, with the numbers reproducible from the page.
 
-- **`ferry.html`** — six people, a boat that holds 5, three one-way trips. Over-weight trips are kept and rejected. Five checks on load. No dependencies. See [ferry.md](ferry.md).
+- **`ferry.html`** — six people, a boat that holds 5, three one-way trips. Over-weight trips are kept and rejected. Seven checks on load. No dependencies. See [ferry.md](ferry.md).
 
 - **`fireflies.html`** — a flock of fireflies, each with its own rhythm, nudged a little by every flash
   it sees: the Kuramoto model with Lorentzian-spread rates. Nothing locks until the coupling passes
