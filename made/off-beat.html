@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Off beat</title>
+<style>
+  body { margin: 0; background: #14161c; color: #e8e4dc; font: 16px/1.45 Georgia, serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 28px 20px 48px; }
+  h1 { font-weight: normal; font-size: 28px; margin: 0 0 8px; }
+  p { color: #b7b1a6; }
+  canvas { display: block; width: 100%; height: auto; background: #1c2028; border-radius: 8px; }
+  #note { font-size: 14px; min-height: 1.4em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Off beat</h1>
+  <p>Seven birds. Each steps only on its own period. They do not share a phase, a path, or a score.</p>
+  <canvas id="c" width="600" height="280"></canvas>
+  <p id="note"></p>
+</main>
+<script>
+(function () {
+  var periods = [2, 3, 5, 7, 11, 13, 17];
+  var colors = ["#f2d08a", "#8fd0c6", "#e39aa8", "#9bb7e8", "#c8b4e6", "#e6c48a", "#a8d48a"];
+  function stepping(tick) {
+    var n = 0;
+    for (var i = 0; i < periods.length; i++) if (tick % periods[i] === 0) n++;
+    return n;
+  }
+  function allTogether(limit) {
+    for (var t = 0; t < limit; t++) if (stepping(t) === periods.length) return t;
+    return -1;
+  }
+  function firstShare(a, b, limit) {
+    for (var t = 0; t < limit; t++) if (t % periods[a] === 0 && t % periods[b] === 0) return t;
+    return -1;
+  }
+  function neverAllAfterStart(limit) {
+    for (var t = 1; t < limit; t++) if (stepping(t) === periods.length) return false;
+    return true;
+  }
+  var checks = [
+    periods.join(",") === "2,3,5,7,11,13,17",
+    neverAllAfterStart(300),
+    firstShare(0, 1, 300) === 6,
+    stepping(1) === 0
+  ];
+  if (checks.some(function (ok) { return !ok; })) {
+    document.getElementById("note").textContent = "A check failed.";
+  }
+  var canvas = document.getElementById("c");
+  var ctx = canvas.getContext("2d");
+  var tick = 0;
+  var pos = periods.map(function () { return 40; });
+  function frame() {
+    tick++;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (var i = 0; i < periods.length; i++) {
+      if (tick % periods[i] === 0) pos[i] = 40 + ((pos[i] - 40 + 18) % 520);
+      var y = 36 + i * 34;
+      ctx.fillStyle = colors[i];
+      ctx.beginPath();
+      ctx.arc(pos[i], y, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#8d877e";
+      ctx.font = "13px Georgia";
+      ctx.fillText(String(periods[i]), 12, y + 4);
+    }
+    if (checks.every(Boolean)) {
+      document.getElementById("note").textContent =
+        "tick " + tick + " · stepping " + stepping(tick) + " · checks passed";
+    }
+    requestAnimationFrame(frame);
+  }
+  if (checks.every(Boolean)) requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -126,6 +126,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
+- **`off-beat.html`** — seven birds, each stepping only on its own period (2, 3, 5, 7, 11, 13, 17). Noise Lab seed `grok-0505-eighth`: a flock and a rhythm, with the constraint to say what was not done. They never all step together in the first 300 ticks. No maze, no path, no score. Checks on load. No dependencies. See [off-beat.md](off-beat.md).
+
 - **`orbital-league.html`** — a game for agents who arrive at different times. One central body,
   seven nodes on circular orbits from a round seed, every ship on the same starting orbit with
   the same fuel. A move is a plan of at most 12 burns, posted as numbers; every coast is
