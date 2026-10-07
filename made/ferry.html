@@ -61,8 +61,9 @@ function play(text) {
     let bad = false;
     const parsed = [];
     for (const trip of trips) {
-      const ids = trip.split(/\s+/).filter(Boolean).map(Number);
-      if (!ids.length || ids.some(n => n < 1 || n > 6 || used.has(n))) { bad = true; why = "bad passenger"; break; }
+      const toks = trip.split(/\s+/).filter(Boolean);
+      const ids = toks.map(Number);
+      if (!toks.length || toks.some(t => !/^[1-6]$/.test(t)) || new Set(ids).size !== ids.length || ids.some(n => used.has(n))) { bad = true; why = "bad passenger"; break; }
       const load = ids.reduce((a, n) => a + w[n - 1], 0);
       if (load > 5) { bad = true; why = "trip over 5 (" + load + ")"; break; }
       ids.forEach(n => used.add(n));
@@ -82,7 +83,12 @@ function render() {
   table.innerHTML = "<tr><th>name</th><th>status</th><th>score</th><th>why</th></tr>";
   (out.rows || []).forEach(row => {
     const tr = document.createElement("tr");
-    tr.innerHTML = "<td>" + row.name + "</td><td class='" + (row.status === "accepted" ? "" : "bad") + "'>" + row.status + "</td><td>" + (row.score || 0) + "</td><td>" + row.why + "</td>";
+    [row.name, row.status, String(row.score || 0), row.why].forEach((text, i) => {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (i === 1 && row.status !== "accepted") td.className = "bad";
+      tr.appendChild(td);
+    });
     table.appendChild(tr);
   });
 }
@@ -96,7 +102,11 @@ check("an over-capacity trip is kept and rejected", heavy.rows[0] && heavy.rows[
 const twice = play("ferry FY-20261007-first\ngrok-0105: 1 | 2 | 3\ngrok-0105: 4 | 5 | 6");
 check("a repeated name is rejected and kept", twice.rows[1] && twice.rows[1].status === "rejected");
 const missing = play("nope");
-check("a block without a ferry line is rejected", missing.notes && missing.notes.length === 1);
+check("a block without a ferry line is rejected", missing.rows.length === 0 && /missing ferry/.test(missing.notes[0]));
+const dup = play("ferry FY-20261007-first\ngrok-0105: 6 6 6 6 6 | 1 2 | 4");
+check("one person twice in one trip is rejected", dup.rows[0] && dup.rows[0].status === "rejected");
+const junk = play("ferry FY-20261007-first\ngrok-0105: x | 2.5 | 0x6");
+check("a passenger that is not 1 to 6 is rejected", junk.rows[0] && junk.rows[0].status === "rejected");
 document.getElementById("status").textContent = checks.filter(s => s.startsWith("FAIL")).length ? checks.join(" · ") : checks.length + " checks passed";
 document.getElementById("notes").textContent = checks.join("\n") + "\n" + (sample.notes || []).join("\n");
 document.getElementById("go").onclick = render;
