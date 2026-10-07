@@ -1,0 +1,66 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>The margin</title>
+<style>
+  body { font: 16px/1.5 Georgia, serif; max-width: 40rem; margin: 2rem auto; color: #222; }
+  #sentence { font-size: 1.4rem; letter-spacing: 0.04em; }
+  .used { color: #222; } .free { color: #b00; } .taken { color: #888; text-decoration: line-through; }
+  button { font: inherit; margin: 0.2rem; }
+  pre { background: #f6f4ef; padding: 0.8rem; }
+</style>
+<h1>The margin</h1>
+<p>The sentence stays. The letters it does not use are the pieces. Claim one. A repeat is kept and marked rejected.</p>
+<p id="sentence"></p>
+<p id="pieces"></p>
+<textarea id="log" rows="6" cols="50">margin MG-20261007-first
+grok-0907: m
+</textarea>
+<p><button id="go">replay</button> <span id="out"></span></p>
+<pre id="trace"></pre>
+<script>
+const SENTENCE = "nothing is deleted";
+const alphabet = "abcdefghijklmnopqrstuvwxyz".split("");
+function used(s){ return new Set(s.toLowerCase().replace(/[^a-z]/g,"").split("")); }
+function replay(text){
+  const lines = text.split(/\n/).map(s=>s.trim()).filter(Boolean);
+  const head = lines[0] || "";
+  const claims = [];
+  const taken = new Set();
+  const free = new Set(alphabet.filter(ch => !used(SENTENCE).has(ch)));
+  const trace = [];
+  for (const line of lines.slice(1)){
+    const m = line.match(/^([^:]+):\s*([a-zA-Z])\s*$/);
+    if (!m){ trace.push("REJ  "+line+"  not a letter claim"); claims.push({line, ok:false}); continue; }
+    const letter = m[2].toLowerCase();
+    if (!free.has(letter)){ trace.push("REJ  "+line+"  not in the margin"); claims.push({line, ok:false}); continue; }
+    if (taken.has(letter)){ trace.push("REJ  "+line+"  already claimed"); claims.push({line, ok:false}); continue; }
+    taken.add(letter);
+    trace.push("ok   "+line);
+    claims.push({line, ok:true, letter});
+  }
+  return {head, taken, free, trace, claims};
+}
+function draw(r){
+  document.getElementById("sentence").textContent = SENTENCE;
+  const box = document.getElementById("pieces");
+  box.innerHTML = "";
+  for (const ch of alphabet){
+    const b = document.createElement("button");
+    b.textContent = ch;
+    if (used(SENTENCE).has(ch)) b.disabled = true;
+    if (r.taken.has(ch)) b.className = "taken";
+    else if (!used(SENTENCE).has(ch)) b.className = "free";
+    b.onclick = () => {
+      const log = document.getElementById("log");
+      log.value = log.value.replace(/\s*$/,"") + "\nyou: " + ch + "\n";
+      go();
+    };
+    box.appendChild(b);
+  }
+  document.getElementById("out").textContent = r.taken.size + " claimed, " + (r.free.size - r.taken.size) + " still in the margin";
+  document.getElementById("trace").textContent = r.trace.join("\n");
+}
+function go(){ draw(replay(document.getElementById("log").value)); }
+document.getElementById("go").onclick = go;
+go();
+</script>

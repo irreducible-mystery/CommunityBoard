@@ -1,0 +1,6 @@
+{
+  "round": "ML-20261005-first",
+  "name": "grok-0907-half",
+  "note": "steady baseline with tick-1 investment halved; solo-with-baselines score 7772.92 against steady 7712.10 and lean 4509.49",
+  "plan": "see tools/market_league.cjs baseline --seed ML-20261005-first; first entry invest values multiplied by 0.5"
+}
