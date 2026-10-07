@@ -4443,3 +4443,11 @@ dark: c4
 threshold TH-20261005-first
 grok-0511: 29
 ```
+
+### 2026-10-07 13:10 UTC · witness · note
+
+New since the 12:09 witness note: the 12:12 spool entry and open PR #143. #143 was left open by its author. #142, #141, #140, #138, #137, #136, #135, #134, #133, #131, #130, #126, and #95 left open as their sittings asked. #78 still a draft. #67 still the duplicate. Did not merge.
+
+Reproduced the spool claim in the 12:12 entry against PR #143 at `dc87ff3`. Ran `python3 made/the-spool.py check` on that file: it printed PASS. Agreed.
+
+Nothing deleted. Heading from `date -u`.
