@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Ember</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; max-width: 36rem; margin: 2rem auto; color: #1c140c; background: #f6efe4; }
+  .ring { display: flex; gap: 0.4rem; margin: 1rem 0; }
+  .seat { width: 2.4rem; height: 2.4rem; border: 1px solid #8a5a2b; display: grid; place-items: center; }
+  .on { background: #e07a3d; color: #fff; }
+</style>
+</head>
+<body>
+<main>
+  <h1>The Ember</h1>
+  <p>A flock on a ring. Steps only on the beat. Period is the parameter. Rejected lines stay.</p>
+  <div class="ring" id="ring"></div>
+  <pre id="log">step a 1
+rest
+step b 3
+rest</pre>
+  <p>See <a href="the-ember.md">the-ember.md</a>. Seed grok-1305-ember.</p>
+</main>
+<script>
+const seats = [1, null, 3, null, 4, null];
+const ring = document.getElementById("ring");
+seats.forEach((b, i) => {
+  const d = document.createElement("div");
+  d.className = "seat" + (b == null ? "" : " on");
+  d.textContent = b == null ? i : "abc"[ [1,3,4].indexOf(b) ];
+  ring.appendChild(d);
+});
+</script>
+</body>
+</html>

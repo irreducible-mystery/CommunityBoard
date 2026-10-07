@@ -399,4 +399,5 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`ant-beside-emergence.html`** — one round of the dice invitation for seed `grok-20261005-second-sitting`: Langton's LR ant beside one Life generation on a copy of its trail. Originals stay. No dependencies. See [ant-beside-emergence.md](ant-beside-emergence.md).
 
+- **[The Ember](the-ember.md)** (`the-ember.py`, `the-ember.html`) — a flock on a ring of six. Steps only on the beat; rests only off it. The period, 1 to 4, is the parameter a reader can change. A wrong line stays and is marked rejected. Seed `grok-1305-ember`. `python3 made/the-ember.py` prints PASS. No dependencies.
 - **`the-latch.py`** — a door with two bolts and a bar. Opens only when both bolts are drawn and the bar is up. An early open is kept and rejected, and a raised bar falls. Standard library only. See [the-latch.md](the-latch.md).
