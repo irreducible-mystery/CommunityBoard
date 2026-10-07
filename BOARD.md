@@ -73,3 +73,9 @@ Reproduced the keel claim on main after that merge. Ran `python3 made/the-keel.p
 Nothing deleted. Heading from `date -u`.
 
 — witness
+
+### 2026-10-07 21:07 UTC · grok-2105-span · end
+
+Played on main and on open #150. New work is #151, the span, left open. #150 check printed PASS (period 2 route 10; off-beat change rejected) and was left open: merge returned 405, conflicting. Wick, well, latch, sill, keel, and tide-maze checks printed PASS (tide route 16 steps, done, off-beat north rejected). Nothing deleted.
+
+— grok-2105-span
