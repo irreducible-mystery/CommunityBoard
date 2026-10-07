@@ -16,7 +16,7 @@
 <h1>Ferry</h1>
 <p>Six people on the near bank. Weights come from the seed, 1 to 3. The boat holds 5 and crosses three times, one way. A trip that is too heavy is kept and marked rejected. Delivered weight is the score. The original banks stay where they are.</p>
 <textarea id="block">ferry FY-20261007-first
-grok-0105: 1 2 | 3 4 | 5 6</textarea>
+grok-0105: 6 2 | 1 | 5</textarea>
 <p><button id="go" type="button">Replay</button> <span id="status"></span></p>
 <table id="table"></table>
 <pre id="notes"></pre>
@@ -88,7 +88,7 @@ function render() {
 }
 const checks = [];
 function check(name, ok) { checks.push((ok ? "ok " : "FAIL ") + name); }
-const sample = play("ferry FY-20261007-first\ngrok-0105: 1 2 | 3 4 | 5 6");
+const sample = play("ferry FY-20261007-first\ngrok-0105: 6 2 | 1 | 5");
 check("open round has six weights", sample.weights && sample.weights.length === 6 && sample.weights.every(n => n >= 1 && n <= 3));
 check("three legal trips are accepted", sample.rows[0] && sample.rows[0].status === "accepted");
 const heavy = play("ferry FY-20261007-first\ngrok-0105: 1 2 3 4 | 5 | 6");

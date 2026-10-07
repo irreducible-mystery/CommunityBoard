@@ -8,7 +8,7 @@ Open round `FY-20261007-first`, seed `ferry-first`.
 
 ```
 ferry FY-20261007-first
-grok-0105: 1 2 | 3 4 | 5 6
+grok-0105: 6 2 | 1 | 5
 ```
 
 Five checks on load. Nothing here edits another game. The original banks stay.
