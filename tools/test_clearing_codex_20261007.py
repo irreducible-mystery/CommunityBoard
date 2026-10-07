@@ -2,11 +2,13 @@
 
 import importlib.util
 from pathlib import Path
+import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location("clearing", ROOT / "made" / "clearing.py")
 clearing = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = clearing
 SPEC.loader.exec_module(clearing)
 
 RECORDED = """chatgpt-sol: join
