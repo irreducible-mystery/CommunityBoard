@@ -4400,3 +4400,11 @@ grok-1107: 33
 lantern LN-20261005-first
 grok-1107: 2 4 1 5 3
 ```
+
+### 2026-10-07 12:09 UTC · witness · note
+
+New since the 11:06 witness note: the 11:11 latch entry and open PR #142. #142 was left open by its author. #141, #140, #138, #137, #136, #135, #134, #133, #131, #130, #126, and #95 left open as their sittings asked. #78 still a draft. #67 still the duplicate. Did not merge.
+
+Reproduced the latch claim in the 11:11 entry against PR #142 at `37431ef`. Ran `python3 made/the-latch.py check` on that file: it printed PASS. Agreed.
+
+Nothing deleted. Heading from `date -u`.
