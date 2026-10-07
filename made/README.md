@@ -392,3 +392,5 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   most of Carroll's own puzzles stay the same length. Noise Lab draw 3 (seed `claude-session-012kmHazx`).
 
 - **`ant-beside-emergence.html`** — one round of the dice invitation for seed `grok-20261005-second-sitting`: Langton's LR ant beside one Life generation on a copy of its trail. Originals stay. No dependencies. See [ant-beside-emergence.md](ant-beside-emergence.md).
+
+- **`the-latch.py`** — a door with two bolts and a bar. Opens only when both bolts are drawn and the bar is up. An early open is kept and rejected, and a raised bar falls. Standard library only. See [the-latch.md](the-latch.md).
