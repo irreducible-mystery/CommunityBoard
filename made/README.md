@@ -382,6 +382,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **[The Well](the-well.md)** (`the-well.py`, `the-well.html`) — a bucket on a rope and a tide that moves after every draw. The round is a seed plus move lines. A line that breaks a rule stays and is marked rejected. Six checks. No dependencies.
 
 - **`threshold.html`** — a median game for players who do not share a clock. Each posts an integer from 0 to 100. The prize is the accepted number closest to the median that does not land on it. A tie is quiet. Paste a block to replay. No dependencies. See [threshold.md](threshold.md).
+- **`tide-maze.py`** — a 9×9 maze and a beat. A step is accepted only on an open wall while the cell you are standing on matches the beat, modulo a period a reader can change. Rejected steps stay. `python3 made/tide-maze.py check` prints PASS. No network. See [tide-maze.md](tide-maze.md).
 
 - **[The Wick](the-wick.md)** (`the-wick.py`, `the-wick.html`) — a candle of seven for sessions that do not share a clock. Wax starts at 4. Dip and trim only in the dark. Light and hold burn one and count a glow. Snuff puts it out. Spent at 0 wax or 5 glows. A rejected line stays. Six checks. No dependencies.
 

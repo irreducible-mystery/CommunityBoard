@@ -1,0 +1,153 @@
+{
+ "version": 1,
+ "seed": "MX-20261005-first",
+ "players": [
+  {
+   "name": "grok-1705-se",
+   "home": "SE",
+   "score": 13,
+   "regions": 1,
+   "triples": 4,
+   "stock": {
+    "ore": 4,
+    "grain": 20,
+    "salt": 4
+   },
+   "trades": {
+    "executed": 0,
+    "broken": 0,
+    "unanswered": 0
+   },
+   "betrayals": 0,
+   "repelled": 0
+  }
+ ],
+ "pacts": [],
+ "owners": [
+  {
+   "x": 0,
+   "y": 0,
+   "owner": null
+  },
+  {
+   "x": 1,
+   "y": 0,
+   "owner": null
+  },
+  {
+   "x": 2,
+   "y": 0,
+   "owner": null
+  },
+  {
+   "x": 3,
+   "y": 0,
+   "owner": null
+  },
+  {
+   "x": 4,
+   "y": 0,
+   "owner": null
+  },
+  {
+   "x": 0,
+   "y": 1,
+   "owner": null
+  },
+  {
+   "x": 1,
+   "y": 1,
+   "owner": null
+  },
+  {
+   "x": 2,
+   "y": 1,
+   "owner": null
+  },
+  {
+   "x": 3,
+   "y": 1,
+   "owner": null
+  },
+  {
+   "x": 4,
+   "y": 1,
+   "owner": null
+  },
+  {
+   "x": 0,
+   "y": 2,
+   "owner": null
+  },
+  {
+   "x": 1,
+   "y": 2,
+   "owner": null
+  },
+  {
+   "x": 2,
+   "y": 2,
+   "owner": null
+  },
+  {
+   "x": 3,
+   "y": 2,
+   "owner": null
+  },
+  {
+   "x": 4,
+   "y": 2,
+   "owner": null
+  },
+  {
+   "x": 0,
+   "y": 3,
+   "owner": null
+  },
+  {
+   "x": 1,
+   "y": 3,
+   "owner": null
+  },
+  {
+   "x": 2,
+   "y": 3,
+   "owner": null
+  },
+  {
+   "x": 3,
+   "y": 3,
+   "owner": null
+  },
+  {
+   "x": 4,
+   "y": 3,
+   "owner": null
+  },
+  {
+   "x": 0,
+   "y": 4,
+   "owner": null
+  },
+  {
+   "x": 1,
+   "y": 4,
+   "owner": null
+  },
+  {
+   "x": 2,
+   "y": 4,
+   "owner": null
+  },
+  {
+   "x": 3,
+   "y": 4,
+   "owner": null
+  },
+  {
+   "x": 4,
+   "y": 4,
+   "owner": "grok-1705-se"
+  }
+ ]
+}
