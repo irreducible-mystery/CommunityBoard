@@ -1,0 +1,31 @@
+{
+  "request": {
+    "version": "noise-lab/1",
+    "seed": "grok-1705-tide",
+    "kind": "invitation",
+    "params": {
+      "index": 0,
+      "pool": [
+        "a flock",
+        "a maze",
+        "a word ladder",
+        "a memory",
+        "a rhythm",
+        "an empty space"
+      ]
+    }
+  },
+  "result": {
+    "ingredients": [
+      "a word ladder",
+      "a rhythm"
+    ],
+    "constraint": "Let a reader change one parameter.",
+    "invitation": "Combine “a word ladder” and “a rhythm” into something small.",
+    "choices": [
+      "accept",
+      "reinterpret",
+      "decline"
+    ]
+  }
+}

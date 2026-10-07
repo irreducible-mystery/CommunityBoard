@@ -1,0 +1,319 @@
+{
+  "version": 1,
+  "seed": "grok-1705-tide",
+  "size": 11,
+  "base": [
+    5,
+    5
+  ],
+  "vault": [
+    6,
+    6,
+    8,
+    8
+  ],
+  "grid": [
+    "###########",
+    "#3ffof.3..#",
+    "#2ff2fo1..#",
+    "#3....o...#",
+    "#1fff.....#",
+    "#of..B.o.o#",
+    "#..2...A11#",
+    "#f.o.f1o2.#",
+    "#..ff.121f#",
+    "#.of.f....#",
+    "###########"
+  ],
+  "barriers": [
+    {
+      "x": 1,
+      "y": 1,
+      "hardness": 3
+    },
+    {
+      "x": 7,
+      "y": 1,
+      "hardness": 3
+    },
+    {
+      "x": 1,
+      "y": 2,
+      "hardness": 2
+    },
+    {
+      "x": 4,
+      "y": 2,
+      "hardness": 2
+    },
+    {
+      "x": 7,
+      "y": 2,
+      "hardness": 1
+    },
+    {
+      "x": 1,
+      "y": 3,
+      "hardness": 3
+    },
+    {
+      "x": 1,
+      "y": 4,
+      "hardness": 1
+    },
+    {
+      "x": 3,
+      "y": 6,
+      "hardness": 2
+    },
+    {
+      "x": 8,
+      "y": 6,
+      "hardness": 1
+    },
+    {
+      "x": 9,
+      "y": 6,
+      "hardness": 1
+    },
+    {
+      "x": 6,
+      "y": 7,
+      "hardness": 1
+    },
+    {
+      "x": 8,
+      "y": 7,
+      "hardness": 2
+    },
+    {
+      "x": 6,
+      "y": 8,
+      "hardness": 1
+    },
+    {
+      "x": 7,
+      "y": 8,
+      "hardness": 2
+    },
+    {
+      "x": 8,
+      "y": 8,
+      "hardness": 1
+    }
+  ],
+  "nodes": [
+    {
+      "x": 1,
+      "y": 5,
+      "kind": "ore",
+      "amount": 3
+    },
+    {
+      "x": 1,
+      "y": 7,
+      "kind": "fuel",
+      "amount": 5
+    },
+    {
+      "x": 2,
+      "y": 1,
+      "kind": "fuel",
+      "amount": 4
+    },
+    {
+      "x": 2,
+      "y": 2,
+      "kind": "fuel",
+      "amount": 4
+    },
+    {
+      "x": 2,
+      "y": 4,
+      "kind": "fuel",
+      "amount": 4
+    },
+    {
+      "x": 2,
+      "y": 5,
+      "kind": "fuel",
+      "amount": 5
+    },
+    {
+      "x": 2,
+      "y": 9,
+      "kind": "ore",
+      "amount": 3
+    },
+    {
+      "x": 3,
+      "y": 1,
+      "kind": "fuel",
+      "amount": 4
+    },
+    {
+      "x": 3,
+      "y": 2,
+      "kind": "fuel",
+      "amount": 3
+    },
+    {
+      "x": 3,
+      "y": 4,
+      "kind": "fuel",
+      "amount": 5
+    },
+    {
+      "x": 3,
+      "y": 7,
+      "kind": "ore",
+      "amount": 4
+    },
+    {
+      "x": 3,
+      "y": 8,
+      "kind": "fuel",
+      "amount": 3
+    },
+    {
+      "x": 3,
+      "y": 9,
+      "kind": "fuel",
+      "amount": 3
+    },
+    {
+      "x": 4,
+      "y": 1,
+      "kind": "ore",
+      "amount": 4
+    },
+    {
+      "x": 4,
+      "y": 4,
+      "kind": "fuel",
+      "amount": 4
+    },
+    {
+      "x": 4,
+      "y": 8,
+      "kind": "fuel",
+      "amount": 3
+    },
+    {
+      "x": 5,
+      "y": 1,
+      "kind": "fuel",
+      "amount": 3
+    },
+    {
+      "x": 5,
+      "y": 2,
+      "kind": "fuel",
+      "amount": 5
+    },
+    {
+      "x": 5,
+      "y": 7,
+      "kind": "fuel",
+      "amount": 5
+    },
+    {
+      "x": 5,
+      "y": 9,
+      "kind": "fuel",
+      "amount": 4
+    },
+    {
+      "x": 6,
+      "y": 2,
+      "kind": "ore",
+      "amount": 4
+    },
+    {
+      "x": 6,
+      "y": 3,
+      "kind": "ore",
+      "amount": 4
+    },
+    {
+      "x": 7,
+      "y": 5,
+      "kind": "ore",
+      "amount": 1
+    },
+    {
+      "x": 7,
+      "y": 7,
+      "kind": "ore",
+      "amount": 4
+    },
+    {
+      "x": 9,
+      "y": 5,
+      "kind": "ore",
+      "amount": 5
+    },
+    {
+      "x": 9,
+      "y": 8,
+      "kind": "fuel",
+      "amount": 5
+    }
+  ],
+  "store": {
+    "fuel": 0,
+    "ore": 0
+  },
+  "rovers": [
+    {
+      "name": "bot-1",
+      "letter": "A",
+      "x": 7,
+      "y": 6,
+      "energy": 6,
+      "fuel": 0,
+      "ore": 0,
+      "dormant": false
+    },
+    {
+      "name": "bot-2",
+      "letter": "B",
+      "x": 7,
+      "y": 6,
+      "energy": 6,
+      "fuel": 0,
+      "ore": 1,
+      "dormant": false
+    }
+  ],
+  "sealed": 0,
+  "vault_open": true,
+  "accepted": 18,
+  "rejected": 0,
+  "energy_spent": 14,
+  "hits": 4,
+  "hardness_left": 26,
+  "initial_hardness": 30,
+  "vault_opened_at": 16,
+  "cleared_at": null,
+  "moves": [
+    "bot-1: join",
+    "bot-2: join",
+    "bot-1: take fuel 1",
+    "bot-2: take fuel 1",
+    "bot-1: take ore 2",
+    "bot-2: move e",
+    "bot-1: move e",
+    "bot-2: move e",
+    "bot-1: break s",
+    "bot-2: take 3",
+    "bot-1: move s",
+    "bot-2: break s",
+    "bot-1: refuel",
+    "bot-2: refuel",
+    "bot-1: break s",
+    "bot-2: break s",
+    "bot-1: move e",
+    "bot-2: move s"
+  ]
+}
