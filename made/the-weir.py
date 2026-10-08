@@ -16,7 +16,7 @@ def apply(state, line):
         state["rejected"] += 1
         state["notes"].append(f"rejected {line!r}: weir already spent")
         return state
-    if len(word) != 1 or word[0] not in {"light-a", "light-b", "pass", "snuff", "hold"}:
+    if len(word) != 1 or word[0] not in {"light-a", "light-b", "pass", "snuff", "hold", "trim-a", "trim-b"}:
         state["rejected"] += 1
         state["notes"].append(f"rejected {line!r}: not a move")
         return state
@@ -49,6 +49,13 @@ def apply(state, line):
             state["notes"].append("rejected snuff: already dark")
             return state
         state["lit"] = None
+    elif move in {"trim-a", "trim-b"}:
+        side = "a" if move == "trim-a" else "b"
+        if state["lit"] == side or state[side] <= 1:
+            state["rejected"] += 1
+            state["notes"].append(f"rejected {move}: lit {state['lit']} wax {state[side]}")
+            return state
+        state[side] -= 1
     else:
         if state["lit"] is not None:
             state[state["lit"]] -= 1
@@ -86,9 +93,9 @@ def check():
     s = replay("both", ["light-a", "pass"])
     if s["lit"] != "b" or s["passes"] != 1 or s["a"] != 2 or s["b"] != 3:
         fails.append(f"pass should spend both and move the flame: {s}")
-    s = replay("thin", ["light-a", "hold", "hold", "pass"])
-    if s["rejected"] != 1 or s["passes"] != 0 or s["lit"] != "a":
-        fails.append("pass on a thin partner must be rejected")
+    s = replay("thin", ["light-a", "trim-b", "trim-b", "trim-b", "pass"])
+    if s["rejected"] != 1 or s["passes"] != 0 or s["b"] != 1 or s["lit"] != "a":
+        fails.append(f"pass on a thin partner must be rejected: {s}")
     s = replay("dark", ["pass"])
     if s["rejected"] != 1 or s["accepted"] != 0:
         fails.append("dark pass")

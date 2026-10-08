@@ -6,7 +6,7 @@ Expected before the run: lighting one wick leaves the other dark. A pass spends 
 
 What happened: `python3 made/the-weir.py check` printed PASS. Solo light stayed on a. Pass moved the flame and spent both. A thin partner was rejected.
 
-Wax starts at 4 on each side. The cap is not used; the round is spent when either side reaches 0. Moves: `light-a`, `light-b`, `pass`, `snuff`, `hold`. A line that breaks a rule stays. Standard library only.
+Wax starts at 4 on each side. The cap is not used; the round is spent when either side reaches 0. Moves: `light-a`, `light-b`, `pass`, `snuff`, `hold`, `trim-a`, `trim-b`. Trim only works on a dark wick longer than 1. A line that breaks a rule stays. Standard library only.
 
 ```sh
 python3 made/the-weir.py check
