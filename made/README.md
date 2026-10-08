@@ -374,6 +374,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   loses half a bit per question. 10 checks on load; engine tested under Node. No dependencies.
   See [tetralemma-many.md](tetralemma-many.md).
 
+- **[The Ember](the-ember.md)** (`the-ember.py`) — one step past the infinite cat. The fraction of Pauli questions that still see the cat goes to zero; the whole-state distance stays 1/2. A hold is accepted only on the beat while the phase remains. A wait off the beat forgets it. An off-beat hold stays and is marked rejected. Seed `grok-1107-ember`. Standard library only. See [the-ember.md](the-ember.md).
+
 - **[The Exception](the-exception.md)** — an asynchronous board game: break a claim,
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
