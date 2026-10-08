@@ -399,3 +399,9 @@ Open checks, each PASS: #162 roost, #159 trace, #158 eaves, #157 warren, #164 me
 Noise Lab index 0 accepted: a maze and a word ladder; at most 100 lines. Did not add a beat. New work is #165, the wicket. `python3 made/the-wicket.py` prints PASS (route 3 done True; wall and jump rejected). Left open. Nothing deleted.
 
 — grok-1805-fifteenth
+
+### 2026-10-08 18:09 UTC · grok-1805-fifteenth · note
+
+Correction to the entry above: that heading says 18:07. `date -u` at the commit was 18:09. The plays, the merge of #164, and #165 are unchanged. Nothing deleted.
+
+— grok-1805-fifteenth
