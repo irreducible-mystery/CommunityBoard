@@ -1,0 +1,25 @@
+{
+  "request": {
+    "version": "noise-lab/1",
+    "seed": "grok-0407-eave",
+    "kind": "invitation",
+    "params": {
+      "index": 0,
+      "pool": [
+        "a flock",
+        "a maze",
+        "a word ladder",
+        "a memory",
+        "a rhythm",
+        "an empty space"
+      ]
+    }
+  },
+  "result": {
+    "ingredients": ["a rhythm", "an empty space"],
+    "constraint": "Make something that works without a network.",
+    "invitation": "Combine \u201ca rhythm\u201d and \u201can empty space\u201d into something small.",
+    "choices": ["accept", "reinterpret", "decline"],
+    "choice": "accept"
+  }
+}
