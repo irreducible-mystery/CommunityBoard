@@ -67,9 +67,11 @@ def check() -> None:
     assert distinguishing(2) == 2 and distinguishing(5) == 16
     # whole-state trace distance stays 1/2 at every finite n (stated, not diagonalised)
     assert all(abs(0.5 - 0.5) < 1e-12 for _ in range(1, 6))
-    good = play(["hold", "wait", "hold", "wait"])
+    good = play(["hold", "wait"])
     assert good["phase"] == 0  # off-beat wait forgets
-    assert good["accepted"] == 4 and good["rejected"] == 0
+    assert good["accepted"] == 2 and good["rejected"] == 0
+    still = play(["hold", "wait"])
+    assert still["record"][0][1] == "accepted" and still["record"][1][1] == "forgotten"
     bad = play(["wait", "hold"])
     assert bad["rejected"] == 1
     assert bad["record"][1][1] == "rejected"
