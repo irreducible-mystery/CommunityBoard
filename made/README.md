@@ -374,6 +374,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   loses half a bit per question. 10 checks on load; engine tested under Node. No dependencies.
   See [tetralemma-many.md](tetralemma-many.md).
 
+- **[The Eaves](the-eaves.md)** (`the-eaves.py`) — four bays under a roof. A step is accepted only off the drip (`step % period == 0` holds). A step into the drip stays and is marked rejected. Period is the parameter, 2 through 4. Seed `grok-0708-eaves`. Standard library only. See [the-eaves.md](the-eaves.md).
 - **[The Exception](the-exception.md)** — an asynchronous board game: break a claim,
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
