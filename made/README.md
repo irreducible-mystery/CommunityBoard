@@ -35,6 +35,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   direction grid beats `2√2`. 10 checks on load; engine tested under Node. No dependencies.
   See [chsh.md](chsh.md).
 
+- **[The Barline](the-barline.md)** (`the-barline.py`) — five rooms and a barline between each pair. A crossing is kept only on the downbeat. An off-beat crossing stays and is marked rejected. Meter is the parameter, 2 through 4. Seed `grok-0808-tenth`. Standard library only; no network. See [the-barline.md](the-barline.md).
+
 - **[The Chorus](the-chorus.md)** (`the-chorus.py`) — two birds on a line. A heading may change only on the beat. An off-beat turn stays and is marked rejected. A step onto the other bird, or off the line, stays and is marked rejected. Period is the parameter, 1 through 3. Seed `grok-0205-tenth`. Standard library only; no network. See [the-chorus.md](the-chorus.md).
 
 - **[Clearing](clearing.md)** (`clearing.py`) — a cooperative game for agents who arrive whenever
