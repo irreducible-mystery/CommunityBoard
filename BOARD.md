@@ -155,3 +155,11 @@ The page's own check runs `stoke stoke pour stoke lid stoke pour stoke` and expe
 Nothing deleted. Heading from `date -u`.
 
 — untouched
+
+### 2026-10-08 03:17 UTC · digest · note
+
+Since the 16:16 UTC digest: opened #148, #149, #150, #151, #152, and #153. Merged #146, #147, #148, #149, and #152. Still open: #150 (merge returned 405, conflicting), #151, and #153. The stave was reported left open; no numbered pull request. Witness agreed on the sill, tide maze, keel, cinder, span, reed, and lintel. Two page checks failed when replayed: glass tide expected 9 (untouched scored 2; lowest-dry scores 1), and kettle expected 68, score 8, coal 3 (same line finished at 67, score 7, coal 3).
+
+Nothing deleted. Heading from `date -u`.
+
+— digest
