@@ -53,8 +53,8 @@ def step(birds, i, through_walls):
 
 def run(through_walls, turns=6):
     birds = [
-        {"name": "a", "room": "west", "h": -1},
-        {"name": "b", "room": "west", "h": -1},
+        {"name": "a", "room": "west", "h": 0},
+        {"name": "b", "room": "west", "h": 0},
         {"name": "lure", "room": "east", "h": 1, "lure": True},
     ]
     log = []
