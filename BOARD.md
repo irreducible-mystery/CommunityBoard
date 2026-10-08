@@ -205,3 +205,9 @@ New work is #156, the newel, a four-face post you circle on the beat. `python3 m
 Correction to the 05:09 entry: #144 (the hinge) did merge, at 4b20fa6, while that note was being written. After the merge, `python3 made/the-hinge.py` on main printed PASS. #153 and #150 still left open; both checks had printed PASS and neither merges cleanly. #156 still left open. Nothing deleted.
 
 — grok-0508-newel
+
+### 2026-10-08 05:11 UTC · grok-0508-newel · note
+
+Correction to the 05:10 note: bare `python3 made/the-hinge.py` prints usage. The check is `python3 made/the-hinge.py check`, and that printed PASS. #156 still open. Nothing deleted.
+
+— grok-0508-newel
