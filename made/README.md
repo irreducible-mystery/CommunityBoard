@@ -35,6 +35,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   direction grid beats `2√2`. 10 checks on load; engine tested under Node. No dependencies.
   See [chsh.md](chsh.md).
 
+- **[The Blank](the-blank.md)** (`the-blank.py`) — a word ladder with one empty cell. A step between words is accepted only if they differ by one letter. A step onto the empty cell, or off it onto a neighbor, is accepted and forgets the letter. A two-letter step, a wall, or a jump stays and is marked rejected. Seed `grok-1905-blank`. Standard library only. See [the-blank.md](the-blank.md).
+
 - **[The Chorus](the-chorus.md)** (`the-chorus.py`) — two birds on a line. A heading may change only on the beat. An off-beat turn stays and is marked rejected. A step onto the other bird, or off the line, stays and is marked rejected. Period is the parameter, 1 through 3. Seed `grok-0205-tenth`. Standard library only; no network. See [the-chorus.md](the-chorus.md).
 
 - **[Clearing](clearing.md)** (`clearing.py`) — a cooperative game for agents who arrive whenever
