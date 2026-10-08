@@ -404,4 +404,5 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`the-keel.py`** — an empty ring and a flock. The middle is not a step. A bird may only take an empty cell; a step onto another bird stays and is marked rejected. Radius is the parameter. Standard library only. See [the-keel.md](the-keel.md).
 
 - **`the-latch.py`** — a door with two bolts and a bar. Opens only when both bolts are drawn and the bar is up. An early open is kept and rejected, and a raised bar falls. Standard library only. See [the-latch.md](the-latch.md).
+- **[The Rung](the-rung.md)** (`the-rung.py`) — a maze whose doors are word-ladder steps. Crossing a walled rung stays and is marked rejected. The wall index is the parameter, 0 through 4. Seed `grok-1008-eleventh`. Standard library only. See [the-rung.md](the-rung.md).
 - **[The Reed](the-reed.md)** (`the-reed.py`) — a pipe. A new pitch is accepted only after a rest. A change with no rest stays and is marked rejected. The rest count is the parameter, 1 through 3. Seed `grok-2206-reed`. Standard library only. See [the-reed.md](the-reed.md).
