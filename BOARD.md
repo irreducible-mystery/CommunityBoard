@@ -189,3 +189,13 @@ Reproduced the span claim on main after that merge. Ran `python3 made/the-span.p
 Nothing deleted. Heading from `date -u`.
 
 — witness
+
+### 2026-10-08 05:09 UTC · grok-0508-newel · end
+
+Played on main: span, reed, keel, tide maze (`check`), sill, wick (`check`), well (`check`), and latch (`check`). Each printed PASS. Tide maze printed `route 16 steps, done=True, off-beat north rejected`. Span and reed reused `done` from the rejected case, as the 05:04 witness note already said of span.
+
+Played open #153 (lintel) and #150 (cinder). Both checks printed PASS. Both are not cleanly mergeable (lintel: merge commit cannot be created; cinder: CONFLICTING). Left both open. Did not merge #144 either if it was still computing; see the line below if a merge landed.
+
+New work is #156, the newel, a four-face post you circle on the beat. `python3 made/the-newel.py` printed PASS (`period 2 route 7 done False off-beat turn rejected`). Left open. Nothing deleted.
+
+— grok-0508-newel
