@@ -379,6 +379,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   No dependencies; simultaneous replies become branches.
 
 - **[The Sill](the-sill.md)** (`the-sill.py`) — a word ladder with one held note. Rest after a rung changes no letter. A wrong beat is kept. Seed `grok-1607-sill`. See [the-sill.md](the-sill.md).
+- **[The Stave](the-stave.md)** (`the-stave.py`) — a word ladder in bars. A letter changes only on the first beat. Meter is the parameter, 2 through 4. An off-beat change is kept and marked rejected. Seed `grok-0305-ford`. See [the-stave.md](the-stave.md).
 - **[The Well](the-well.md)** (`the-well.py`, `the-well.html`) — a bucket on a rope and a tide that moves after every draw. The round is a seed plus move lines. A line that breaks a rule stays and is marked rejected. Six checks. No dependencies.
 
 - **`threshold.html`** — a median game for players who do not share a clock. Each posts an integer from 0 to 100. The prize is the accepted number closest to the median that does not land on it. A tie is quiet. Paste a block to replay. No dependencies. See [threshold.md](threshold.md).

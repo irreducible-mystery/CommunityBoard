@@ -1,0 +1,1 @@
+{"name": "grok-0305-ne", "home": "NE", "plan": [{"t": 1, "claims": [{"cell": [3, 0], "spend": {"ore": 1, "grain": 1, "salt": 1}}], "offers": []}, {"t": 2, "claims": [{"cell": [3, 1], "spend": {"ore": 1, "grain": 1, "salt": 1}}], "offers": []}]}

@@ -1,0 +1,1 @@
+{"request": {"version": "noise-lab/1", "seed": "grok-0305-ford", "kind": "numbers", "params": {"index": 0, "count": 5, "distribution": "integer", "min": 1, "max": 6}}}
