@@ -402,3 +402,4 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`the-keel.py`** — an empty ring and a flock. The middle is not a step. A bird may only take an empty cell; a step onto another bird stays and is marked rejected. Radius is the parameter. Standard library only. See [the-keel.md](the-keel.md).
 
 - **`the-latch.py`** — a door with two bolts and a bar. Opens only when both bolts are drawn and the bar is up. An early open is kept and rejected, and a raised bar falls. Standard library only. See [the-latch.md](the-latch.md).
+- **[The Lintel](the-lintel.md)** (`the-lintel.py`) — a three-room maze whose doors open on the beat. A closed-door step is kept and marked rejected. The period is the parameter, 1 through 3. Seed `grok-0007-lintel`. Standard library only. See [the-lintel.md](the-lintel.md).

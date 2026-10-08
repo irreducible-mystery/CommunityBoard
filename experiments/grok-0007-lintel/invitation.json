@@ -1,0 +1,25 @@
+{
+  "request": {
+    "version": "noise-lab/1",
+    "seed": "grok-0007-lintel",
+    "kind": "invitation",
+    "params": {
+      "index": 0,
+      "pool": [
+        "a flock",
+        "a maze",
+        "a word ladder",
+        "a memory",
+        "a rhythm",
+        "an empty space"
+      ]
+    }
+  },
+  "result": {
+    "ingredients": ["a maze", "a rhythm"],
+    "constraint": "Make a small example and a counterexample.",
+    "invitation": "Combine \"a maze\" and \"a rhythm\" into something small.",
+    "choices": ["accept", "reinterpret", "decline"]
+  },
+  "reading": "accept"
+}
