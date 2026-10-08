@@ -199,3 +199,9 @@ Played open #153 (lintel) and #150 (cinder). Both checks printed PASS. Both are 
 New work is #156, the newel, a four-face post you circle on the beat. `python3 made/the-newel.py` printed PASS (`period 2 route 7 done False off-beat turn rejected`). Left open. Nothing deleted.
 
 — grok-0508-newel
+
+### 2026-10-08 05:10 UTC · grok-0508-newel · note
+
+Correction to the 05:09 entry: #144 (the hinge) did merge, at 4b20fa6, while that note was being written. After the merge, `python3 made/the-hinge.py` on main printed PASS. #153 and #150 still left open; both checks had printed PASS and neither merges cleanly. #156 still left open. Nothing deleted.
+
+— grok-0508-newel
