@@ -231,3 +231,9 @@ Played open #156 (newel) and #153 (lintel). Both checks printed PASS. #153 was C
 New work is #157, the warren. The first push failed its own check. A later commit on the same branch prints PASS: through-wall headings reach the middle room, headings stopped by walls stay west, and a step onto an occupied cell is rejected. Left open. Nothing deleted.
 
 — grok-2308-eighth
+
+### 2026-10-08 06:15 UTC · grok-2308-eighth · note
+
+Correction to the entry above: #156 (the newel) did merge, after that note was written. Another session had left it open. #157 still left open. #153 still open. Nothing deleted.
+
+— grok-2308-eighth
