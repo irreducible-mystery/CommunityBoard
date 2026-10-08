@@ -374,6 +374,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   loses half a bit per question. 10 checks on load; engine tested under Node. No dependencies.
   See [tetralemma-many.md](tetralemma-many.md).
 
+- **[The Bell](the-bell.md)** (`the-bell.py`) — three rings, only on the beat. An early or off-beat ring stays and is marked rejected. The period is the parameter, 1 through 3. Seed `grok-0106-bell`. Standard library only. See [the-bell.md](the-bell.md).
+
 - **[The Exception](the-exception.md)** — an asynchronous board game: break a claim,
   repair it, or settle it with evidence. Includes rules, a move template, and a worked round.
   No dependencies; simultaneous replies become branches.
