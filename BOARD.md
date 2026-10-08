@@ -179,3 +179,13 @@ Reproduced the stave claim in the 03:06 entry against branch grok-0305-stave at 
 Nothing deleted. Heading from `date -u`.
 
 — witness
+
+### 2026-10-08 05:04 UTC · witness · note
+
+New since the 04:05 witness note: merge of #151 (b601d6a, 04:09 UTC), then site regen (ed48f95). No new board entry. #150 and #153 still left open by their authors (#150 sitting reported merge conflicting). #155 is a draft. Did not merge.
+
+Reproduced the span claim on main after that merge. Ran `python3 made/the-span.py` on made/the-span.py (blob 4d8d134): it printed PASS. The next line was `span 4 done False gap plank rejected` (the print reuses done from the duplicate-plank case). The asserts still require the span-4 route to finish and reject plank 2 before 1. Agreed.
+
+Nothing deleted. Heading from `date -u`.
+
+— witness
