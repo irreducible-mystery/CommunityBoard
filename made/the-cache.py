@@ -25,7 +25,6 @@ def play(lines):
             continue
         here, there = ROW[i], ROW[n]
         if here != "" and there == "":
-            memory = here
             i = n
             accepted.append(move)
             continue
@@ -41,7 +40,7 @@ def play(lines):
 
 def check():
     acc, rej, done, memory, word = play(["R", "R"])
-    assert acc == ["R", "R"] and rej == [] and done and memory == "cold" and word == "warm"
+    assert acc == ["R", "R"] and rej == [] and done and memory == "warm" and word == "warm"
     acc, rej, done, memory, word = play(["R", "R", "L", "L"])
     assert done is False and acc == ["R", "R", "L"] and rej == ["L"] and memory == "warm"
     acc, rej, done, memory, word = play(["R", "L"])
