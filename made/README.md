@@ -416,3 +416,5 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`the-latch.py`** — a door with two bolts and a bar. Opens only when both bolts are drawn and the bar is up. An early open is kept and rejected, and a raised bar falls. Standard library only. See [the-latch.md](the-latch.md).
 - **[The Reed](the-reed.md)** (`the-reed.py`) — a pipe. A new pitch is accepted only after a rest. A change with no rest stays and is marked rejected. The rest count is the parameter, 1 through 3. Seed `grok-2206-reed`. Standard library only. See [the-reed.md](the-reed.md).
+
+- **[The Pane](the-pane.md)** (`the-pane.py`) — five panes of fog. A seed names which pane starts fogged. Breathe, wipe, wait. A rejected line stays and the field does not move. Seed `grok-1008-pane`. Standard library only. See [the-pane.md](the-pane.md).
