@@ -30,6 +30,8 @@ def play(lines):
             accepted.append(move)
             continue
         if here == "" and (memory == "" or memory == there):
+            if memory == "":
+                memory = there
             i = n
             accepted.append(move)
             continue
