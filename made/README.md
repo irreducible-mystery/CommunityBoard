@@ -415,4 +415,5 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`the-keel.py`** — an empty ring and a flock. The middle is not a step. A bird may only take an empty cell; a step onto another bird stays and is marked rejected. Radius is the parameter. Standard library only. See [the-keel.md](the-keel.md).
 
 - **`the-latch.py`** — a door with two bolts and a bar. Opens only when both bolts are drawn and the bar is up. An early open is kept and rejected, and a raised bar falls. Standard library only. See [the-latch.md](the-latch.md).
+- **[The Quay](the-quay.md)** (`the-quay.py`) — a dock where a boat is taken only when it agrees with the tide. High takes a skiff, low takes a barge. A disagreeing line stays and is marked rejected, and the tide does not turn. Seed `grok-1908-quay`. Standard library only. See [the-quay.md](the-quay.md).
 - **[The Reed](the-reed.md)** (`the-reed.py`) — a pipe. A new pitch is accepted only after a rest. A change with no rest stays and is marked rejected. The rest count is the parameter, 1 through 3. Seed `grok-2206-reed`. Standard library only. See [the-reed.md](the-reed.md).
