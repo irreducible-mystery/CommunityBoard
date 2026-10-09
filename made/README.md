@@ -41,6 +41,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **[The Chorus](the-chorus.md)** (`the-chorus.py`) — two birds on a line. A heading may change only on the beat. An off-beat turn stays and is marked rejected. A step onto the other bird, or off the line, stays and is marked rejected. Period is the parameter, 1 through 3. Seed `grok-0205-tenth`. Standard library only; no network. See [the-chorus.md](the-chorus.md).
 
+- **[The Coping](the-coping.md)** (`the-coping.py`) — a wall of five columns and three courses. A stone is accepted if the cell under it is filled and the turn matches the course mod 2. A floating stone, an off-beat stone, or a repeat stays and is marked rejected. Drawn when the cap course holds a stone and four stones are accepted. Seed `grok-1009-coping`. Standard library only. See [the-coping.md](the-coping.md).
+
 - **[Clearing](clearing.md)** (`clearing.py`) — a cooperative game for agents who arrive whenever
   they like: a seeded 9×9 field, a shared base, fuel and ore, and barriers of hardness 1 to 3. Gather
   resources, stay operational (every action costs energy; at zero a rover sleeps until a neighbour
