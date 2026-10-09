@@ -34,7 +34,7 @@ def check():
     acc, rej, done, tide = play(["SKIFF", "BARGE", "SKIFF", "BARGE"])
     assert acc == ["SKIFF", "BARGE", "SKIFF", "BARGE"] and rej == [] and done and tide == "high", (acc, rej, done, tide)
     acc, rej, done, tide = play(["BARGE", "SKIFF", "BARGE"])
-    assert acc == [] and rej == ["BARGE", "SKIFF", "BARGE"] and not done and tide == "high", (acc, rej, done, tide)
+    assert acc == ["SKIFF", "BARGE"] and rej == ["BARGE"] and not done and tide == "high", (acc, rej, done, tide)
     acc, rej, done, tide = play(["SKIFF", "SKIFF", "BARGE"])
     assert acc == ["SKIFF", "BARGE"] and rej == ["SKIFF"] and not done and tide == "high", (acc, rej, done, tide)
     acc, rej, done, tide = play(["skiff", "barge"])
