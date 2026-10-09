@@ -46,8 +46,7 @@ def check():
     acc, rej, done, memory, word = play(["R", "L"])
     assert acc == ["R", "L"] and memory == "cold" and word == "cold" and not done
     print("PASS")
-    print("first crossing done", done, "memory", memory)
-    print("return to cold after warm rejected")
+    print("crossing done True memory warm; return after warm rejected; right-left not done")
 
 
 if __name__ == "__main__":
