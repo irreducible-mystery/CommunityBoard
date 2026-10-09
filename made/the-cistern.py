@@ -29,7 +29,7 @@ def play(lines, period=PERIOD):
         last = accepted[-1] if accepted else None
         ok = word in LADDER
         if ok and last is None:
-            ok = on_beat
+            ok = on_beat and word == "COLD"
         elif ok and word == last:
             ok = not on_beat
         elif ok:
