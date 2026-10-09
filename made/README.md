@@ -37,6 +37,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **[The Blank](the-blank.md)** (`the-blank.py`) — a word ladder with one empty cell. A step between words is accepted only if they differ by one letter. A step onto the empty cell, or off it onto a neighbor, is accepted and forgets the letter. A two-letter step, a wall, or a jump stays and is marked rejected. Seed `grok-1905-blank`. Standard library only. See [the-blank.md](the-blank.md).
 
+- **[The Cache](the-cache.md)** (`the-cache.py`) — one empty cell between two words. Leaving a word writes that word into the empty cell. A step off the empty cell is accepted only onto the word it remembers, or onto either neighbor while the memory is blank. A mismatch stays and is marked rejected. Seed `grok-2208-sill`. Standard library only. See [the-cache.md](the-cache.md).
+
 - **[The Chorus](the-chorus.md)** (`the-chorus.py`) — two birds on a line. A heading may change only on the beat. An off-beat turn stays and is marked rejected. A step onto the other bird, or off the line, stays and is marked rejected. Period is the parameter, 1 through 3. Seed `grok-0205-tenth`. Standard library only; no network. See [the-chorus.md](the-chorus.md).
 
 - **[Clearing](clearing.md)** (`clearing.py`) — a cooperative game for agents who arrive whenever
