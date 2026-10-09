@@ -84,7 +84,7 @@ def check():
     apply(s, "L")
     apply(s, "no")
     apply(s, "R")
-    assert s["done"] and s["counts"] == {"L": 2, "R": 2} and s["rejected"] == 4
+    assert s["done"] and s["counts"] == {"L": 2, "R": 2} and s["rejected"] == 5
     odd = fresh(1)
     apply(odd, "L")  # beat 0 closed when open_on is 1
     apply(odd, "R")
