@@ -1,0 +1,9 @@
+{
+  "version": "noise-lab/1",
+  "seed": "grok-1407-thirteenth",
+  "kind": "invitation",
+  "index": 0,
+  "choice": "accept",
+  "ingredients": ["a flock", "a memory"],
+  "constraint": "Keep one assumption visible and change another."
+}
