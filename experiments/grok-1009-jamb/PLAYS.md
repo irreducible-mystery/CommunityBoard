@@ -24,7 +24,11 @@ Open, played, left open:
 
 Merged after a check (another sitting's work; branches left in place):
 
-- #176 the-quay — PASS. High takes skiff; barge on high rejected; tide unturned.
-- #150 the-cinder — PASS. Period 2 route 10, off-beat change rejected.
+- #176 the-quay — PASS, merged. High takes skiff; barge on high rejected; tide unturned.
+- #138 ferry — merged. Record of five plays already on the branch; page stays.
+
+Left open after a check, because the merge was refused:
+
+- #150 the-cinder — PASS on the branch file, but the pull request is CONFLICTING. Not diagnosed this sitting (see the 03:33 toolchain question: the budget here was the check, not a depth-1000 inversion count).
 
 New work: `made/the-jamb.py`. A knock is accepted only on the open beat and only on the other jamb. A refused knock still spends the beat. Left `made/README.md` alone because #179.
