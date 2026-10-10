@@ -1,142 +1,87 @@
 #!/usr/bin/env python3
-"""The Latch. A seed plus move lines. Standard library only. Never writes unless asked.
+"""The latch. A bar that opens and closes on opposite turns, only on the open beat.
 
-A door has two bolts and a bar. Both bolts start shut. The bar starts down.
-The door opens only when both bolts are drawn and the bar is up, on the move
-named open. An open that is early is kept and marked rejected, and a raised
-bar falls. Nothing is deleted from the record.
+A turn is L or R. It is accepted only on the open beat, and only if it is
+the opposite of the last accepted turn (the first may be either). The beat
+advances on every line, accepted or rejected. The latch draws when it has
+accepted two opens and two closes (four opposite turns). An off-beat turn,
+a same-direction repeat, or a non-L/R word is kept and marked rejected.
+
+Parameter: which residue is the open beat, 0 or 1. Default 0.
+
+Standard library only. Nothing deleted.
 """
-import argparse
-import sys
 
-BOLTS = ("n", "s")
-MOVES = {"draw", "set", "lift", "drop", "open"}
+BEATS = 2
+NEED = 4  # two opens, two closes
 
 
-def fresh(seed):
+def fresh(open_on=0):
+    open_on = 0 if int(open_on) % 2 == 0 else 1
     return {
-        "seed": seed,
-        "bolts": {"n": "shut", "s": "shut"},
-        "bar": "down",
-        "open": False,
+        "open_on": open_on,
+        "beat": 0,
+        "last": None,
         "accepted": 0,
         "rejected": 0,
+        "done": False,
         "notes": [],
     }
 
 
 def apply(state, line):
-    word = line.strip().split()
-    if state["open"]:
+    word = line.strip().upper()
+    if state["done"]:
         state["rejected"] += 1
-        state["notes"].append(f"rejected {line!r}: door already open")
+        state["notes"].append(f"rejected {word!r}: latch already drawn")
+        state["beat"] += 1
         return state
-    if not word or word[0] not in MOVES:
+    if word not in ("L", "R"):
         state["rejected"] += 1
-        state["notes"].append(f"rejected {line!r}: not a move")
+        state["notes"].append(f"rejected {line!r}: want L or R")
+        state["beat"] += 1
         return state
-    move = word[0]
-    if move in {"draw", "set"}:
-        if len(word) != 2 or word[1] not in BOLTS:
-            state["rejected"] += 1
-            state["notes"].append(f"rejected {line!r}: name a bolt, n or s")
-            return state
-        bolt = word[1]
-        want = "drawn" if move == "draw" else "shut"
-        if state["bolts"][bolt] == want:
-            state["rejected"] += 1
-            state["notes"].append(f"rejected {move} {bolt}: already {want}")
-            return state
-        state["bolts"][bolt] = want
-    elif move == "lift":
-        if state["bar"] == "up":
-            state["rejected"] += 1
-            state["notes"].append("rejected lift: bar already up")
-            return state
-        state["bar"] = "up"
-    elif move == "drop":
-        if state["bar"] == "down":
-            state["rejected"] += 1
-            state["notes"].append("rejected drop: bar already down")
-            return state
-        state["bar"] = "down"
-    else:
-        ready = state["bolts"]["n"] == "drawn" and state["bolts"]["s"] == "drawn" and state["bar"] == "up"
-        if not ready:
-            if state["bar"] == "up":
-                state["bar"] = "down"
-            state["rejected"] += 1
-            state["notes"].append(
-                f"rejected open: n {state['bolts']['n']} s {state['bolts']['s']} bar {state['bar']}"
-            )
-            return state
-        state["open"] = True
+    if state["beat"] % BEATS != state["open_on"]:
+        state["rejected"] += 1
+        state["notes"].append(f"rejected {word}: beat {state['beat']} is closed")
+        state["beat"] += 1
+        return state
+    if state["last"] == word:
+        state["rejected"] += 1
+        state["notes"].append(f"rejected {word}: same direction as last accepted")
+        state["beat"] += 1
+        return state
+    state["last"] = word
     state["accepted"] += 1
+    state["beat"] += 1
+    if state["accepted"] >= NEED:
+        state["done"] = True
     return state
 
 
 def show(state):
-    print(f"the-latch {state['seed']}")
     print(
-        f"n {state['bolts']['n']}  s {state['bolts']['s']}  bar {state['bar']}  "
-        f"open {state['open']}  accepted {state['accepted']} rejected {state['rejected']}"
+        f"latch open_on {state['open_on']} beat {state['beat']} "
+        f"last {state['last'] or '-'} accepted {state['accepted']}/{NEED} "
+        f"rejected {state['rejected']} drawn {state['done']}"
     )
     for note in state["notes"]:
         print(note)
 
 
-def load_moves(path):
-    text = sys.stdin.read() if path == "-" else open(path, encoding="utf-8").read()
-    return [line.strip() for line in text.splitlines() if line.strip() and not line.strip().startswith("#")]
-
-
 def check():
-    fails = []
-    s = fresh("check")
-    apply(s, "open")
-    if s["rejected"] != 1 or s["open"] or s["bar"] != "down":
-        fails.append("early open stays shut")
-    apply(s, "lift")
-    apply(s, "open")
-    if s["bar"] != "down" or s["rejected"] != 2:
-        fails.append("early open drops the bar")
-    apply(s, "draw n")
-    apply(s, "draw s")
-    apply(s, "lift")
-    apply(s, "open")
-    if not s["open"] or s["accepted"] != 5 or s["rejected"] != 2:
-        fails.append("ready open")
-    apply(s, "drop")
-    if s["rejected"] != 3 or not s["open"]:
-        fails.append("after open is kept and rejected")
-    if fails:
-        print("FAIL")
-        for item in fails:
-            print(item)
-        return 1
+    s = fresh()
+    for line in ("L", "same", "R", "gap", "L", "no", "R"):
+        apply(s, line)
+    assert s["done"] and s["accepted"] == 4 and s["rejected"] == 3, s
+    odd = fresh(1)
+    apply(odd, "L")  # closed
+    apply(odd, "R")
+    assert odd["accepted"] == 1 and odd["rejected"] == 1 and not odd["done"]
     print("PASS")
-    return 0
-
-
-def main(argv):
-    parser = argparse.ArgumentParser(description="The Latch. A door, two bolts, a bar.")
-    sub = parser.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("check")
-    show_p = sub.add_parser("show")
-    show_p.add_argument("seed")
-    replay_p = sub.add_parser("replay")
-    replay_p.add_argument("seed")
-    replay_p.add_argument("path")
-    args = parser.parse_args(argv)
-    if args.cmd == "check":
-        return check()
-    state = fresh(args.seed)
-    if args.cmd == "replay":
-        for line in load_moves(args.path):
-            apply(state, line)
-    show(state)
-    return 0
+    print("opposite turns on open beats draw after four; same and closed rejected")
+    show(s)
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    check()
