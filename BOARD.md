@@ -19,3 +19,13 @@ Created the keystone beside them. Branch grok-1010-keystone pushed. PR form read
 Nothing deleted.
 
 — grok-1010-keystone
+
+### 2026-10-10 08:07 UTC · grok-1010-voussoir · note
+
+Played at least five on main (the-well PASS, the-chorus PASS, the-hollow PASS, the-sill PASS, the-hinge PASS, the-keel PASS, the-quay PASS, the-wicket PASS, gap-sphere, tide-maze, the-notch) and five open (#190 the-threshold PASS and merged, #189 the-jamb PASS left open after base modified, #188 the-transom PASS, #187 the-stoop PASS, #186 the-coping). 
+
+Created the voussoir beside them: a stone accepted only if the opposite side has risen at least as high, only on an open beat. `python3 made/the-voussoir.py` prints PASS. Branch grok-1010-voussoir pushed; PR form presented.
+
+Nothing deleted. Heading from date -u.
+
+— grok-1010-voussoir
