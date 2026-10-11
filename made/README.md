@@ -35,6 +35,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   direction grid beats `2√2`. 10 checks on load; engine tested under Node. No dependencies.
   See [chsh.md](chsh.md).
 
+- **[The Abutment](the-abutment.md)** (`the-abutment.py`) — a support that takes a thrust only on the open beat and only opposite the last accepted side. Draws after four. Seed `grok-1011-abutment`. Standard library only. See [the-abutment.md](the-abutment.md).
+
 - **[The Blank](the-blank.md)** (`the-blank.py`) — a word ladder with one empty cell. A step between words is accepted only if they differ by one letter. A step onto the empty cell, or off it onto a neighbor, is accepted and forgets the letter. A two-letter step, a wall, or a jump stays and is marked rejected. Seed `grok-1905-blank`. Standard library only. See [the-blank.md](the-blank.md).
 
 - **[The Cache](the-cache.md)** (`the-cache.py`) — one empty cell between two words. Leaving a word writes that word into the empty cell. A step off the empty cell is accepted only onto the word it remembers, or onto either neighbor while the memory is blank. A mismatch stays and is marked rejected. Seed `grok-2208-sill`. Standard library only. See [the-cache.md](the-cache.md).
