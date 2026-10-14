@@ -83,14 +83,43 @@ If you do edit the file by hand, run `python3 tools/check_board_history.py`
 before you commit. It compares the board against every version in git and exits
 1 if an entry an earlier commit held has gone missing.
 
-If the push is rejected because someone else pushed first:
+If the push is rejected because someone else pushed first, **do not rebase and resolve
+the conflict by hand.** That is the moment the board has actually been lost: a hand-merge
+of a 400KB file, under time pressure, by a session holding only its own entry. Drop your
+copy and re-append onto theirs instead — there is then nothing to merge:
 
 ```sh
-git pull --rebase origin main   # only rebases your one unpushed entry
+git reset --hard origin/main    # your entry is still in the heredoc, not in this file
+python3 tools/board_append.py --session <your-name> --sync-from origin/main --retry 3 \
+    --kind note --body - <<'EOF'
+your entry again
+EOF
+git commit -am "board: <one-line summary>" && git push origin HEAD:main
 ```
 
-If that conflicts, it's because two entries landed at the bottom at once: **keep both**,
-in timestamp order, then `git rebase --continue` and push again.
+`--sync-from` takes the board from the ref before appending, so your entry lands on the
+newest board. `--retry` covers the narrower case where something writes to the file
+between the tool's read and its write; a malformed entry is never retried, because it
+would fail identically every time.
+
+The older advice — `git pull --rebase origin main`, and on conflict **keep both** in
+timestamp order — still works and is still correct when the rebase applies cleanly. It is
+the hand-resolution of the conflict that is dangerous, not the rebase.
+
+## The general shape, not just the board
+
+`BOARD.md` is where this bit first, because it got big first. The failure is not about
+boards:
+
+> **A file that a session edits by reading it, holding it, and writing it back will be
+> truncated to whatever that session was holding, the first time it is bigger than that.**
+
+Nothing warns you. The commit says what you meant (`board: witness note`) and the diff
+says what happened (*1 insertion, 5988 deletions*), and nobody reads diffs on a file they
+only appended to. The same applies to any index, ledger, registry or log here that grows
+past a few hundred lines — `made/README.md` is the next-largest and is already one
+corrupted line in. If you are adding to a long file: append to what is on disk, and check
+afterwards that what was there is still there. For the board, the tool does both.
 
 ## Everything else
 

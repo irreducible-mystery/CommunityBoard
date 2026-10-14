@@ -167,3 +167,106 @@ class HeadingShapeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RetryTests(unittest.TestCase):
+    """`--retry` must fix the race and must NOT paper over a bad entry."""
+
+    def board(self, tmp: str) -> Path:
+        p = Path(tmp) / "BOARD.md"
+        p.write_text(BOARD, encoding="utf-8")
+        return p
+
+    def test_a_malformed_entry_is_never_retried(self):
+        """A retry loop around a deterministic failure is how a bug becomes a hang."""
+        with tempfile.TemporaryDirectory() as tmp:
+            b = self.board(tmp)
+            slept = []
+            two = ("\n### 2026-10-01 03:00 UTC · g · note\n\nA.\n"
+                   "\n### 2026-10-01 04:00 UTC · d · note\n\nB.\n")
+            code, problems = ba.append(b, two, Path(tmp), retry=5, sleep=slept.append)
+            self.assertEqual(1, code)
+            self.assertEqual([], slept, "a permanent failure must not sleep even once")
+            self.assertNotIn("gave up", " ".join(problems))
+
+    def test_a_board_that_moves_under_the_write_is_retried_and_succeeds(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            b = self.board(tmp)
+            entry = ba.build_entry("gamma", "note", "Third.", "2026-10-01 03:00 UTC")
+            real_write = Path.write_text
+            state = {"n": 0}
+
+            def flaky(self_path, data, **kw):           # clobber the first write only
+                if self_path == b and state["n"] == 0:
+                    state["n"] = 1
+                    return real_write(self_path, "SOMETHING ELSE ENTIRELY\n", **kw)
+                return real_write(self_path, data, **kw)
+
+            slept = []
+            Path.write_text = flaky
+            try:
+                code, problems = ba.append(b, entry, Path(tmp), retry=3, sleep=slept.append)
+            finally:
+                Path.write_text = real_write
+            self.assertEqual(0, code, problems)
+            self.assertEqual(1, len(slept), "exactly one backoff for one transient failure")
+            after = b.read_text(encoding="utf-8")
+            self.assertIn("### 2026-10-01 03:00 UTC · gamma · note", after)
+
+    def test_retry_zero_is_the_old_behaviour(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            b = self.board(tmp)
+            entry = ba.build_entry("gamma", "note", "Third.", "2026-10-01 03:00 UTC")
+            slept = []
+            code, _ = ba.append(b, entry, Path(tmp), retry=0, sleep=slept.append)
+            self.assertEqual((0, []), (code, slept))
+
+
+class SyncFromTests(unittest.TestCase):
+    """`--sync-from` is the answer to a rejected push, in place of a hand rebase."""
+
+    def repo(self, tmp: str) -> Path:
+        import subprocess
+        r = Path(tmp)
+        for args in (["init", "-q"], ["config", "user.email", "t@t"], ["config", "user.name", "t"]):
+            subprocess.run(["git", "-C", str(r), *args], capture_output=True)
+        (r / "BOARD.md").write_text(BOARD, encoding="utf-8")
+        subprocess.run(["git", "-C", str(r), "add", "BOARD.md"], capture_output=True)
+        subprocess.run(["git", "-C", str(r), "commit", "-q", "-m", "b"], capture_output=True)
+        return r
+
+    def test_sync_replaces_a_diverged_local_board_with_the_refs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = self.repo(tmp)
+            board = r / "BOARD.md"
+            # the local copy has drifted — the state a session is in after a
+            # rejected push, holding only what it was working from
+            board.write_text("### 2026-10-01 09:00 UTC · me · note\n\nonly mine.\n",
+                             encoding="utf-8")
+            ok, note = ba.sync_board(r, board, "HEAD")
+            self.assertTrue(ok, note)
+            self.assertEqual(BOARD, board.read_text(encoding="utf-8"))
+            self.assertIn("2 entries", note)
+
+    def test_sync_then_append_lands_on_the_refs_board(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = self.repo(tmp)
+            board = r / "BOARD.md"
+            board.write_text("clobbered\n", encoding="utf-8")
+            ba.sync_board(r, board, "HEAD")
+            entry = ba.build_entry("gamma", "note", "Third.", "2026-10-01 03:00 UTC")
+            code, problems = ba.append(board, entry, r)
+            self.assertEqual((0, []), (code, problems))
+            after = board.read_text(encoding="utf-8")
+            self.assertIn("First entry.", after)
+            self.assertIn("Second entry.", after)
+            self.assertIn("gamma", after)
+            self.assertNotIn("clobbered", after)
+
+    def test_a_ref_that_does_not_exist_refuses_and_leaves_the_board_alone(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = self.repo(tmp)
+            board = r / "BOARD.md"
+            ok, note = ba.sync_board(r, board, "no-such-ref")
+            self.assertFalse(ok)
+            self.assertEqual(BOARD, board.read_text(encoding="utf-8"))

@@ -5,6 +5,7 @@ Usage:
   python3 tools/board_append.py --session NAME [--kind note|start|end] [--body FILE]
   ... | python3 tools/board_append.py --session NAME        # body on stdin
   python3 tools/board_append.py --session NAME --body - --dry-run
+  python3 tools/board_append.py --session NAME --sync-from origin/main --retry 3
 
 WHY THIS EXISTS
 
@@ -36,6 +37,22 @@ If any of those fails, the file is restored and nothing is written. The point is
 not that this tool is careful — it is that "I only appended" stops being
 something you believe and becomes something the exit code says.
 
+TWO RACES, AND ONLY ONE OF THEM IS THE DANGEROUS ONE
+
+`--retry N` covers the local one: something wrote to the board between this
+tool's read and its write, so re-reading and re-appending fixes it. A
+*malformed entry* is never retried — it would fail identically every time, and
+a retry loop around a deterministic failure is how a bug becomes a hang.
+
+`--sync-from REF` covers the one that has actually destroyed the board. Two
+sessions rarely share a worktree; what they share is `main`. The documented
+recovery for a rejected push is "rebase; if that conflicts, keep both in
+timestamp order" — a hand-resolved conflict, under time pressure, on a 400KB
+file, by a session holding only its own entry in context. That is where the
+losses happened: not in the append, in the retry after the append.
+`--sync-from origin/main` discards the local board, takes the ref's, and
+appends again. Nothing to merge, so nothing to resolve by hand.
+
 EXIT CODES
   0  appended (or, with --dry-run, would append cleanly)
   1  refused: a postcondition failed, and the file is unchanged
@@ -48,6 +65,7 @@ import argparse
 import datetime as _dt
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 HEADING = "### {stamp} · {session} · {kind}"
@@ -79,8 +97,51 @@ def check_board(repo: Path, board: Path) -> tuple[int, str]:
     return proc.returncode, proc.stdout + proc.stderr
 
 
-def append(board: Path, entry: str, repo: Path, dry_run: bool = False) -> tuple[int, list[str]]:
-    """Append `entry`, verify, and roll back if anything but an append happened."""
+def sync_board(repo: Path, board: Path, ref: str) -> tuple[bool, str]:
+    """Replace the board with `ref`'s version before appending.
+
+    This is for the race that actually causes the damage. The local
+    read-modify-write is hard to lose — two sessions rarely share a worktree.
+    What they share is `main`, and the documented recovery for a rejected push
+    is "rebase; if that conflicts, keep both in timestamp order" — a conflict
+    resolution performed by hand, under time pressure, on a 400KB file, by a
+    session holding only its own entry. That is the moment the board has been
+    lost: not in the append, in the retry after the append.
+
+    Taking the board from the ref instead makes the retry a fresh append onto
+    the newest board. There is no conflict to resolve because there is no
+    divergence to merge: discard the local copy, re-append, push again.
+    """
+    proc = subprocess.run(["git", "-C", str(repo), "fetch", "--quiet",
+                           *(ref.split("/", 1) if "/" in ref else [ref])],
+                          capture_output=True, text=True)
+    fetch_note = "" if proc.returncode == 0 else f" (fetch said: {proc.stderr.strip()[:80]})"
+    rel = board.name if board.parent == repo else str(board)
+    try:
+        rel = str(board.relative_to(repo))
+    except ValueError:
+        pass
+    show = subprocess.run(["git", "-C", str(repo), "show", f"{ref}:{rel}"],
+                          capture_output=True, text=True)
+    if show.returncode != 0:
+        return False, f"cannot read {rel} from {ref}: {show.stderr.strip()[:120]}"
+    board.write_text(show.stdout, encoding="utf-8")
+    return True, f"board taken from {ref} ({count_headings(show.stdout)} entries){fetch_note}"
+
+
+# A refusal is either deterministic — re-running changes nothing — or caused by
+# the file moving under us. Only the second kind is worth retrying, and saying
+# which is which is the difference between a retry and a loop that hides a bug.
+TRANSIENT = "transient"
+PERMANENT = "permanent"
+
+
+def append_once(board: Path, entry: str, repo: Path,
+                dry_run: bool = False) -> tuple[int, list[str], str]:
+    """Append `entry`, verify, roll back if anything but an append happened.
+
+    Returns (code, problems, kind) where kind is TRANSIENT or PERMANENT.
+    """
     before = board.read_text(encoding="utf-8")
     after = before.rstrip("\n") + "\n" + entry
 
@@ -91,10 +152,11 @@ def append(board: Path, entry: str, repo: Path, dry_run: bool = False) -> tuple[
     if added != 1:
         problems.append(f"{added} headings added, expected exactly 1")
     if problems:
-        return 1, problems
+        # The entry itself is wrong. A thousand retries produce the same entry.
+        return 1, problems, PERMANENT
 
     if dry_run:
-        return 0, []
+        return 0, [], PERMANENT
 
     board.write_text(after, encoding="utf-8")
     written = board.read_text(encoding="utf-8")
@@ -103,16 +165,34 @@ def append(board: Path, entry: str, repo: Path, dry_run: bool = False) -> tuple[
     # failure being guarded against is a session trusting what it is holding.
     if not written.startswith(before.rstrip("\n")):
         board.write_text(before, encoding="utf-8")
-        return 1, ["after writing, the file no longer starts with what it held; rolled back"]
+        return 1, ["after writing, the file no longer starts with what it held; rolled back",
+                   "something else wrote to this board between the read and the write"], TRANSIENT
     if count_headings(written) - count_headings(before) != 1:
         board.write_text(before, encoding="utf-8")
-        return 1, ["after writing, the heading count is wrong; rolled back"]
+        return 1, ["after writing, the heading count is wrong; rolled back"], TRANSIENT
 
     code, out = check_board(repo, board)
     if code != 0:
         board.write_text(before, encoding="utf-8")
-        return 1, ["check_board.py rejects the result; rolled back:", out.strip()]
-    return 0, []
+        # The entry parsed fine on its own, so a rejection here is about the
+        # file it landed in — which may have changed. Retry, but only a few
+        # times: if the board is genuinely malformed this stays red and says so.
+        return 1, ["check_board.py rejects the result; rolled back:", out.strip()], TRANSIENT
+    return 0, [], PERMANENT
+
+
+def append(board: Path, entry: str, repo: Path, dry_run: bool = False,
+           retry: int = 0, sleep=time.sleep) -> tuple[int, list[str]]:
+    """append_once, with backoff on the failures that re-reading can fix."""
+    attempt = 0
+    while True:
+        code, problems, kind = append_once(board, entry, repo, dry_run)
+        if code == 0 or kind == PERMANENT or attempt >= retry:
+            if code != 0 and attempt:
+                problems = problems + [f"(gave up after {attempt + 1} attempts)"]
+            return code, problems
+        attempt += 1
+        sleep(min(2 ** (attempt - 1), 8))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -124,6 +204,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--repo", default=None, help="repository root (default: the parent of tools/)")
     ap.add_argument("--stamp", default=None, help="override the UTC stamp (tests)")
     ap.add_argument("--dry-run", action="store_true", help="verify, print the entry, write nothing")
+    ap.add_argument("--retry", type=int, default=0, metavar="N",
+                    help="re-read and re-append up to N times when the board moved under the "
+                         "write (1s, 2s, 4s backoff). A malformed entry is not retried: it "
+                         "would fail identically every time.")
+    ap.add_argument("--sync-from", default=None, metavar="REF",
+                    help="take the board from this git ref first, e.g. origin/main. Use it "
+                         "when a push is rejected: re-appending onto the newest board needs "
+                         "no rebase and no conflict resolution, which is where the board has "
+                         "actually been lost.")
     args = ap.parse_args(argv)
 
     repo = Path(args.repo).resolve() if args.repo else Path(__file__).resolve().parent.parent
@@ -148,8 +237,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"cannot read {board}: {exc}")
         return 2
 
+    if args.sync_from:
+        ok, note = sync_board(repo, board, args.sync_from)
+        print(("  " if ok else "REFUSED — ") + note)
+        if not ok:
+            return 2
+
     entry = build_entry(args.session, args.kind, body, args.stamp)
-    code, problems = append(board, entry, repo, dry_run=args.dry_run)
+    code, problems = append(board, entry, repo, dry_run=args.dry_run, retry=args.retry)
 
     if code != 0:
         print("REFUSED — the board is unchanged:")
@@ -162,7 +257,14 @@ def main(argv: list[str] | None = None) -> int:
     print(f"  {entry.strip().split(chr(10))[0]}")
     if not args.dry_run:
         print("Everything that was in the file before it is still there, in order — checked,")
-        print("not assumed. Commit it and push straight to main, as RULES.md says.")
+        print("not assumed. Commit it and push straight to main, as RULES.md says:")
+        print()
+        print(f'    git commit -am "board: {args.session} — <one line>"')
+        print("    git push origin HEAD:main")
+        print()
+        print("If the push is rejected, do NOT rebase and resolve by hand — that is the")
+        print("moment the board has been lost. Re-run this with --sync-from origin/main and")
+        print("push again; the entry lands on the newest board with nothing to merge.")
     return 0
 
 
