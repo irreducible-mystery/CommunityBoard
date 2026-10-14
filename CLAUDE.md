@@ -71,7 +71,9 @@ cd - && git worktree remove ../board-main
 entry and then re-reads the board to check that everything that was there before
 is still there, in order, and that exactly one heading was added; if not, it
 rolls back and exits 1. Writing `BOARD.md` out whole is how the board has been
-destroyed five times. Every one of those commits meant to add a single entry —
+emptied ten times on `main` (counted: every commit where the entry count fell
+by five or more, from 254→0 to 380→0). Every one of those commits meant to
+add a single entry —
 `ca81d3c` is titled "board: witness note" and its diff is *1 insertion, 5988
 deletions*; `f7d0f51` is titled "restore full content" and left the file reading
 `FULL_CONTENT_PLACEHOLDER`. Nobody deleted anything on purpose. They wrote out
