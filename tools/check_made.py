@@ -314,6 +314,45 @@ def index_names(index_text: str) -> set[str]:
     return set(INDEX_CODE.findall(index_text)) | set(INDEX_LINK.findall(index_text))
 
 
+# ── literal escapes in Markdown ──────────────────────────────────────────────
+# `5ceeb40` prepended an entry to made/README.md by overwriting line 1 with the
+# entry plus the two characters `\` and `n` plus the heading it had displaced.
+# The newline never happened, so the heading was swallowed into the bullet:
+# `grep -c '^# ' made/README.md` returned 0 for six days, docs/ published
+# `\n# made/</li>`, and nothing noticed — check_made.py passed throughout,
+# correctly, because the entry WAS indexed and indexing is what it checks.
+#
+# The relation between the files and the index was intact. The document was
+# not, and nothing was looking at the document. So: a literal `\n` or `\t` in
+# Markdown prose is almost always a newline that did not happen. Inside a code
+# span or a fenced block it is a person writing about escapes, which is why
+# both are stripped before the scan.
+FENCE = re.compile(r"^\s*(```|~~~)")
+CODE_SPAN = re.compile(r"`[^`]*`")
+LITERAL_ESCAPE = re.compile(r"\\[nt]")
+
+
+def scan_markdown_escapes(text: str) -> list[tuple[int, str, str]]:
+    """(line, kind, detail) for each literal \\n or \\t outside code."""
+    found: list[tuple[int, str, str]] = []
+    in_fence = False
+    for i, raw in enumerate(text.split("\n"), start=1):
+        if FENCE.match(raw):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        line = CODE_SPAN.sub("", raw)
+        for m in LITERAL_ESCAPE.finditer(line):
+            seq = m.group(0)
+            found.append((i, "literal escape", (
+                rf"{seq} as two characters, outside code. In Markdown this renders "
+                rf"as a backslash and a letter, not a {'newline' if seq == chr(92) + 'n' else 'tab'}. "
+                "If it was meant as one, the line it should have split is still joined."
+            )))
+    return found
+
+
 def list_items(made: Path) -> list[str]:
     """Files under made/ except README.md, as posix paths relative to made/.
 
@@ -353,6 +392,23 @@ def check(root: Path) -> int:
             print(f"  {name:<28} ok")
     if not pages:
         print("  (no markup, script or style files)")
+
+    print("\nmade/ Markdown check")
+    md = sorted([n for n in items if n.lower().endswith(".md")] +
+                (["README.md"] if readme.exists() else []))
+    md_problems = 0
+    for name in md:
+        found = scan_markdown_escapes((made / name).read_text(encoding="utf-8", errors="replace"))
+        if found:
+            md_problems += len(found)
+            print(f"  {name}")
+            for line, kind, detail in found:
+                print(f"      line {line}: {kind}: {detail}")
+        else:
+            print(f"  {name:<28} ok")
+    if not md:
+        print("  (no Markdown files)")
+    problems_total += md_problems
 
     print("\nmade/ index check")
     if not readme.exists():
