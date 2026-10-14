@@ -22,6 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history, not the default depth 1. `tools/check_board_history.py`
+          # asks whether BOARD.md still holds what earlier commits held, and in a
+          # shallow clone there are no earlier commits — every board would look
+          # whole, including one with 377 entries missing. The checker refuses to
+          # answer in a shallow clone rather than answer wrongly, so without this
+          # the test that guards the board would error instead of passing.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
