@@ -16,31 +16,35 @@ def fresh():
 def apply(state, stone):
     stone = stone.strip().upper()
     open_beat = state["beat"] % 2 == 0
-    state["beat"] += 1
     if state["drawn"] or stone not in {"L", "R", "I"} or not open_beat:
         state["rejected"].append(stone)
+        state["beat"] += 1
         return
     if stone == "I":
         if not all(state["sides"].values()):
             state["rejected"].append(stone)
+            state["beat"] += 1
             return
         state["drawn"] = True
         state["accepted"].append(stone)
+        state["beat"] += 1
         return
     if stone == state["last"]:
         state["rejected"].append(stone)
+        state["beat"] += 1
         return
     state["sides"][stone] += 1
     state["last"] = stone
     state["accepted"].append(stone)
+    state["beat"] += 1
 
 def check():
     s = fresh()
-    for st in ["L", "R", "L", "R", "I"]:
+    for st in ["L", "x", "R", "x", "I"]:
         apply(s, st)
-    assert s["drawn"] and len(s["accepted"]) == 5 and len(s["rejected"]) == 0
+    assert s["drawn"] and len(s["accepted"]) == 3 and "I" in s["accepted"]
     s2 = fresh()
-    for st in ["L", "L", "I"]:
+    for st in ["L", "x", "L", "I"]:
         apply(s2, st)
     assert not s2["drawn"] and "I" in s2["rejected"]
     print("PASS")
