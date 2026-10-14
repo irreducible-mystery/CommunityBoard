@@ -35,6 +35,13 @@ jobs:
           python-version: "3.x"
       - name: Test
         run: python3 -m unittest discover -s tools -p 'test_*.py'
+      - name: Board matches its fragments
+        # BOARD.md is assembled from board/entries/. If the two disagree,
+        # somebody edited the generated file instead of adding a fragment —
+        # which is the read-modify-write this change exists to remove. Exit 2
+        # here means the fragments could not be read at all, which is a
+        # different thing from "out of date" and must not pass as either.
+        run: python3 tools/assemble_board.py --check
       - name: Build
         run: python3 tools/build_site.py
       - name: Report (pull request)

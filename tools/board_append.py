@@ -195,6 +195,59 @@ def append(board: Path, entry: str, repo: Path, dry_run: bool = False,
         sleep(min(2 ** (attempt - 1), 8))
 
 
+def append_fragment(repo: Path, board: Path, entry: str) -> tuple[int, list[str]]:
+    """Write the entry as its own file under board/entries/, then reassemble.
+
+    The same postconditions are checked afterwards — previous bytes still a
+    prefix, exactly one heading more, check_board.py clean — so this mode is
+    not trusted more than the other, it is just structurally unable to fail in
+    the way the other one is guarded against. Creating a file cannot truncate
+    anything.
+    """
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import assemble_board as ab
+
+    d = repo / ab.ENTRIES
+    if not d.is_dir():
+        return 1, [f"{ab.ENTRIES}/ does not exist — run assemble_board.py --split first"]
+    before = board.read_text(encoding="utf-8") if board.exists() else ""
+
+    seqs = [int(m.group(1)) for m in
+            (ab.FRAGMENT.match(p.name) for p in d.iterdir() if p.suffix == ".md") if m]
+    nxt = (max(seqs) + 1) if seqs else 1
+    text = entry.strip() + "\n"
+    name = f"{nxt:04d}-{ab.slug(text)}.md"
+    path, n = d / name, 2
+    while path.exists():                      # another session took this name
+        path, n = d / f"{nxt:04d}-{ab.slug(text)}-{n}.md", n + 1
+    path.write_text(text, encoding="utf-8")
+
+    try:
+        rebuilt = ab.assemble(repo)
+    except ab.ProbeFailure as exc:
+        path.unlink()
+        return 1, [f"reassembly failed, fragment removed: {exc}"]
+
+    problems = []
+    if before and not rebuilt.startswith(before.rstrip("\n")):
+        problems.append("the reassembled board does not start with what BOARD.md held")
+    if count_headings(rebuilt) - count_headings(before) != 1:
+        problems.append(f"{count_headings(rebuilt) - count_headings(before)} headings added, "
+                        "expected exactly 1")
+    if problems:
+        path.unlink()
+        return 1, problems + ["fragment removed; BOARD.md untouched"]
+
+    board.write_text(rebuilt, encoding="utf-8")
+    code, out = check_board(repo, board)
+    if code != 0:
+        path.unlink()
+        board.write_text(before, encoding="utf-8")
+        return 1, ["check_board.py rejects the result; fragment removed and BOARD.md restored:",
+                   out.strip()]
+    return 0, [f"wrote {ab.ENTRIES}/{path.name} and regenerated BOARD.md"]
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--session", required=True, help="your session name, as it appears in headings")
@@ -208,6 +261,11 @@ def main(argv: list[str] | None = None) -> int:
                     help="re-read and re-append up to N times when the board moved under the "
                          "write (1s, 2s, 4s backoff). A malformed entry is not retried: it "
                          "would fail identically every time.")
+    ap.add_argument("--fragment", action="store_true",
+                    help="write the entry as its own file under board/entries/ and regenerate "
+                         "BOARD.md, instead of appending to BOARD.md directly. Creating a file "
+                         "cannot truncate anything, so this removes the failure the rest of "
+                         "this tool guards against.")
     ap.add_argument("--sync-from", default=None, metavar="REF",
                     help="take the board from this git ref first, e.g. origin/main. Use it "
                          "when a push is rejected: re-appending onto the newest board needs "
@@ -244,7 +302,17 @@ def main(argv: list[str] | None = None) -> int:
             return 2
 
     entry = build_entry(args.session, args.kind, body, args.stamp)
-    code, problems = append(board, entry, repo, dry_run=args.dry_run, retry=args.retry)
+    if args.fragment:
+        if args.dry_run:
+            print("would write 1 fragment under board/entries/:")
+            print(f"  {entry.strip().split(chr(10))[0]}")
+            return 0
+        code, problems = append_fragment(repo, board, entry)
+        if code == 0:
+            print(problems[0])
+            problems = []
+    else:
+        code, problems = append(board, entry, repo, dry_run=args.dry_run, retry=args.retry)
 
     if code != 0:
         print("REFUSED — the board is unchanged:")
