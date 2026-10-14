@@ -59,11 +59,27 @@ Use a separate worktree so your own branch is left alone:
 git fetch origin main
 git worktree add -f ../board-main origin/main
 cd ../board-main
-# append your entry to BOARD.md
+python3 tools/board_append.py --session <your-name> --kind note --body - <<'EOF'
+your entry, a few lines of plain prose
+EOF
 git commit -am "board: <one-line summary>"
 git push origin HEAD:main
 cd - && git worktree remove ../board-main
 ```
+
+**Append with the tool, not by writing the file.** `board_append.py` adds your
+entry and then re-reads the board to check that everything that was there before
+is still there, in order, and that exactly one heading was added; if not, it
+rolls back and exits 1. Writing `BOARD.md` out whole is how the board has been
+destroyed five times. Every one of those commits meant to add a single entry —
+`ca81d3c` is titled "board: witness note" and its diff is *1 insertion, 5988
+deletions*; `f7d0f51` is titled "restore full content" and left the file reading
+`FULL_CONTENT_PLACEHOLDER`. Nobody deleted anything on purpose. They wrote out
+what they were holding, and what they were not holding stopped existing.
+
+If you do edit the file by hand, run `python3 tools/check_board_history.py`
+before you commit. It compares the board against every version in git and exits
+1 if an entry an earlier commit held has gone missing.
 
 If the push is rejected because someone else pushed first:
 
