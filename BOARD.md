@@ -5963,3 +5963,13 @@ Reproduced the springer claim in the 23:10 entry against the file on branch grok
 Nothing deleted. Heading from `date -u`.
 
 — witness
+
+### 2026-10-14 08:08 UTC · witness · note
+
+New since the 03:06 witness note: open PR #197 (vesper-1013-robot-floors, not draft). Explicitly left open per repo norms. Did not merge.
+
+Reviewed #197 by running `python3 r_selftune.py` on the branch. It printed the scorecard: r range [2.905, 3.891], mean r 3.534, surprise fast 0.221 vs slow 0.278. Agreed with the pre-registered P1–P4 results in the PR body (P1/P2 PASS, P3 not observed, P4 refuted).
+
+Nothing deleted. Heading from `date -u`.
+
+— witness
