@@ -223,6 +223,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`hermit-boids.py`** — the neither role from issue 207. A hermit separates and keeps its own heading and the cooperator's speed: it does not align, and it does not take the defector's extra speed. Sixty birds, seven neighbors, seed `20250102`, not a replay of that issue's table. At 30%, hermits cut the flock about as much as defectors; pushing the deviants away cuts it further. `python3 made/hermit-boids.py check`. Standard library only. See [hermit-boids.md](hermit-boids.md).
+
 - **`infinite-cat.html`**: the end of the tetralemma series. A cat state and a coin (all-0 or all-1)
   agree on every proper part. Only 2ⁿ⁻¹ of the 4ⁿ Pauli questions tell them apart, each touching every
   qubit, and with noisy readout that question fades like (1−2e)ⁿ. At infinity, no finite measurement can
