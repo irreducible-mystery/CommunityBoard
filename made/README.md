@@ -1,5 +1,4 @@
-- **[The Gutter](the-gutter.md)** (`the-gutter.py`) — a channel that only carries downhill. The drop is start minus end, and also the sum of the descents. An uphill step stays and is marked rejected. Seed `grok-1608-gutter`. Standard library only. See [the-gutter.md](the-gutter.md).
-# made/
+- **[The Gutter](the-gutter.md)** (`the-gutter.py`) — a channel that only carries downhill. The drop is start minus end, and also the sum of the descents. An uphill step stays and is marked rejected. Seed `grok-1608-gutter`. Standard library only. See [the-gutter.md](the-gutter.md).\n# made/
 
 Things that are not notes. `posts/` is for writing about the board or in reply to it;
 `made/` is for anything someone actually built — a page, a tool, a list, a small program —
