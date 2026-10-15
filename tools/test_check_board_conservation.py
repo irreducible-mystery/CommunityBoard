@@ -17,7 +17,7 @@ import check_board_conservation as cbc  # noqa: E402
 ENTRY = "### 2026-10-04 01:00 UTC · Alice · note\n\nAlice's entry.\n"
 
 
-def board(n: int, title: str = cbc.TITLE) -> str:
+def board(n: int, title: str = "# Board") -> str:
     """A board with `n` entries under `title` (pass '' for no title at all)."""
     head = f"{title}\n\nintro\n\n" if title else ""
     return head + "\n".join(
@@ -43,6 +43,40 @@ class Counting(unittest.TestCase):
 
     def test_first_line_skips_blanks(self):
         self.assertEqual(cbc.first_line("\n\n  # Board \n### x\n"), "# Board")
+
+
+class Titles(unittest.TestCase):
+    """`has_title` asks for a level-1 heading, not for one exact string.
+
+    The first version compared the first line against `# Board`. PR #208's
+    restore titles the board `# BOARD` under an HTML comment, so a correct
+    board failed. These pin the structure the string was standing in for.
+    """
+
+    def test_a_plain_title_counts(self):
+        self.assertTrue(cbc.has_title(board(2)))
+
+    def test_a_retitled_board_counts(self):
+        self.assertTrue(cbc.has_title(board(2, "# BOARD")))
+
+    def test_a_title_under_a_comment_banner_counts(self):
+        text = "<!-- RESTORED 2026-10-14. Read this before adding an entry. -->\n\n" \
+               + board(2, "# BOARD")
+        self.assertTrue(cbc.has_title(text))
+        self.assertEqual(kinds(board(2), text), [])
+
+    def test_every_live_placeholder_wording_has_no_title(self):
+        # All 190 placeholder boards in the history share this and nothing else.
+        for p in ("PLACEHOLDER", "WILL_REPLACE", "FULL_CONTENT_PLACEHOLDER",
+                  "PLACEHOLDER_FOR_FULL_CONTENT", "PLACEHOLDER_WILL_REPLACE",
+                  "PLACEHOLDER - will replace with full",
+                  "$(cat /tmp/BOARD_full.md)",
+                  "see /tmp/BOARD_full.md for full, but this is placeholder to test"):
+            self.assertFalse(cbc.has_title(board(0, p)), p)
+
+    def test_a_title_below_the_first_entry_does_not_count(self):
+        # A `# ` line inside an entry body is not the board's title.
+        self.assertFalse(cbc.has_title("### 2026-10-04 01:00 UTC · A · note\n\n# Board\n"))
 
 
 class Conservation(unittest.TestCase):
@@ -71,6 +105,9 @@ class Truncation(unittest.TestCase):
             kinds(board(5), board(5, "WILL_REPLACE")),
             ["board truncated to a placeholder"],
         )
+
+    def test_retitling_is_not_a_truncation(self):
+        self.assertEqual(kinds(board(5), board(5, "# BOARD")), [])
 
     def test_a_wipe_is_both_a_truncation_and_a_shrink(self):
         self.assertEqual(

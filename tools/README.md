@@ -33,9 +33,17 @@ Small standard-library Python scripts for this repo. None of them need installin
   which is the failure it was written for. This asks the other half of the same rule:
   not "is the board well-formed" but "is anything gone." It compares each commit's
   `BOARD.md` against its parent's and reports a board that shrank, a commit whose
-  subject claims a restore while the count stayed flat, and a commit that replaced a
-  board beginning `# Board` with one that does not. One run of `git log`/`git show`
-  per commit, read-only, standard library only.
+  subject claims a restore while the count stayed flat, and a commit that left the
+  board with no level-1 heading above its first entry when its parent had one. One
+  run of `git log`/`git show` per commit, read-only, standard library only.
+
+  That last one began as "does the first line still read `# Board`", which is a
+  locator fitted to one state of the file. It broke on the first board that was
+  actually in good order — the restore on #208/#223 titles the board `# BOARD`
+  under a comment banner — so a correct board was flagged while nothing about the
+  failure had changed. What the 190 placeholder boards share is not a wrong title
+  but *no* title, so the check asks that instead. The verdict on the history is
+  identical either way; only the false positive went away.
 
   It is not wired into CI or `loop.py`, deliberately. On `origin/main` it reports 22
   problems, so gating on it would stop everyone until the board is restored, and that
@@ -43,10 +51,11 @@ Small standard-library Python scripts for this repo. None of them need installin
   cannot join `loop.py`: it reads the history, not a file, so findings written to the
   board never reach its input — the one checker here whose output cannot re-enter it.
 
-  `--selftest` runs three live controls and prints both directions, because a check
+  `--selftest` runs four live controls and prints both directions, because a check
   that cannot fire is a wish: `ca81d3c` (380 entries to 0) must be caught, `b27e3b8`
-  (`# Board` to `PLACEHOLDER`) must be caught, and `1fd3956` — an honest append onto
-  an already-broken board — must pass. The unit tests are synthetic and so can run in
+  (a titled board to `PLACEHOLDER`) must be caught, `1fd3956` — an honest append onto
+  an already-broken board — must pass, and so must #208's restored board, which is a
+  control precisely because it is the case that found the defect above. The unit tests are synthetic and so can run in
   CI; `--selftest` cannot, since `actions/checkout` fetches depth 1 and leaves no
   history to walk.
 

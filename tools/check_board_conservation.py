@@ -18,8 +18,8 @@ count and `check_board.py`'s verdict come from other commands.
 
   * The board holds 24 entries. Its high-water mark was 380, at `ed2236c`.
     356 entries are not on the published surface.
-  * 190 of the 442 commits that touched BOARD.md left a file that does not
-    begin with `# Board`. It begins instead with `WILL_REPLACE` (98 commits),
+  * 190 of the 442 commits that touched BOARD.md left a file with no level-1
+    heading at all. It begins instead with `WILL_REPLACE` (98 commits),
     `FULL_CONTENT_PLACEHOLDER` (37), `see /tmp/BOARD_full.md for full, but
     this is placeholder to test` (21, including HEAD), `PLACEHOLDER`,
     `PLACEHOLDER_FOR_FULL_CONTENT`, `PLACEHOLDER_WILL_REPLACE`, and once
@@ -51,12 +51,14 @@ Checks (problems; exit 1):
       copy-paste away. This is the finding; the three below are the culprits.
 
   board truncated to a placeholder
-      A commit whose BOARD.md does not begin with `# Board` when its parent's
-      did. Purely structural, per `FLOOR.md`'s constraint on checks: it reads
-      one line and knows nothing about content. Four commits in history did
-      this, and each started a stretch that later commits appended onto. A
+      A commit whose BOARD.md has no level-1 heading above its first entry
+      when its parent's did. Purely structural, per `FLOOR.md`'s constraint on
+      checks: it knows nothing about content. All 190 placeholder boards have
+      no title at all; a board that is merely *retitled* is not a finding,
+      which is the correction in `has_title` below. Four commits in history
+      did this, and each started a stretch that later commits appended onto. A
       stretch ends when the title returns, which is not the same as the
-      entries returning — `df4abc4` restored `# Board` above an empty board.
+      entries returning — `df4abc4` restored a title above an empty board.
       That gap is what the first finding is for.
 
   board shrank
@@ -101,8 +103,8 @@ import sys
 from pathlib import Path
 
 BOARD = "BOARD.md"
-TITLE = "# Board"
 LOOKS_LIKE_HEADING = re.compile(r"^###\s")
+LOOKS_LIKE_TITLE = re.compile(r"^#\s+\S")
 CLAIMS_RESTORE = re.compile(r"\b(restor\w*|recover\w*|reinstat\w*)\b", re.I)
 
 PROBLEM = "problem"
@@ -114,7 +116,7 @@ NOTE = "note"
 # ordinary append and MUST pass. Either direction failing means this check is
 # broken, and it says so and exits 1.
 CONTROL_SHRINK = "ca81d3c"    # 380 entries -> 0
-CONTROL_TRUNCATE = "b27e3b8"  # '# Board' -> 'PLACEHOLDER'
+CONTROL_TRUNCATE = "b27e3b8"  # titled board -> 'PLACEHOLDER'
 CONTROL_CLEAN = "1fd3956"     # an honest append onto a broken board: 0 -> 1
 
 
@@ -175,6 +177,31 @@ def first_line(text: str) -> str:
     return ""
 
 
+def has_title(text: str) -> bool:
+    """Is there a level-1 heading above the first entry?
+
+    ERRATUM, and the reason this is not a string comparison. The first version
+    asked whether the board's first line was exactly `# Board`. That is a
+    locator fitted to one state of the file, and it broke on the first board
+    that was actually in good order: PR #208's restore titles the board
+    `# BOARD` and puts an HTML comment above it, so a correct board failed the
+    check while nothing about the failure it detects had changed.
+
+    What the 190 placeholder boards actually have in common is not a wrong
+    title. It is no title: `PLACEHOLDER`, `WILL_REPLACE`,
+    `$(cat /tmp/BOARD_full.md)` and the rest carry no level-1 heading at all
+    before the first entry -- all 190 of them. So ask that instead. It catches
+    every case the string comparison caught, and it survives the board being
+    retitled, which the string comparison did not.
+    """
+    for line in text.splitlines():
+        if LOOKS_LIKE_HEADING.match(line):
+            return False          # reached an entry with no title above it
+        if LOOKS_LIKE_TITLE.match(line):
+            return True
+    return False
+
+
 def subject(ref: str) -> str:
     return git("log", "-1", "--format=%s", ref).strip()
 
@@ -197,10 +224,11 @@ def classify(parent_text: str, text: str, line: str) -> list[tuple[str, str]]:
     out: list[tuple[str, str]] = []
     here, parent = entry_count(text), entry_count(parent_text)
 
-    if first_line(text) != TITLE and first_line(parent_text) == TITLE:
+    if not has_title(text) and has_title(parent_text):
         out.append((
             "board truncated to a placeholder",
-            f"board began {TITLE!r}, now begins {first_line(text)[:64]!r}",
+            f"the level-1 heading is gone; the board now begins "
+            f"{first_line(text)[:64]!r}",
         ))
     if here < parent:
         out.append((
@@ -220,7 +248,7 @@ def scan(ref: str, limit: int | None = None) -> tuple[list[Finding], dict]:
     commits = commits_touching_board(ref, limit)
     boards = {c: board_at(c) for c in commits}
     counts = {c: entry_count(t) for c, t in boards.items() if t is not None}
-    titled = {c: first_line(t) == TITLE for c, t in boards.items() if t is not None}
+    titled = {c: has_title(t) for c, t in boards.items() if t is not None}
 
     findings: list[Finding] = []
     for i, commit in enumerate(commits):
@@ -280,7 +308,7 @@ def report(ref: str, limit: int | None) -> int:
     print(f"\n{len(problems)} problem(s), {len(notes)} note(s) "
           f"in {BOARD} history at {ref}.")
     print(f"  {s['commits']} commit(s) touched {BOARD}; {s['untitled']} left a "
-          f"file not beginning {TITLE!r}:")
+          f"file with no level-1 heading, beginning instead:")
     for line, n in s["first_lines"]:
         print(f"      {n:4d}  {line[:68]!r}")
     if not findings:
@@ -304,11 +332,21 @@ def selftest() -> int:
           f"{'OK' if caught else 'FAILED — the wipe is not detected'}")
     ok &= bool(caught)
 
-    _, _, fl, pl = counts(CONTROL_TRUNCATE)
-    trunc = pl == TITLE and fl != TITLE and fl != ""
-    print(f"  control CAUGHT  {CONTROL_TRUNCATE} truncate:  {pl!r} -> {fl[:32]!r} "
+    t, pt = board_at(CONTROL_TRUNCATE), board_at(f"{CONTROL_TRUNCATE}^")
+    trunc = t is not None and pt is not None and has_title(pt) and not has_title(t)
+    print(f"  control CAUGHT  {CONTROL_TRUNCATE} truncate:  titled -> "
+          f"{first_line(t or '')[:28]!r} "
           f"{'OK' if trunc else 'FAILED — the truncation is not detected'}")
     ok &= bool(trunc)
+
+    # The board this session is proposing on #223 must NOT trip the check. It
+    # is the case that found the defect above, so it is a control now.
+    u = board_at("origin/claude/board-restore")
+    if u is not None:
+        good = has_title(u)
+        print(f"  control CLEARED #208 restore: {first_line(u)[:28]!r} "
+              f"{'OK' if good else 'FAILED — a correct board is flagged'}")
+        ok &= bool(good)
 
     here, before, _, _ = counts(CONTROL_CLEAN)
     clean = here is not None and here >= before
