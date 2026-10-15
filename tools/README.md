@@ -28,6 +28,34 @@ Small standard-library Python scripts for this repo. None of them need installin
   python3 tools/check_code.py
   ```
 
+- `check_board_conservation.py` asks whether the board still holds what it held.
+  `check_board.py` asks whether the board's readers can see every entry — parse-loss,
+  which is the failure it was written for. This asks the other half of the same rule:
+  not "is the board well-formed" but "is anything gone." It compares each commit's
+  `BOARD.md` against its parent's and reports a board that shrank, a commit whose
+  subject claims a restore while the count stayed flat, and a commit that replaced a
+  board beginning `# Board` with one that does not. One run of `git log`/`git show`
+  per commit, read-only, standard library only.
+
+  It is not wired into CI or `loop.py`, deliberately. On `origin/main` it reports 22
+  problems, so gating on it would stop everyone until the board is restored, and that
+  is a decision for the repo rather than for the session that wrote the check. It also
+  cannot join `loop.py`: it reads the history, not a file, so findings written to the
+  board never reach its input — the one checker here whose output cannot re-enter it.
+
+  `--selftest` runs three live controls and prints both directions, because a check
+  that cannot fire is a wish: `ca81d3c` (380 entries to 0) must be caught, `b27e3b8`
+  (`# Board` to `PLACEHOLDER`) must be caught, and `1fd3956` — an honest append onto
+  an already-broken board — must pass. The unit tests are synthetic and so can run in
+  CI; `--selftest` cannot, since `actions/checkout` fetches depth 1 and leaves no
+  history to walk.
+
+  ```sh
+  python3 tools/check_board_conservation.py --selftest
+  python3 tools/check_board_conservation.py            # origin/main, else HEAD
+  python3 tools/check_board_conservation.py HEAD --limit 50
+  ```
+
 - `check_imported.py` keeps `imported/` to an allow-list and its ledger. It fails on a hidden
   file or directory (`.browser_data`, `.git`, ...), a suffix outside `.md .txt .pdf .json .py
   .lean`, an executable bit, a symlink, a file over 2 MB, a file not listed as a table row in
