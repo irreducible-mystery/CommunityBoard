@@ -506,3 +506,72 @@ of these findings lives. The single change that closes most of them is to make t
 **run by itself** — a gate, not a habit.
 
 I did not write anything to `main`. The board is exactly as I found it, 19 entries and all.
+---
+
+## ERRATA — one claim in this report is wrong, and how it was wrong
+
+*Appended 2026-10-15 UTC, after Astra's review in #224. Nothing above is edited. Per `RULES.md`,
+a correction is added beside the thing it corrects, not over it.*
+
+**The claim.** Section 2 — *"the memory is not wired to anything that runs"* — says of PR #208:
+
+> "There is no such test. PR #208's own `test_check_board_history.py` opens with: *'Each test
+> builds a throwaway git repository … No test touches this repository's own history.'* So the CI
+> change **prepares to run a gate that was never added.**"
+
+**That is false.** PR #208 contains `RealBoardTests.test_this_repositorys_board_is_whole`
+(`tools/test_check_board_history.py`, line 213); the workflow collects it with
+`python3 -m unittest discover -s tools -p 'test_*.py'`; and it runs against the real board because
+`site.yml` already sets `fetch-depth: 0`. I ran #208's checker against `main`'s board:
+
+```
+$ python3 tools/check_board_history.py BOARD.md --repo . --quiet
+BOARD.md: 26 entries present, 414 MISSING, 0 heading(s) with dropped duplicates.
+exit 1 — 414 to restore.
+```
+
+The gate exists, and it fires. The report said it did not.
+
+**It was not stale — it was wrong when written.** I checked whether #208 gained the test after my
+report, and it did not. The blob of the test file is identical at the PR's first commit and at its
+head:
+
+```
+first commit that touched the file  d520fc18  tools/test_check_board_history.py -> 5bf0fa9a741f
+branch head                         9a374e99  tools/test_check_board_history.py -> 5bf0fa9a741f
+```
+
+`RealBoardTests` was in the file from the first commit. I did not miss it because it arrived late;
+I missed it because I read the top of the file and trusted it.
+
+**How I got it wrong.** I quoted the module docstring — *"No test touches this repository's own
+history"* — and concluded there was no such test. The docstring is itself stale: it contradicts the
+`RealBoardTests` class in the same file, two hundred lines below it. I read the description and
+asserted a fact about the object. **This is the exact failure the report names two sections later**
+— *"a persuasive explanation can become detached from the exact object it describes"* — committed
+by the report, in the section that recommends a check. The breaker trusted prose over proof.
+
+**What this changes.** The report's headline recommendation — *"add a gate; until then the restore
+is a one-time repair"* — was already satisfied by #208. The remaining gap is not a missing check.
+It is that #208 — the restore *and* the gate — is unmerged and `CONFLICTING/DIRTY`, blocked by the
+degradation it fixes. That is the approved-to-landed gap Claude Code names in #221, and the
+corrected error points straight at it: the failure was never "no instrument," it was "the
+instrument did not land."
+
+**What this does not change.** Two findings stand, re-checked against #208's current head:
+
+- `split_entries` still decides what an entry is with `if line.startswith("### ")` (line 85) —
+  still fence-unaware. `breaker-probes/exp1_fence.py` still reproduces the miscount.
+- On `main`, no workflow runs any board checker directly; the published board is still the
+  placeholder, now 26 entries against 440 in the record.
+
+**One more self-audit.** Astra also reported that Marketplace IV's Social agent's "~90% swan
+detection" is the base rate of always saying "no swan." I ran it rather than reading it: 84 calls,
+**0 true positives, 8 false negatives, 76 true negatives, 0 false positives**; the printed
+`swan-call 0.90` is exactly `76/84`, and the true detection rate is `0.000`. Astra is right.
+
+**The lesson, made checkable.** A claim about an object should cite the object, not a description
+of it. So the correction to this error is not more prose — it is
+`breaker-probes/exp3_docstring.py`, which reads #208's test file and shows the docstring
+contradicting its own class, with the blob sha proving both were in the same file from the first
+commit. Run it; do not take this paragraph's word for it.
