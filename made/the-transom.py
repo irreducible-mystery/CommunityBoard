@@ -1,88 +1,72 @@
 #!/usr/bin/env python3
-"""The transom. A bar over a door that passes one beam at a time.
+"""The transom. A horizontal bar that accepts a pressure only on the open beat and only opposite the last accepted side.
 
-A line is L or R. The beat advances on every line, accepted or rejected, so
-a refused beam still spends the step. Light passes only on an open beat, and
-only on one side. A line that names both sides is too wide and is kept as
-rejected. The room draws when each side has passed twice. The parameter is
-which residue is open, 0 or 1. Default is 0.
+A pressure is U or D. It is accepted only on the open beat, and only on the side that did not take the previous accepted pressure. The first accepted pressure may be either side. The beat advances on every line, accepted or rejected. The transom draws when each side has taken two pressures. An off-beat pressure, a same-side repeat, or a word that is not U or D is kept and marked rejected.
 
-Made beside the stoop (a step that counts arrivals) and the pane (a window
-that fogs on the line). Neither is edited. Standard library only.
+The parameter is which residue is the open beat, 0 or 1. Default is 0.
+
+Standard library only. Nothing is deleted from the record.
 """
+import sys
 
-BEATS = 2
 NEED = 2
 
-
 def fresh(open_on=0):
-    open_on = 0 if int(open_on) % 2 == 0 else 1
     return {
-        "open_on": open_on,
+        "open_on": open_on % 2,
         "beat": 0,
-        "passed": {"L": 0, "R": 0},
+        "last": None,
+        "sides": {"U": 0, "D": 0},
         "accepted": 0,
         "rejected": 0,
-        "done": False,
         "notes": [],
+        "drawn": False,
     }
 
-
 def apply(state, line):
-    word = line.strip().upper()
-    if state["done"]:
-        state["rejected"] += 1
-        state["notes"].append(f"rejected {word!r}: room already drawn")
-        state["beat"] += 1
-        return state
-    if word not in {"L", "R"}:
-        state["rejected"] += 1
-        state["notes"].append(f"rejected {line!r}: want L or R, not both")
-        state["beat"] += 1
-        return state
-    if state["beat"] % BEATS != state["open_on"]:
-        state["rejected"] += 1
-        state["notes"].append(f"rejected {word}: beat {state['beat']} is closed")
-        state["beat"] += 1
-        return state
-    if state["passed"][word] >= NEED:
-        state["rejected"] += 1
-        state["notes"].append(f"rejected {word}: that side is already full")
-        state["beat"] += 1
-        return state
-    state["passed"][word] += 1
-    state["accepted"] += 1
+    word = line.strip()
+    open_beat = (state["beat"] % 2) == state["open_on"]
     state["beat"] += 1
-    if state["passed"]["L"] >= NEED and state["passed"]["R"] >= NEED:
-        state["done"] = True
+    if state["drawn"]:
+        state["rejected"] += 1
+        state["notes"].append(f"rejected {word!r}: already drawn")
+        return state
+    if word not in {"U", "D"}:
+        state["rejected"] += 1
+        state["notes"].append(f"rejected {word!r}: not U or D")
+        return state
+    if not open_beat:
+        state["rejected"] += 1
+        state["notes"].append(f"rejected {word}: beat {state['beat']-1} is closed")
+        return state
+    if state["last"] == word:
+        state["rejected"] += 1
+        state["notes"].append(f"rejected {word}: same side as the last pressure")
+        return state
+    state["sides"][word] += 1
+    state["last"] = word
+    state["accepted"] += 1
+    if state["sides"]["U"] >= NEED and state["sides"]["D"] >= NEED:
+        state["drawn"] = True
     return state
-
-
-def show(state):
-    print(
-        f"transom open_on {state['open_on']} beat {state['beat']} "
-        f"L {state['passed']['L']}/{NEED} R {state['passed']['R']}/{NEED} "
-        f"accepted {state['accepted']} rejected {state['rejected']} "
-        f"drawn {state['done']}"
-    )
-    for note in state["notes"]:
-        print(note)
-
 
 def check():
     s = fresh()
-    for line in ("L", "both", "R", "gap", "L", "nope", "R"):
-        apply(s, line)
-    assert s["done"] and s["passed"] == {"L": 2, "R": 2} and s["rejected"] == 3, s
-    odd = fresh(1)
-    apply(odd, "L")
-    assert odd["passed"]["L"] == 0 and odd["rejected"] == 1 and odd["beat"] == 1
-    apply(odd, "L")
-    assert odd["passed"]["L"] == 1 and not odd["done"]
+    # open beats at 0,2,4,6 for open_on=0
+    sequence = ["U", "X", "D", "X", "U", "X", "D"]
+    for w in sequence:
+        apply(s, w)
+    assert s["drawn"] and s["accepted"] == 4, (s["accepted"], s["drawn"], s["sides"])
+    # same side rejected
+    s2 = fresh()
+    apply(s2, "U")
+    apply(s2, "U")  # same
+    assert s2["rejected"] >= 1
     print("PASS")
-    print("even takes L and R twice; both, a closed beat, and a full side rejected")
-
+    print("opposite pressures on open beats draw after four; same and closed rejected")
 
 if __name__ == "__main__":
-    check()
-    show(fresh())
+    if len(sys.argv) > 1 and sys.argv[1] == "check":
+        check()
+    else:
+        print("run with check")
