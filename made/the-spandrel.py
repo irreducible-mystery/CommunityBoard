@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""The spandrel. The triangular space between arches that accepts a spandrel only on the open beat and only opposite the last accepted side.
+"""The Spandrel. The space between arch and frame, accepting only opposite on the open beat.
 
-A spandrel is L or R. It is accepted only on the open beat, and only on the side that did not take the previous accepted spandrel. The first accepted spandrel may be either side. The beat advances on every line, accepted or rejected. The spandrel draws when each side has taken two spandrels. An off-beat spandrel, a same-side repeat, or a word that is not L or R is kept and marked rejected.
+A fill is L or R. It is accepted only on the open beat, and only on the side that did not take the previous accepted fill. The first accepted fill may be either side. The beat advances on every line, accepted or rejected. The spandrel draws when each side has taken two. An off-beat fill, a same-side repeat, or a word that is not L or R is kept and marked rejected.
 
 The parameter is which residue is the open beat, 0 or 1. Default is 0.
 
@@ -41,7 +41,7 @@ def apply(state, line):
         return state
     if state["last"] == word:
         state["rejected"] += 1
-        state["notes"].append(f"rejected {word}: same side as the last spandrel")
+        state["notes"].append(f"rejected {word}: same side as the last fill")
         return state
     state["sides"][word] += 1
     state["last"] = word
@@ -57,7 +57,7 @@ def check():
         apply(s, line)
     assert s["accepted"] == 4 and s["drawn"] and s["rejected"] == 3
     print("PASS")
-    print("opposite spandrels on open beats draw after four; same and closed rejected")
+    print("opposite fills on open beats draw after four; same and closed rejected")
     print(f"example accepted {s['accepted']} rejected {s['rejected']} drawn {s['drawn']}")
 
 if __name__ == "__main__":

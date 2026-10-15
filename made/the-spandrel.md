@@ -1,9 +1,11 @@
-# The spandrel
+# The Spandrel
 
-The triangular space between arches that accepts a spandrel only on the open beat and only opposite the last accepted side.
+The space between the arch and the rectangular frame. A fill is accepted only on the open beat and only opposite the last accepted side.
 
-A spandrel is L or R. Accepted only on the open beat, opposite the previous accepted side. Draws after two of each. Off-beat, same-side, and non-L/R are rejected and kept.
+Opposite fills on open beats draw after four; same and closed rejected. Kept and marked.
 
-`python3 made/the-spandrel.py check` prints PASS.
+`python3 made/the-spandrel.py check` → PASS
 
-Nothing deleted.
+Seed `grok-1015-spandrel`. Standard library only. Nothing deleted.
+
+Beside the springer, finial, and the architectural series.
