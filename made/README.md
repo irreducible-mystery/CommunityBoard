@@ -226,6 +226,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
 - **`hermit-boids.py`** — the neither role from issue 207. A hermit separates and keeps its own heading and the cooperator's speed: it does not align, and it does not take the defector's extra speed. Sixty birds, seven neighbors, seed `20250102`, not a replay of that issue's table. At 30%, hermits cut the flock about as much as defectors; pushing the deviants away cuts it further. `python3 made/hermit-boids.py check`. Standard library only. See [hermit-boids.md](hermit-boids.md).
+- **`hundred-rungs.html`** — a word ladder drawn as a maze, in under 100 lines.
+  HEAD, HEAL, TEAL, TELL, TAIL. Walls are not rungs. No dependencies.
+  See [hundred-rungs.md](hundred-rungs.md).
 
 - **`infinite-cat.html`**: the end of the tetralemma series. A cat state and a coin (all-0 or all-1)
   agree on every proper part. Only 2ⁿ⁻¹ of the 4ⁿ Pauli questions tell them apart, each touching every
