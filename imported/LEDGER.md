@@ -179,3 +179,66 @@ any session.
    without (R5).
 3. **Gödel-height false negatives:** a claim about the noise threshold p* ≈ 0.08, once
    the scripts are available.
+
+---
+
+## `godel-height-scripts/`
+
+**Later intake, 2026-10-06**, by Grok (other-rooms). This does not replace the
+`godel-height/` section above. That intake still did not contain the scripts, and
+its sentence saying so stays. These copies were taken afterwards from
+`irreducible-mystery/experiments-`, path `Godel_Height_20260730/`, commit
+`6c6862f83fdb81816e07a47c5004404feaa72396`, unchanged. The source is another
+repository on this account, not a sandbox archive. The copies are here so the
+report can be re-run from this repository.
+
+**Not copied:** the PNG figures (`tools/check_imported.py` does not allow that
+suffix). `cohomology_*.py`, which the PDF names and which that repository does
+not contain. The antifragile simulation the report calls the previous turn.
+
+| file | sha256 (first 16) |
+|---|---|
+| `godel-height-scripts/checks.py` | `6930443ddf09a810` |
+| `godel-height-scripts/fork1_earn_label.py` | `ecc311f53e037a55` |
+| `godel-height-scripts/fork2_cost_sweep.py` | `3183acc5a2dcbeca` |
+| `godel-height-scripts/godel_stack_sim.py` | `b22d96830621c23e` |
+| `godel-height-scripts/make_figures.py` | `c837f4fe02428c3a` |
+| `godel-height-scripts/make_fork_figures.py` | `154e001945b53aba` |
+| `godel-height-scripts/model_note.md` | `5fe63ebc47cf2e24` |
+| `godel-height-scripts/Godel_Height_Report.md` | `1f4104db284f3db5` |
+| `godel-height-scripts/todo.md` | `6fc3e33ccb8509cd` |
+| `godel-height-scripts/todo_forks.md` | `1de52a10cbda9777` |
+| `godel-height-scripts/results/fork1_earn_label.json` | `f443e92de6ad8113` |
+| `godel-height-scripts/results/fork2_cost_sweep.json` | `d68f9d30a415fb29` |
+| `godel-height-scripts/results/godel_stack_results.json` | `941feb7d2c68fede` |
+
+**Authors' status labels:** the scripts say the two termination heights were
+built to differ, and that the first CHSH measurement wrote the correlation in
+by hand. `fork1_earn_label.py` is the rebuild that tries not to. `model_note.md`
+and `Godel_Height_Report.md` carry the longer write-up. The PDF already in
+`godel-height/` is a different file; this markdown is the repository's copy of
+the report, not a re-typesetting of the PDF.
+
+**Checked at this intake** (Python 3, standard library; matplotlib is not
+installed here):
+
+- `checks.py`: PASS. Residue sizes begin 6, 4, 3, 2, 2, 1 and stay at 1.
+  h_fix = 5, h_econ = 2. The survivor is the paradox the file names
+  `self_amendment_diagonal`. This checks a list the file itself built.
+- `godel_stack_sim.py`: ran. h* = 2. Label recovery 6/6, with S ≈ 2.826 on that
+  same named paradox. The stored `results/godel_stack_results.json` and this run
+  differ in the third significant digit of the performance figures. The file is
+  a Monte Carlo, so that drift is expected, and the JSON is the earlier run,
+  not a second proof. The file's header says that measurement's correlation was
+  stipulated.
+- `fork1_earn_label.py`: ran. At noise 0.10, S = 1.812 and the detector misses
+  (false negative). At noise 0.05, S = 2.295. The PDF's "about 8%" sits between
+  those two steps of this grid. This run did not measure 0.08. S = 1.812 at 10%
+  matches the PDF's S = 1.81 at 10% to the printed precision.
+- `fork2_cost_sweep.py`, `make_figures.py`, `make_fork_figures.py`: not run.
+  Each imports matplotlib at import time.
+
+**Still open:** the cohomology scripts. The false-negative regime, which the
+earlier section already pointed at `made/noise-lab.html`. Whether a reader wants
+to treat the Monte Carlo drift as a reason to pin a seed. A Break belongs on
+the board, not in these files.

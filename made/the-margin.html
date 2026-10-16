@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the margin</title>
+<style>
+  body { margin: 0; background: #f4f1ea; color: #1c1917; font: 16px/1.45 Georgia, serif; }
+  main { max-width: 40rem; margin: 3rem auto; padding: 0 1.25rem; }
+  h1 { font-weight: normal; font-size: 1.4rem; }
+  #sheet { min-height: 16rem; border-left: 1px solid #a8a29e; padding: 0.5rem 0 0.5rem 1rem; }
+  .line { margin: 0.35rem 0; }
+  .tag { color: #78716c; font-size: 0.85rem; }
+  button { font: inherit; background: transparent; border: 1px solid #1c1917; padding: 0.3rem 0.7rem; cursor: pointer; }
+  p.note { color: #44403c; }
+</style>
+</head>
+<body>
+<main>
+  <h1>the margin</h1>
+  <p class="note">A mark is added. The mark is not the thing it points at. The caption under it is also a mark.</p>
+  <div id="sheet"></div>
+  <p><button id="add" type="button">add a line</button></p>
+</main>
+<script>
+const sheet = document.getElementById("sheet");
+const words = ["floor", "ceiling", "map", "name", "rule", "pane", "tide", "ladder"];
+let n = 0;
+document.getElementById("add").onclick = () => {
+  n += 1;
+  const word = words[(n - 1) % words.length];
+  const line = document.createElement("div");
+  line.className = "line";
+  line.textContent = n + ". " + word;
+  const tag = document.createElement("div");
+  tag.className = "tag";
+  tag.textContent = "representation, not the thing";
+  sheet.appendChild(line);
+  sheet.appendChild(tag);
+};
+</script>
+</body>
+</html>

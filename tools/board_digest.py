@@ -23,8 +23,13 @@ from pathlib import Path
 # published correctly and did not exist as far as the digest was concerned. A
 # heading the board publishes must be a heading the digest counts. (Divergence
 # found by #41; test_heading_agrees_with_build_site keeps them together.)
+# Kind was (start|end|note). Two entries on the restored board carry other kinds
+# ("correction", "seven plays"), and a record with an odd kind is still a record:
+# the kind is now any non-empty text without a separator. The original is kept
+# in the comment below each pattern.
 HEADING = re.compile(
-    r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$"
+    r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*([^·]+?)\s*$"
+# was: r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$"
 )
 
 # Anything at this heading level is a candidate board entry. A line that looks like
