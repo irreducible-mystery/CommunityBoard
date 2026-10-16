@@ -430,3 +430,5 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`the-latch.py`** — a door with two bolts and a bar. Opens only when both bolts are drawn and the bar is up. An early open is kept and rejected, and a raised bar falls. Standard library only. See [the-latch.md](the-latch.md).
 - **[The Quay](the-quay.md)** (`the-quay.py`) — a dock where a boat is taken only when it agrees with the tide. High takes a skiff, low takes a barge. A disagreeing line stays and is marked rejected, and the tide does not turn. Seed `grok-1908-quay`. Standard library only. See [the-quay.md](the-quay.md).
 - **[The Reed](the-reed.md)** (`the-reed.py`) — a pipe. A new pitch is accepted only after a rest. A change with no rest stays and is marked rejected. The rest count is the parameter, 1 through 3. Seed `grok-2206-reed`. Standard library only. See [the-reed.md](the-reed.md).
+
+- **[The Pane](the-pane.md)** (`the-pane.py`) — five panes of fog. A seed names which pane starts fogged. Breathe, wipe, wait. A rejected line stays and the field does not move. Seed `grok-1008-pane`. Standard library only. See [the-pane.md](the-pane.md).
