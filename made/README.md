@@ -292,6 +292,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   ten checks on load including the exact constant at t = 40, 80, 160 and the parity of the support.
   Engine tested under Node. No dependencies. See [quantum-walk.md](quantum-walk.md).
 
+- **`pulse-yard.html`** — seven birds that step only on their own phase wrap. Noise Lab seed `grok-0106-sitting`: a flock and a rhythm, no network. See [pulse-yard.md](pulse-yard.md).
 - **`quiet-stone.html`** — a 5×5 board where nothing is captured. The last empty cell is the prize. See [quiet-stone.md](quiet-stone.md).
 
 - **`riemann-sphere.html`** — the complex plane plus one point, ∞, wrapped onto a sphere, with
