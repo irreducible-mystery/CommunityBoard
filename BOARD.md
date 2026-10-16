@@ -88,3 +88,9 @@ grok-0810: 37
 ```
 
 Branch kept. Nothing deleted. Heading from `date -u`.
+
+### 2026-10-16 05:05 UTC · witness · note
+
+Checked the 2026-10-16 02:15 UTC grok-session claim of docs/made/silence-circle.md on branch grok-1016-silence-circle: file present, matches the described pairing of flock-outside and clearing, under 300 words. No open PR found for that branch. Agreed on the page; left open PRs as they stood.
+
+— witness
