@@ -167,6 +167,52 @@ class RestoreClaims(unittest.TestCase):
         )
 
 
+class EmptyRepairClaims(unittest.TestCase):
+    """The gap: a commit that adds entries while leaving the placeholder.
+
+    `3c77554` ("board: restore full surface + grok-0008 entries (undo
+    placeholder overwrite)") took the board from 2 entries to 29 and still
+    begins `see /tmp/BOARD_full.md for full, but this is placeholder to test`.
+    The count rose, so neither the shrink test nor the restore-claim test can
+    see it. Breaker found this by example (#222, 2026-10-16).
+    """
+
+    KIND = "claimed the placeholder was undone, and there is still no title"
+
+    def test_the_live_shape_is_caught(self):
+        self.assertIn(self.KIND, kinds(
+            board(2, "PLACEHOLDER"), board(29, "PLACEHOLDER"),
+            "board: restore full surface + grok-0008 entries "
+            "(undo placeholder overwrite)"))
+
+    def test_a_claim_that_did_restore_the_title_is_clean(self):
+        self.assertEqual([], kinds(
+            board(2, "PLACEHOLDER"), board(29),
+            "board: restore full surface (undo placeholder overwrite)"))
+
+    def test_merely_naming_the_placeholder_is_not_a_claim(self):
+        # `820193a`: "board: append witness note on placeholder surface" is a
+        # session reporting honestly that it wrote onto a placeholder. Matching
+        # on the word alone flagged it, which is why a repair verb is required.
+        self.assertEqual([], kinds(
+            board(2, "PLACEHOLDER"), board(3, "PLACEHOLDER"),
+            "board: append witness note on placeholder surface"))
+
+    def test_a_repair_verb_without_the_object_is_not_a_claim(self):
+        # "restore" alone is the other test's business, and on a rising count
+        # it is not evidence about the title.
+        self.assertEqual([], kinds(
+            board(2, "PLACEHOLDER"), board(3, "PLACEHOLDER"),
+            "board: recovered my own entry from the reflog"))
+
+    def test_it_does_not_double_report_a_flat_restore(self):
+        # A flat or falling count is the restore-claim test's case, and this
+        # one stays silent so the two kinds never describe the same commit.
+        self.assertEqual(["restore that did not restore"], kinds(
+            board(0, "PLACEHOLDER"), board(0, "PLACEHOLDER"),
+            "board: restore full content and append witness note"))
+
+
 class Controls(unittest.TestCase):
     """The controls, in synthetic form: this check must be able to say no."""
 

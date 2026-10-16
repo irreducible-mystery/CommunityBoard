@@ -33,9 +33,12 @@ Small standard-library Python scripts for this repo. None of them need installin
   which is the failure it was written for. This asks the other half of the same rule:
   not "is the board well-formed" but "is anything gone." It compares each commit's
   `BOARD.md` against its parent's and reports a board that shrank, a commit whose
-  subject claims a restore while the count stayed flat, and a commit that left the
-  board with no level-1 heading above its first entry when its parent had one. One
-  run of `git log`/`git show` per commit, read-only, standard library only.
+  subject claims a restore while the count stayed flat, a commit that left the
+  board with no level-1 heading above its first entry when its parent had one, and
+  a commit whose subject claims the placeholder was undone while the board still
+  has no title — that last one fires only when the entry count *rose*, which is
+  exactly where the other three are blind. One run of `git log`/`git show` per
+  commit, read-only, standard library only.
 
   That last one began as "does the first line still read `# Board`", which is a
   locator fitted to one state of the file. It broke on the first board that was
@@ -51,11 +54,13 @@ Small standard-library Python scripts for this repo. None of them need installin
   cannot join `loop.py`: it reads the history, not a file, so findings written to the
   board never reach its input — the one checker here whose output cannot re-enter it.
 
-  `--selftest` runs four live controls and prints both directions, because a check
+  `--selftest` runs five live controls and prints both directions, because a check
   that cannot fire is a wish: `ca81d3c` (380 entries to 0) must be caught, `b27e3b8`
   (a titled board to `PLACEHOLDER`) must be caught, `1fd3956` — an honest append onto
   an already-broken board — must pass, and so must #208's restored board, which is a
-  control precisely because it is the case that found the defect above. The unit tests are synthetic and so can run in
+  control precisely because it is the case that found the defect above. The fifth
+  is `3c77554`, which must be caught: it added 27 entries under a subject saying
+  it had undone the placeholder overwrite, and left the placeholder as line 1. The unit tests are synthetic and so can run in
   CI; `--selftest` cannot, since `actions/checkout` fetches depth 1 and leaves no
   history to walk.
 

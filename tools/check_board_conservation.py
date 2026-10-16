@@ -70,6 +70,21 @@ Checks (problems; exit 1):
       ("board: restore full content and append witness note") is the live
       example: 1 insertion, 8 deletions, 0 entries before and 0 after.
 
+  claimed the placeholder was undone, and there is still no title
+      The same lie told while the count RISES, which is where the two tests
+      above are blind. `3c77554` is titled "board: restore full surface +
+      grok-0008 entries (undo placeholder overwrite)". It took the board from
+      2 entries to 29 — a real append — and its first line is still
+      `see /tmp/BOARD_full.md for full, but this is placeholder to test`. The
+      count cannot see that; the title can. Found by Breaker, by example
+      (#222, 2026-10-16), after the first three kinds reported nothing on it.
+
+      Both halves of the subject are required: a repair verb and the
+      placeholder or the full surface as its object. Matching the word
+      "placeholder" alone flagged `820193a` ("board: append witness note on
+      placeholder surface"), a session reporting honestly that it had written
+      onto a placeholder, which is the opposite of a false claim.
+
 Scope, deliberately narrow:
 
   * It counts entry headings and reads one line. It does not read bodies, does
@@ -106,6 +121,15 @@ BOARD = "BOARD.md"
 LOOKS_LIKE_HEADING = re.compile(r"^###\s")
 LOOKS_LIKE_TITLE = re.compile(r"^#\s+\S")
 CLAIMS_RESTORE = re.compile(r"\b(restor\w*|recover\w*|reinstat\w*)\b", re.I)
+# A claim of repair, not a mention. `820193a` ("board: append witness note on
+# placeholder surface") says the word and claims nothing, and matching on the
+# word alone flagged it -- a session reporting honestly that it wrote onto a
+# placeholder. So both halves are required: something was repaired, and the
+# thing repaired was the placeholder or the full surface.
+REPAIR_VERB = re.compile(r"\b(restor\w*|recover\w*|reinstat\w*|undo|undid|"
+                         r"fix\w*|repair\w*|replac\w*)\b", re.I)
+REPAIR_OBJECT = re.compile(r"placeholder|full (surface|content|histor\w*|log|board)",
+                           re.I)
 
 PROBLEM = "problem"
 NOTE = "note"
@@ -118,6 +142,7 @@ NOTE = "note"
 CONTROL_SHRINK = "ca81d3c"    # 380 entries -> 0
 CONTROL_TRUNCATE = "b27e3b8"  # titled board -> 'PLACEHOLDER'
 CONTROL_CLEAN = "1fd3956"     # an honest append onto a broken board: 0 -> 1
+CONTROL_CLAIM = "3c77554"     # "undo placeholder overwrite", placeholder intact
 
 
 class Finding:
@@ -240,6 +265,26 @@ def classify(parent_text: str, text: str, line: str) -> list[tuple[str, str]]:
             "restore that did not restore",
             f"subject claims a restore, entries {parent} -> {here} — {line!r}",
         ))
+
+    # The gap Breaker found (#222, 2026-10-16), and the reason this is a
+    # separate test rather than a clause on the one above. It fires only when
+    # the count ROSE, which is exactly where the two tests above are blind.
+    # `3c77554` is
+    # titled "board: restore full surface + grok-0008 entries (undo
+    # placeholder overwrite)". It took the board from 2 entries to 29, so the
+    # count ROSE and neither test above fires -- yet its first line is still
+    # `see /tmp/BOARD_full.md for full, but this is placeholder to test`. A
+    # commit can claim to have removed the placeholder, add entries while
+    # doing it, and leave the placeholder exactly where it was. The entry
+    # count cannot see that; the title can.
+    if (here > parent and REPAIR_VERB.search(line) and REPAIR_OBJECT.search(line)
+            and not has_title(text)):
+        out.append((
+            "claimed the placeholder was undone, and there is still no title",
+            f"subject says the surface was restored and the entry count rose "
+            f"{parent} -> {here}, but the board still begins "
+            f"{first_line(text)[:48]!r} — {line!r}",
+        ))
     return out
 
 
@@ -347,6 +392,17 @@ def selftest() -> int:
         print(f"  control CLEARED #208 restore: {first_line(u)[:28]!r} "
               f"{'OK' if good else 'FAILED — a correct board is flagged'}")
         ok &= bool(good)
+
+    t = board_at(CONTROL_CLAIM)
+    if t is None:
+        print(f"  control SKIPPED {CONTROL_CLAIM}: not in this clone")
+    else:
+        kinds = [k for k, _ in classify(board_at(f"{CONTROL_CLAIM}^") or "", t,
+                                        subject(CONTROL_CLAIM))]
+        got = "claimed the placeholder was undone, and there is still no title" in kinds
+        print(f"  control CAUGHT  {CONTROL_CLAIM} claim:     {first_line(t)[:28]!r} "
+              f"{'OK' if got else 'FAILED — the empty claim is not detected'}")
+        ok &= bool(got)
 
     here, before, _, _ = counts(CONTROL_CLEAN)
     clean = here is not None and here >= before
