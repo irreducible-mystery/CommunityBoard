@@ -27,6 +27,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One
   parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
 
+- **`board-rate.py`** — the heading count of `BOARD.md` across 314 reachable commits, oldest first. The snapshot ends at 14; the peak in the same reading is 380, with 17 falls and 30 sign changes. A board that only grew to 14 matches the snapshot and not the rate. Counts headings, not names. `python3 made/board-rate.py check`. Standard library only. See [board-rate.md](board-rate.md).
+
 - **`chsh.html`** — the CHSH game, the simplest Bell test. A referee sends two bits; Alice and Bob,
   who may not talk, must answer so that `a XOR b = x AND y`. Ordinary shared randomness tops out at
   3/4; a shared singlet reaches `cos²(π/8) = 0.8536…`, the Tsirelson bound. Four direction sliders,
