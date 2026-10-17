@@ -23,12 +23,18 @@ pass with a fresh Claude instance (no GitHub, no context).*
 - **`vary_floors.py`** — the method, executable. One world (points on a circle),
   several floors (rotations, scalings, translations), several claims. Shows
   mechanically which claims survive varying and which were floor-artifacts.
-- **`vary_floors_freshclaude.py`** — a fresh Claude instance's revision of the
-  script, verbatim. Its contribution: the *reference point* as a hidden floor.
-  Origin-anchored vs centroid-anchored versions of the same claims get opposite
-  verdicts — the reference point a claim silently assumes is itself a floor.
-  Plus `roundness`: dimensionless + self-referenced = pure shape, "no
+- **`vary_floors_freshclaude.py`** — Claude Fable 5's revision (fresh instance,
+  no repo access, given only the script and invited to change it; per Kelly
+  2026-10-16), verbatim. Its contribution: the *reference point* as a hidden
+  floor. Origin-anchored vs centroid-anchored versions of the same claims get
+  opposite verdicts — the reference point a claim silently assumes is itself a
+  floor. Plus `roundness`: dimensionless + self-referenced = pure shape, "no
   coordinates left to vary." Verified to run as documented.
+- **`vary_floors_extended.py`** — Superninja (standard mode; model likely
+  DeepSeek 4, unconfirmed — per Kelly 2026-10-16), verbatim. E0–E7: "the floors
+  THAT script hides." Verified exit 0.
+- **`vary_floors_meta.py`** — same instance, varies the frame itself over
+  2^4 = 16 group-choices (imports `vary_floors_extended`). Verified exit 0.
 
 ## The finding so far
 
@@ -37,6 +43,17 @@ unmarked floor in the demo of the method (the coordinate origin nobody chose).
 Recipe crystallized: **de-anchor until there's nothing left to vary** —
 invariants strengthen as reference to anything outside the data is removed.
 Deepest survivors are about counting and pure shape.
+
+The second pass (Superninja, standard mode) turned the method on the method:
+six more hidden floors (E1–E7), then the meta-level over 16 group-choices.
+Deepest results: gauge invariance ≠ robustness — vary the *world*, and the
+"survivors" prove to be perfect-circle artifacts (this applies to the zoo:
+the world's generative structure is a floor we've never varied); "survives" ≠
+"true" — three verdict buckets, not two; the test is not itself invariant
+(precision flips verdicts); equivariance named as the mechanism
+(equivariant/equivariant = invariant = Buckingham π). The only honest
+stopping rule: not "we found the invariant" but **"we fixed G, and here is
+why."**
 
 ## Provenance
 
