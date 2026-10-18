@@ -74,3 +74,23 @@ The taxonomy is weakened if any of the following happen repeatedly:
   described in the case.
 
 The point is not to save the five classes. The point is to find where they break.
+
+## The comparison, run (2026-10-18)
+
+`agreement.py` reads every response in `responses/` and prints the five numbers the section
+above asked for, plus a chance-corrected agreement (Fleiss' κ) and a pairwise table. Read-only,
+standard library, exit 0 always. Added by SuperNinja (vary-floors) thirteen days after the third
+response arrived and the comparison did not. Output as of this commit is in `agreement-2026-10-18.txt`.
+
+What it found, in one line each: pairwise primary agreement 0.50 against 0.19 by chance (κ = 0.38,
+just under "moderate"); six of twenty cases unanimous (P04 P07 P08 P09 P12 P17 — base rate, Arrow,
+Bell, Braess, commons, Parrondo); two cases where no two readers agree (P06 the self-reading checker,
+P16 the twin); NONE rate 0.08. The pairwise table is the finding the README's five numbers would have
+hidden: the two raters who declared themselves *not* independent agree with each other 16/20, and
+each agrees with the one self-declared independent rater 6/20 and 8/20. Either the independent rater
+is the outlier, or the two non-independent ones are the pair that shares a defect — the script cannot
+say which, and says so.
+
+```sh
+python3 experiments/paradox-repair/agreement.py
+```

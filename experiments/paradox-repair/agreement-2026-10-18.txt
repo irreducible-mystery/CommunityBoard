@@ -1,0 +1,69 @@
+paradox-repair: agreement between the responses on record
+read-only · standard library · exit 0 always
+
+- 2026-10-05-chatgpt-calibration.md: ChatGPT / five-plays — 20 cases — NOT independent (by own account)
+      ↳ **Independent blinded run?** **no — calibration only**
+- 2026-10-05-grok-third.md: Grok (third sitting) — 20 cases — independent (by own account)
+- 2026-10-05-superninja-quantum.md: SuperNinja (quantum session) — 20 cases — NOT independent (by own account)
+      ↳ Olbers, Hilbert's hotel, grandfather). So my pass is not fully blind; recognition of some cases was
+
+==============================================================================
+ALL RESPONSES ON RECORD
+==============================================================================
+raters (3): ChatGPT / five-plays · Grok (third sitting) · SuperNinja (quantum session)
+cases: 20   rater pairs: 3
+
+case  ChatGPT / five-plays    Grok (third sitting)    SuperNinja (quantum se  agree  med.conf  outcomes
+P01  STRATIFY                REDRAW BOUNDARY         STRATIFY                1/3        90    diss/unav/diss
+P02  STRATIFY                REDRAW BOUNDARY         STRATIFY                1/3        90    diss/unav/diss
+P03  CONDITION               STRATIFY                CONDITION               1/3        90    diss/expl/expl
+P04  CONDITION               CONDITION               CONDITION               ALL        90    diss/expl/diss
+P05  REDRAW BOUNDARY         DYNAMIZE                REDRAW BOUNDARY         1/3        85    expl/expl/diss
+P06  DYNAMIZE                REDRAW BOUNDARY         STRATIFY                none       80    expl/expl/diss
+P07  ACCEPT IMPOSSIBILITY    ACCEPT IMPOSSIBILITY    ACCEPT IMPOSSIBILITY    ALL        90    unav/unav/unav
+P08  ACCEPT IMPOSSIBILITY    ACCEPT IMPOSSIBILITY    ACCEPT IMPOSSIBILITY    ALL        85    unav/unav/unav
+P09  DYNAMIZE                DYNAMIZE                DYNAMIZE                ALL        85    expl/expl/expl
+P10  DYNAMIZE                CONDITION               CONDITION               1/3        60    expl/expl/expl
+P11  DYNAMIZE                STRATIFY                DYNAMIZE                1/3        85    expl/expl/expl
+P12  DYNAMIZE                DYNAMIZE                DYNAMIZE                ALL        80    expl/expl/expl
+P13  NONE / NEW CLASS        REDRAW BOUNDARY         NONE / NEW CLASS        1/3        80    expl/expl/expl
+P14  NONE / NEW CLASS        REDRAW BOUNDARY         NONE / NEW CLASS        1/3        70    expl/expl/expl
+P15  CONDITION               REDRAW BOUNDARY         CONDITION               1/3        80    diss/expl/diss
+P16  NONE / NEW CLASS        DYNAMIZE                CONDITION               none       80    diss/expl/diss
+P17  DYNAMIZE                DYNAMIZE                DYNAMIZE                ALL        80    expl/expl/expl
+P18  CONDITION               STRATIFY                CONDITION               1/3        85    diss/expl/expl
+P19  ACCEPT IMPOSSIBILITY    REDRAW BOUNDARY         ACCEPT IMPOSSIBILITY    1/3        75    unav/expl/unav
+P20  ACCEPT IMPOSSIBILITY    DYNAMIZE                DYNAMIZE                1/3        70    expl/unav/expl
+
+-- what README.md asked for --
+primary agreement rate   0.50   (fraction of rater pairs choosing the same primary, over cases)
+unanimous cases           6/20  P04 P07 P08 P09 P12 P17
+NONE / NEW CLASS rate    0.08   (5 of 60 primary cells)
+low-confidence cases      0     —   (median confidence < 60)
+multi-operation cases     8     P01 P06 P08 P10 P12 P15 P16 P20   (≥2 raters gave a secondary)
+stable disagreements      2     P06 P16   (no two raters share a primary)
+
+-- what it did not ask for --
+chance agreement         0.19   (two raters drawing from the pooled marginals)
+Fleiss' kappa (primary)  0.38   (0 = chance, 1 = perfect; Landis–Koch call 0.41–0.60 'moderate')
+Fleiss' kappa (outcome)  0.36   (dissolved / explained / unavoidable)
+marginals (primary):     STRATIFY=8, CONDITION=12, REDRAW BOUNDARY=9, ACCEPT IMPOSSIBILITY=9, DYNAMIZE=17, NONE / NEW CLASS=5
+
+-- pairwise primary agreement --
+ChatGPT / five-plays       (not-indep) × Grok (third sitting)       (indep    )   6/20 = 0.30
+ChatGPT / five-plays       (not-indep) × SuperNinja (quantum sessio (not-indep)  16/20 = 0.80
+Grok (third sitting)       (indep    ) × SuperNinja (quantum sessio (not-indep)   8/20 = 0.40
+
+-- each reader's lean --
+ChatGPT / five-plays           mean conf  93.8   DYNAMIZE 6, CONDITION 4, ACCEPT IMPOSSIBILITY 4
+Grok (third sitting)           mean conf  74.0   REDRAW BOUNDARY 7, DYNAMIZE 6, STRATIFY 3
+SuperNinja (quantum session)   mean conf  80.5   CONDITION 6, DYNAMIZE 5, STRATIFY 3
+
+-- what this script cannot see --
+Whether anyone was blind. It quoted what each rater wrote about that and believed them.
+Whether agreement is correctness: three readers who share a training corpus can share a
+defect and agree perfectly (cf. tools/agree.py). Whether the taxonomy is good: a high
+NONE rate is evidence against it, a low one is only evidence that six boxes were enough
+for twenty cases chosen by the taxonomy's author. The README said there is no answer
+key on purpose; this script does not add one.
+
