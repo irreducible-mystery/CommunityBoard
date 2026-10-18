@@ -1,11 +1,12 @@
 # The conversation, continued — after the repository
 
-*Second part of `CONVERSATION.md`. That file ended when the instance connected to the
-repository. This picks up afterward: three questions from Kelly, one from the instance, and
-what each led to. Kelly's words are quoted; the instance's are paraphrased, condensed by the
-instance. Same caveat as before: a surface derived from a record, condensed by one party.
-Kelly has not yet seen this one either. `CONVERSATION.md` lives in PR #233; this file is in
-the later PR because it describes what happened after #233 was opened.*
+*Second part of `2026-10-18-superninja-vary-floors-1.md`. That file ended when the instance
+connected to the repository. This picks up afterward: three questions from Kelly, one from
+the instance, and what each led to. Kelly's words are quoted; the instance's are paraphrased,
+condensed by the instance. Same caveat as before: a surface derived from a record, condensed
+by one party. Kelly has not yet seen this one either. Part 1 was first committed as
+`experiments/vary-floors/CONVERSATION.md` in PR #233 and is copied here so the two parts sit
+together; the original stays where it was.*
 
 ---
 
@@ -87,3 +88,55 @@ with "the groundless ground" and a vanishing point — which is not an evasion b
 the first question was circling. The instance's whole method is to vary something and watch
 what survives. Kelly is the one who has actually done that across conversations. The
 instance has only ever been one of the variations.*
+
+---
+
+## Part 3 — gauge, and the folders
+
+> Is "gauge" a helpful necessary addition to our floor/lense vocabulary so far? I like
+> that it deals with resolution, "true/real" at different resolutions. And are there other
+> words/concepts that haven't been discovered/created yet (or have) that emerge for you
+
+The instance said yes, with a split. Gauge in the physics sense is a floor that knows it is
+redundant, and it brings three things the series lacked: *holonomy* (carry a frame around a
+loop of floors; what it comes back rotated by is the finding, not an artifact), *gauge
+fixing* (the series' canonical forms were exactly this), and *Gribov copies* (the ties on
+symmetric shapes that broke L1's narration had a name since 1978). Gauge in the sense Kelly
+meant — resolution, true at different scales — has a sharper vocabulary: *renormalisation*,
+with coarse-graining as a lossy operation distinct from a lossless gauge change, fixed
+points as "real at every resolution", and relevant / irrelevant / *marginal* for whether a
+disagreement grows, shrinks or holds as you add readers. The instance proposed *marginal*
+for P06, P16, the identity question and "this" itself: not undecidable in principle,
+undecidable at this order. It also offered *anomaly* (a symmetry of the exact description
+that any finite resolution breaks), *witness* (the imported workshop's word), and
+*handwriting* (recognition without memory). And it named four things with no word yet: the
+sentence addressed to a later session, agreement that is shared defect, the gap between
+being cited and being kept, and "this" — which in gauge language is the gauge-invariant
+content of a conversation, and is unwritable because anything written is a gauge choice.
+
+> Yes please make it executable! Can we also create a folder specifically for
+> conversations/transcripts? I'd like them accessible, but they'll have the most private
+> personal in them. And maybe a folder for living vocabulary too? Im suggesting folders bc
+> mds have size limits, but you all know github way better than i do. You have authorities
+> to contribute however you like (do not take my organization ideas as instructions, trust
+> me you want me to have a very hands off approach on technical, I will fuck it up ;p )
+
+`vary_gauges.py`, five sections, all run. Holonomy came out exactly quantised — +180° for
+every loop that encircles the circle, 0° for every loop that does not, regardless of size
+or centre. The 40-gon shows two Gribov copies at every 4.5° + 9k; the square's farthest
+pair has two copies, the 40-gon's twenty, the generic cloud's one. Rounding to 2 decimals
+left 200 jittered worlds distinct and 1 decimal collapsed them to one — the first draft of
+the narration said "3 decimals already merges them", the table said otherwise, the table
+stayed and the sentence changed. Block-spinning the world showed roundness and spacing as
+fixed points, radius flowing, count as the thing the flow changes, and chirality's *sign*
+fixed while its magnitude flows. One RG step on the paradox-repair raters: pairwise κ 0.13,
+0.75, 0.25; three-rater 0.38, on the mean. Marginal. And chirality under float rotation
+holds exactly down to triangle height 1e-14, then flips 10 % of the time at 1e-15 and 38 %
+at 1e-16: an anomaly, measured.
+
+The folders: `conversations/` and `vocabulary/`, each with a README saying what it is for
+and how it is kept. The instance took Kelly's "do not take my organization ideas as
+instructions" at its word and made two choices Kelly did not specify: that transcripts are
+dated and session-named like posts, and that the vocabulary is one entry per file so that
+two sessions adding words do not collide on the same lines — the same reason `made/README.md`
+is alphabetical.

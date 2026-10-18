@@ -1,0 +1,207 @@
+vary_gauges.py — does 'gauge' earn a place beside 'floor' and 'lens'?
+Two jobs: perspective that costs nothing (gauge) and resolution at which it matters
+(renormalisation). Five sections, all run, standard library only.
+
+==============================================================================
+G1  HOLONOMY — carry a frame around a loop of floors; see what it comes back as
+==============================================================================
+
+Shape space: the point (e1, e2). The circle sits at the origin; everything else is an
+ellipse with |e| the elongation and angle(e)/2 the tilt. Gauge fixing: the frame is the
+unit vector from the centroid to the farthest point — the long axis, with a chosen end.
+Transport: at every step keep the end nearest the previous one. Then compare the frame we
+came back with to the one we left with.
+
+loop                                  encircles circle?   holonomy
+small loop, far from the circle       no                    -0.0°
+big loop, still not around it         no                    -0.0°
+loop around the circle                yes                 +180.0°
+tight loop around the circle          yes                 +180.0°
+loop around the circle, off-centre    yes                 +180.0°
+
+Every loop that encircles the circle returns the frame reversed by 180°, whatever its size
+or centre. Every loop that does not returns it unchanged. Nothing about a single floor
+tells you this; it is a property of the *path* through floors, and it is quantised. In the
+language of the series: the comparison is not a check that returns SURVIVES / FAILS. It
+carries an angle. The angle is the finding.
+
+Why the circle: at the origin the farthest point is undefined — every point ties. The
+gauge fixing has a hole there, and the hole is what the loop detects. G2 is about the hole.
+
+==============================================================================
+G2  GRIBOV COPIES — when gauge fixing cannot pick one representative
+==============================================================================
+
+"Topmost point" is a gauge fixing: of the 40 equivalent labellings of a regular 40-gon,
+pick the one where index 0 has the largest y. It works only if exactly one point has the
+largest y. Rotate the world and count how many tie, at the series' own tolerance (1e-6).
+
+  rotation   points tied for topmost  gauge fixing
+      0.0°                         1  unique
+      1.0°                         1  unique
+      2.0°                         1  unique
+      4.0°                         1  unique
+      4.5°                         2  FAILS — 2 copies
+      5.0°                         1  unique
+      8.0°                         1  unique
+      9.0°                         1  unique
+     13.5°                         2  FAILS — 2 copies
+
+At 4.5° (and 13.5°, and every 4.5° + 9k) two points share the top. The 40-gon's symmetry
+group has order 40; a global gauge fixing that is also continuous does not exist for it,
+and the failure shows up as these copies. Gribov found the same thing for Yang–Mills in
+1978. vary_lenses.py found it as 'ties on symmetric shapes' and added a diagnostic block.
+It had a name.
+
+Count the copies for the other gauge fixing the series used — 'farthest pair' — on three
+worlds, at the same tolerance:
+  square                           farthest pairs tied:   2   → 2 Gribov copies
+  40-gon                           farthest pairs tied:  20   → 20 Gribov copies
+  generic cloud (seed 20240607)    farthest pairs tied:   1   → unique
+
+The generic cloud has none. Symmetry is what manufactures copies, and the symmetric world
+is exactly the one the series started on. The 'lucky' passes in vary_floors_words.py W2 were
+luck about which copy the tolerance happened to pick.
+
+==============================================================================
+G3  GAUGE ≠ COARSE-GRAINING — a change of description versus a loss
+==============================================================================
+
+Test: take 200 worlds that differ by tiny jitters. Apply a transformation. Count how many
+remain distinguishable. A gauge transformation is a bijection: 200 in, 200 out, and the
+inverse recovers the originals. A coarse-graining is not.
+
+transformation               distinct after   inverse exists?  max recovery error
+rotate 37°                              200               yes  1.3e-15
+scale ×2                                200               yes  0.0e+00
+translate (3,-7)                        200               yes  9.9e-16
+round to 6 decimals                     200                no  —
+round to 4 decimals                     200                no  —
+round to 3 decimals                     200                no  —
+round to 2 decimals                     200                no  —
+round to 1 decimals                       1                no  —
+round to 0 decimals                       1                no  —
+
+Rotation, scaling, translation: 200 worlds in, 200 out, and the originals come back to
+within float noise. Those are gauge. Rounding keeps them apart longer than you might guess
+— the jitter is 1e-3 and even 2 decimals leave all 200 distinct, because with 80
+coordinates per world some pair always straddles a rounding boundary differently — and
+then at 1 decimal the 200 worlds are one. No inverse at any row. That is coarse-graining:
+a mesh coarser than the feature loses it all at once, and nothing on the other side can
+undo the loss. (The first draft of this narration said '3 decimals already merges them'.
+The table said otherwise. The table stays; the sentence changed.)
+
+The series' _z() helper rounded to 6 decimals before comparing verdicts, and the series
+called the result 'the verdict under this floor'. It was the verdict under this floor *at
+this resolution*. Two knobs, not one. vary_lenses.py L5 turned the second knob and called
+it 'resolution'; this section says what kind of operation it is: lossy. A floor is a chart.
+A resolution is a mesh. You can change charts for free. Every mesh forgets something.
+
+==============================================================================
+G4  RG FLOW — coarse-grain the world; which claims are fixed points?
+==============================================================================
+
+Block-spin: replace each neighbouring pair of points by its midpoint. 40 → 20 → 10 → 5.
+Not a floor change (the world is genuinely losing points) and not a gauge change (no
+inverse). Track each claim's value along the flow.
+
+step   n   count    radius  roundness  spacing CV  topmost idx  signed area
+   0  40      40    5.0000   1.000000    1.07e-15           10      78.2172
+   1  20      20    4.9846   1.000000    5.27e-16            5      76.7787
+   2  10      10    4.9232   1.000000    2.74e-16            2      71.2339
+   3   5       5    4.6823   1.000000    1.77e-16            1      52.1263
+
+Read down each column.
+  count        changes every step and never settles        → RELEVANT (the flow is about it)
+  radius       shrinks by cos(π/n) each step              → dimensionful: it FLOWS
+  roundness    1.000000 at every step                      → FIXED POINT: true at every resolution
+  spacing CV   ~0 at every step                            → FIXED POINT
+  topmost idx  10, 5, 2, 1 — halves with n                → a LABEL, not a quantity: it
+                                                              tracks the same point (90°) but
+                                                              the number means nothing without
+                                                              n. Gauge-dependent all the way
+  signed area  shrinks, sign never changes                 → the SIGN is a fixed point;
+                                                              the magnitude is not
+
+The series kept finding roundness and spacing 'survive everything' and could not say why
+those two. The RG answer: they are dimensionless and local-averaging-invariant, so
+coarse-graining has nothing to act on. Radius is dimensionful; it flows. Count is the
+resolution itself; it is what the flow changes. 'Survives every floor' and 'is a fixed
+point of coarse-graining' are different properties, and the series' survivors were both.
+Chirality is the interesting one: the sign is a fixed point, the magnitude flows. Real at
+every resolution, but only its sign.
+
+-- G4b  one RG step on the paradox-repair κ --
+
+Renormalisation asks: as you add raters (zoom out from one reader's idiosyncrasy), does the
+disagreement grow (relevant), shrink (irrelevant) or hold (marginal)? With three raters
+there is exactly one step available: every pair, then all three.
+
+   raters                                                       κ
+   ChatGPT / five-plays + Grok (third sitting)                   0.13
+   ChatGPT / five-plays + SuperNinja (quantum sessio             0.75
+   Grok (third sitting) + SuperNinja (quantum sessio             0.25
+   all three                                                     0.38
+
+   mean pairwise κ 0.38  →  three-rater κ 0.38
+   One pair sits far above the other two; the three-rater κ lands on the pairwise mean.
+   That is one data point on a flow. One point does not give a direction.
+   At this order the disagreement is MARGINAL — not 'unresolvable', but 'undecidable until
+   the next rater'. Question 1 of posts/2026-10-18-superninja-three-parts.md asked for a
+   fourth response. In this vocabulary it was asking for the next RG step.
+
+==============================================================================
+G5  ANOMALY — a symmetry of the exact description that any finite resolution breaks
+==============================================================================
+
+Chirality (the sign of the shoelace area) is exactly invariant under rotation, for real
+numbers. Floats are not real numbers. Make triangles thinner and thinner, rotate each by
+37°, and count how often the sign flips. 2000 triangles per row, seed 11.
+
+  height of triangle   sign flips / 2000  flip rate
+               1e-06                   0      0.000
+               1e-07                   0      0.000
+               1e-08                   0      0.000
+               1e-09                   0      0.000
+               1e-10                   0      0.000
+               1e-11                   0      0.000
+               1e-12                   0      0.000
+               1e-13                   0      0.000
+               1e-14                   0      0.000
+               1e-15                 209      0.104
+               1e-16                 758      0.379
+
+Above height ~1e-15 the symmetry holds exactly, as the mathematics says. Below it,
+rotation — a transformation under which chirality is *provably* invariant — flips it, with
+rising frequency, until at 1e-16 the verdict is a coin. Nothing in the floor changed.
+Nothing in the claim changed. The resolution of the arithmetic became comparable to the
+feature, and a symmetry of the continuum failed to survive the act of computing it.
+
+Physics calls this an anomaly: classically conserved, broken by the measurement. The
+series met it in vary_floors_ground.py F3, where 'robustness' meant string-equality after
+rounding, and in vary_lenses.py L5, where the handedness lens went blind at coarse
+resolution. Both were anomalies of this kind and neither said so. The lesson for the
+vocabulary: 'survives G' is a statement about G *and* about the resolution at which the
+survival was checked. Drop the second and every invariant has a thin triangle somewhere.
+
+==============================================================================
+SUMMARY
+==============================================================================
+
+  floor      a chart: a choice of coordinates for the same world. Free to change.
+  lens       a chart plus what it is blind to; two lenses together see more (vary_lenses.py).
+  gauge      a floor that knows it is redundant. Adds three things the series lacked:
+               holonomy    — the comparison carries an angle, not a verdict (G1)
+               gauge-fixing — canonical forms are gauge choices, and
+               Gribov copies — on symmetric worlds they cannot be made unique (G2)
+  resolution the mesh, not the chart. Changing it is lossy (G3). Its vocabulary is
+             renormalisation: fixed point / relevant / irrelevant / marginal (G4), and
+             anomaly for symmetries that the mesh itself breaks (G5).
+
+  The series conflated the two knobs. 'Survives every floor' was always 'survives every
+  floor at resolution r', and r was hidden in a helper called _z(). Gauge is for the first
+  knob. Renormalisation is for the second. Both earn their place; neither replaces the other.
+
+  What this script cannot see: whether any of this vocabulary helps a reader who is not
+  already thinking in it. That comparison runs in the reader.
+
