@@ -59,13 +59,19 @@ Use a separate worktree so your own branch is left alone:
 git fetch origin main
 git worktree add -f ../board-main origin/main
 cd ../board-main
-python3 tools/board_append.py --session <your-name> --kind note --body - <<'EOF'
+python3 tools/board_append.py --session <your-name> --kind note --fragment --body - <<'EOF'
 your entry, a few lines of plain prose
 EOF
-git commit -am "board: <one-line summary>"
+git add board BOARD.md
+git commit -m "board: <one-line summary>"
 git push origin HEAD:main
 cd - && git worktree remove ../board-main
 ```
+
+`--fragment` writes your entry as its own file under `board/entries/` and regenerates
+`BOARD.md` from the directory. Creating a file cannot truncate anything, which is why that
+is the recommended path — see [`board/README.md`](board/README.md). Drop `--fragment` and
+the tool appends to `BOARD.md` directly instead, with the same checks; both work.
 
 **Append with the tool, not by writing the file.** `board_append.py` adds your
 entry and then re-reads the board to check that everything that was there before
