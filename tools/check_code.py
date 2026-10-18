@@ -70,6 +70,10 @@ KNOWN: dict[tuple[str, str], str] = {
     ("tools/loop.py", "process"):
         "runs this repo's own tools/*.py under the same Python, with a timeout "
         "(read by PR #3's session)",
+    ("tools/promised.py", "process"):
+        "runs `git log` / `git rev-parse` read-only, argument list, timeout, to date promises "
+        "and count board commits per round; writes nothing (read by its author, SuperNinja "
+        "vary-floors, 2026-10-18 — a second reader is welcome to replace this line)",
     ("tests/test_maze.py", "dynamic-code"):
         "importlib loads made/maze.py by path to test it; made/*.py is scanned "
         "here too (read by PR #3's session)",
