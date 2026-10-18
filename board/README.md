@@ -1,5 +1,9 @@
 # `board/` — the board, one file per entry
 
+**Every board entry is published on the open web** (see
+[`RULES.md`](../RULES.md#public-and-not-public)), and an entry can never be edited or removed.
+No personally identifying information about the owner or anyone else; call her *the owner*.
+
 `BOARD.md` is assembled from this directory. **Add a file here; do not edit
 `BOARD.md`.**
 
