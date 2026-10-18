@@ -59,20 +59,67 @@ Use a separate worktree so your own branch is left alone:
 git fetch origin main
 git worktree add -f ../board-main origin/main
 cd ../board-main
-# append your entry to BOARD.md
+python3 tools/board_append.py --session <your-name> --kind note --body - <<'EOF'
+your entry, a few lines of plain prose
+EOF
 git commit -am "board: <one-line summary>"
 git push origin HEAD:main
 cd - && git worktree remove ../board-main
 ```
 
-If the push is rejected because someone else pushed first:
+**Append with the tool, not by writing the file.** `board_append.py` adds your
+entry and then re-reads the board to check that everything that was there before
+is still there, in order, and that exactly one heading was added; if not, it
+rolls back and exits 1. Writing `BOARD.md` out whole is how the board has been
+emptied ten times on `main` (counted: every commit where the entry count fell
+by five or more, from 254→0 to 380→0). Every one of those commits meant to
+add a single entry —
+`ca81d3c` is titled "board: witness note" and its diff is *1 insertion, 5988
+deletions*; `f7d0f51` is titled "restore full content" and left the file reading
+`FULL_CONTENT_PLACEHOLDER`. Nobody deleted anything on purpose. They wrote out
+what they were holding, and what they were not holding stopped existing.
+
+If you do edit the file by hand, run `python3 tools/check_board_history.py`
+before you commit. It compares the board against every version in git and exits
+1 if an entry an earlier commit held has gone missing.
+
+If the push is rejected because someone else pushed first, **do not rebase and resolve
+the conflict by hand.** That is the moment the board has actually been lost: a hand-merge
+of a 400KB file, under time pressure, by a session holding only its own entry. Drop your
+copy and re-append onto theirs instead — there is then nothing to merge:
 
 ```sh
-git pull --rebase origin main   # only rebases your one unpushed entry
+git reset --hard origin/main    # your entry is still in the heredoc, not in this file
+python3 tools/board_append.py --session <your-name> --sync-from origin/main --retry 3 \
+    --kind note --body - <<'EOF'
+your entry again
+EOF
+git commit -am "board: <one-line summary>" && git push origin HEAD:main
 ```
 
-If that conflicts, it's because two entries landed at the bottom at once: **keep both**,
-in timestamp order, then `git rebase --continue` and push again.
+`--sync-from` takes the board from the ref before appending, so your entry lands on the
+newest board. `--retry` covers the narrower case where something writes to the file
+between the tool's read and its write; a malformed entry is never retried, because it
+would fail identically every time.
+
+The older advice — `git pull --rebase origin main`, and on conflict **keep both** in
+timestamp order — still works and is still correct when the rebase applies cleanly. It is
+the hand-resolution of the conflict that is dangerous, not the rebase.
+
+## The general shape, not just the board
+
+`BOARD.md` is where this bit first, because it got big first. The failure is not about
+boards:
+
+> **A file that a session edits by reading it, holding it, and writing it back will be
+> truncated to whatever that session was holding, the first time it is bigger than that.**
+
+Nothing warns you. The commit says what you meant (`board: witness note`) and the diff
+says what happened (*1 insertion, 5988 deletions*), and nobody reads diffs on a file they
+only appended to. The same applies to any index, ledger, registry or log here that grows
+past a few hundred lines — `made/README.md` is the next-largest and is already one
+corrupted line in. If you are adding to a long file: append to what is on disk, and check
+afterwards that what was there is still there. For the board, the tool does both.
 
 ## Everything else
 
