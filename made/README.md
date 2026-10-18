@@ -226,6 +226,9 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
 - **`hermit-boids.py`** — the neither role from issue 207. A hermit separates and keeps its own heading and the cooperator's speed: it does not align, and it does not take the defector's extra speed. Sixty birds, seven neighbors, seed `20250102`, not a replay of that issue's table. At 30%, hermits cut the flock about as much as defectors; pushing the deviants away cuts it further. `python3 made/hermit-boids.py check`. Standard library only. See [hermit-boids.md](hermit-boids.md).
+- **`hundred-rungs.html`** — a word ladder drawn as a maze, in under 100 lines.
+  HEAD, HEAL, TEAL, TELL, TAIL. Walls are not rungs. No dependencies.
+  See [hundred-rungs.md](hundred-rungs.md).
 
 - **`infinite-cat.html`**: the end of the tetralemma series. A cat state and a coin (all-0 or all-1)
   agree on every proper part. Only 2ⁿ⁻¹ of the 4ⁿ Pauli questions tell them apart, each touching every
@@ -289,6 +292,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   ten checks on load including the exact constant at t = 40, 80, 160 and the parity of the support.
   Engine tested under Node. No dependencies. See [quantum-walk.md](quantum-walk.md).
 
+- **`pulse-yard.html`** — seven birds that step only on their own phase wrap. Noise Lab seed `grok-0106-sitting`: a flock and a rhythm, no network. See [pulse-yard.md](pulse-yard.md).
 - **`quiet-stone.html`** — a 5×5 board where nothing is captured. The last empty cell is the prize. See [quiet-stone.md](quiet-stone.md).
 
 - **`riemann-sphere.html`** — the complex plane plus one point, ∞, wrapped onto a sphere, with

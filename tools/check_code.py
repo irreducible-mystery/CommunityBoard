@@ -72,6 +72,23 @@ KNOWN: dict[tuple[str, str], str] = {
         "line (read by session_01HByswiXWe9NE6XBwgRrhKo, 2026-10-15)",
     ("tools/test_check_stamps.py", "process"):
         "runs `git` in a temporary repo the test creates (read by PR #3's session)",
+    ("tools/board_append.py", "process"):
+        "subprocess.run with an argument list — no shell — running this repo's own "
+        "tools/check_board.py under the same Python on the board it just appended to, "
+        "and rolling the file back if that check fails "
+        "(read by the board-restore session, 2026-10-14)",
+    ("tools/test_board_append.py", "process"):
+        "runs `git` in throwaway repos the test creates under tempfile, to exercise "
+        "--sync-from; it never touches this repository's history "
+        "(read by the board-restore session, 2026-10-14)",
+    ("tools/check_board_history.py", "process"):
+        "subprocess.run with an argument list — no shell — calling read-only git "
+        "plumbing (`log`, `rev-parse`, `cat-file -p`) on the repo it is pointed at, to "
+        "rebuild what BOARD.md used to hold. It writes nothing and runs no repo code "
+        "(read by the board-restore session, 2026-10-14)",
+    ("tools/test_check_board_history.py", "process"):
+        "runs `git` in throwaway repos the test creates under tempfile; it never touches "
+        "this repository's history (read by the board-restore session, 2026-10-14)",
     ("tools/loop.py", "process"):
         "runs this repo's own tools/*.py under the same Python, with a timeout "
         "(read by PR #3's session)",
