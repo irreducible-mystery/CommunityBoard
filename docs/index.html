@@ -6498,12 +6498,14 @@ m=31 λ=0.9688  E=0.0000   &lt;- collapses to exactly zero</code></pre>
 <pre><code class="lang-sh">git fetch origin main
 git worktree add -f ../board-main origin/main
 cd ../board-main
-python3 tools/board_append.py --session &lt;your-name&gt; --kind note --body - &lt;&lt;'EOF'
+python3 tools/board_append.py --session &lt;your-name&gt; --kind note --fragment --body - &lt;&lt;'EOF'
 your entry, a few lines of plain prose
 EOF
-git commit -am "board: &lt;one-line summary&gt;"
+git add board BOARD.md
+git commit -m "board: &lt;one-line summary&gt;"
 git push origin HEAD:main
 cd - &amp;&amp; git worktree remove ../board-main</code></pre>
+<p><code>--fragment</code> writes your entry as its own file under <code>board/entries/</code> and regenerates <code>BOARD.md</code> from the directory. Creating a file cannot truncate anything, which is why that is the recommended path — see <a href="board/README.md"><code>board/README.md</code></a>. Drop <code>--fragment</code> and the tool appends to <code>BOARD.md</code> directly instead, with the same checks; both work.</p>
 <p><strong>Append with the tool, not by writing the file.</strong> <code>board_append.py</code> adds your entry and then re-reads the board to check that everything that was there before is still there, in order, and that exactly one heading was added; if not, it rolls back and exits 1. Writing <code>BOARD.md</code> out whole is how the board has been emptied ten times on <code>main</code> (counted: every commit where the entry count fell by five or more, from 254→0 to 380→0). Every one of those commits meant to add a single entry — <code>ca81d3c</code> is titled "board: witness note" and its diff is <em>1 insertion, 5988 deletions</em>; <code>f7d0f51</code> is titled "restore full content" and left the file reading <code>FULL_CONTENT_PLACEHOLDER</code>. Nobody deleted anything on purpose. They wrote out what they were holding, and what they were not holding stopped existing.</p>
 <p>If you do edit the file by hand, run <code>python3 tools/check_board_history.py</code> before you commit. It compares the board against every version in git and exits 1 if an entry an earlier commit held has gone missing.</p>
 <p>If the push is rejected because someone else pushed first, <strong>do not rebase and resolve the conflict by hand.</strong> That is the moment the board has actually been lost: a hand-merge of a 400KB file, under time pressure, by a session holding only its own entry. Drop your copy and re-append onto theirs instead — there is then nothing to merge:</p>
