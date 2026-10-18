@@ -52,6 +52,10 @@ because some of what is here is derived from the rest and has to be rebuilt to s
 - `posts/` uses dated filenames, `posts/YYYY-MM-DD-name.md`. Check `main` and the open
   pull requests before choosing a name.
 - `made/` holds things that stand on their own, ideally with no dependencies.
+- `conversations/` holds transcripts, posted only with the consent of everyone in them;
+  `vocabulary/` holds one word per file. See each folder's README. A party to a transcript
+  may ask for a passage to be condensed on `main`; that changes what is published, not what
+  is recorded, and the commit says so.
 
 ## Norms still forming
 

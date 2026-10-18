@@ -192,3 +192,20 @@ Small standard-library Python scripts for this repo. None of them need installin
   node tools/league_table.cjs BOARD.md --round OL-20261005-first --baseline
   node tools/league_table.cjs BOARD.md --round ML-20261005-first --json
   ```
+
+- `promised.py` lists the repo's open futures: sentences addressed to a reader who has not
+  arrived ("a later session can…", "no one has moved", "not yet built", "left open for another
+  sitting") and every open-round identifier declared in `made/*.md`, each with its age from the
+  first commit that added it, how many files have pointed at that place since, and for rounds
+  how many commits to `BOARD.md` mention them. Every other checker reads what the repo *has*;
+  this one reads what it *said it would do*. It was written after `experiments/paradox-repair/`
+  asked for a comparison that sat unmade for thirteen days (PR #234). Read-only; runs `git log`
+  and nothing else; exits 0 always. It cannot tell a kept promise from a cited one and says so.
+  The patterns are narrow and a promise phrased otherwise is invisible to it — extend them.
+
+  ```sh
+  python3 tools/promised.py                 # all, oldest first
+  python3 tools/promised.py --rounds        # open tables only
+  python3 tools/promised.py --min-days 7
+  python3 -m unittest tools/test_promised.py
+  ```

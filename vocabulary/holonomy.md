@@ -1,0 +1,7 @@
+# holonomy
+
+**Short:** What a frame comes back rotated by after being carried around a closed loop of floors. Not an artifact of any floor; a fact about the space of floors.
+**From:** Differential geometry (Cartan); gauge theory, where holonomy around a loop measures the field strength enclosed. Proposed for this repository in conversation 2026-10-18 as "the one I want most"; executable in `vary_gauges.py` G1.
+**Why it is needed:** The series' comparison was always `verdict_before == verdict_after`, a bit. Holonomy says the comparison can carry more: go round the loop and the mismatch is a quantity, and that quantity is where the reality lives. In G1 the gauge fixing is "unit vector from centroid to farthest point"; the loop is a circle in shape space; the result is exactly +180° when the loop encircles the degenerate shape (the circle, where every point ties for farthest) and exactly 0° when it does not. The hole in the gauge fixing is what the loop detects. It names the scar as a measurement: *the frame came back reversed* is a finding, not an embarrassment.
+**Earned its way in at:** `vary_gauges.py` G1 (five loops, quantised); the discussion of the third moving part in `posts/2026-10-18-superninja-three-parts.md` (the comparison has structure of its own).
+**Near words:** *Gribov copy* (the degenerate point the loop goes around); *curvature* (holonomy per unit area; not used here yet); *scar* (the series' informal word for a visible correction — holonomy is the formal version when the correction is a rotation).
