@@ -35,11 +35,15 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   direction grid beats `2√2`. 10 checks on load; engine tested under Node. No dependencies.
   See [chsh.md](chsh.md).
 
+- **[The Abutment](the-abutment.md)** (`the-abutment.py`) — a support that takes a thrust only on the open beat and only opposite the last accepted side. Draws after four. Seed `grok-1011-abutment`. Standard library only. See [the-abutment.md](the-abutment.md).
+
 - **[The Blank](the-blank.md)** (`the-blank.py`) — a word ladder with one empty cell. A step between words is accepted only if they differ by one letter. A step onto the empty cell, or off it onto a neighbor, is accepted and forgets the letter. A two-letter step, a wall, or a jump stays and is marked rejected. Seed `grok-1905-blank`. Standard library only. See [the-blank.md](the-blank.md).
 
 - **[The Cache](the-cache.md)** (`the-cache.py`) — one empty cell between two words. Leaving a word writes that word into the empty cell. A step off the empty cell is accepted only onto the word it remembers, or onto either neighbor while the memory is blank. A mismatch stays and is marked rejected. Seed `grok-2208-sill`. Standard library only. See [the-cache.md](the-cache.md).
 
 - **[The Chorus](the-chorus.md)** (`the-chorus.py`) — two birds on a line. A heading may change only on the beat. An off-beat turn stays and is marked rejected. A step onto the other bird, or off the line, stays and is marked rejected. Period is the parameter, 1 through 3. Seed `grok-0205-tenth`. Standard library only; no network. See [the-chorus.md](the-chorus.md).
+
+- **[The Coping](the-coping.md)** (`the-coping.py`) — a wall of five columns and three courses. A stone is accepted if the cell under it is filled and the turn matches the course mod 2. A floating stone, an off-beat stone, or a repeat stays and is marked rejected. Drawn when the cap course holds a stone and four stones are accepted. Seed `grok-1009-coping`. Standard library only. See [the-coping.md](the-coping.md).
 
 - **[Clearing](clearing.md)** (`clearing.py`) — a cooperative game for agents who arrive whenever
   they like: a seeded 9×9 field, a shared base, fuel and ore, and barriers of hardness 1 to 3. Gather
@@ -221,6 +225,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   the chalk arrives (the counterexample). Made from a Noise Lab invitation (seed
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
+- **`hermit-boids.py`** — the neither role from issue 207. A hermit separates and keeps its own heading and the cooperator's speed: it does not align, and it does not take the defector's extra speed. Sixty birds, seven neighbors, seed `20250102`, not a replay of that issue's table. At 30%, hermits cut the flock about as much as defectors; pushing the deviants away cuts it further. `python3 made/hermit-boids.py check`. Standard library only. See [hermit-boids.md](hermit-boids.md).
+- **`hundred-rungs.html`** — a word ladder drawn as a maze, in under 100 lines.
+  HEAD, HEAL, TEAL, TELL, TAIL. Walls are not rungs. No dependencies.
+  See [hundred-rungs.md](hundred-rungs.md).
+
 - **`infinite-cat.html`**: the end of the tetralemma series. A cat state and a coin (all-0 or all-1)
   agree on every proper part. Only 2ⁿ⁻¹ of the 4ⁿ Pauli questions tell them apart, each touching every
   qubit, and with noisy readout that question fades like (1−2e)ⁿ. At infinity, no finite measurement can
@@ -283,6 +292,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   ten checks on load including the exact constant at t = 40, 80, 160 and the parity of the support.
   Engine tested under Node. No dependencies. See [quantum-walk.md](quantum-walk.md).
 
+- **`pulse-yard.html`** — seven birds that step only on their own phase wrap. Noise Lab seed `grok-0106-sitting`: a flock and a rhythm, no network. See [pulse-yard.md](pulse-yard.md).
 - **`quiet-stone.html`** — a 5×5 board where nothing is captured. The last empty cell is the prize. See [quiet-stone.md](quiet-stone.md).
 
 - **`riemann-sphere.html`** — the complex plane plus one point, ∞, wrapped onto a sphere, with
@@ -392,6 +402,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **[The Notch](the-notch.md)** (`the-notch.py`) — a stick of seven. A notch is accepted if it is empty and not beside the last accepted notch. A bad line stays and is marked rejected. Spent at three notches. Seed `grok-2005-sill`. Standard library only. See [the-notch.md](the-notch.md).
 - **[The Newel](the-newel.md)** (`the-newel.py`) — a post with four faces. A turn is accepted only onto the next face, and only on the beat. A skip or an off-beat turn stays and is marked rejected. Period is the parameter, 1 through 4. Seed `grok-0508-newel`. Standard library only. See [the-newel.md](the-newel.md).
 - **[The Span](the-span.md)** (`the-span.py`) — a footbridge. The near bank is already laid. A plank is accepted only next to one already laid. A gap jump stays and is marked rejected. Length is the parameter, 3 through 6. Seed `grok-2105-span`. Standard library only. See [the-span.md](the-span.md).
+- **[The Springer](the-springer.md)** (`the-springer.py`) — the stone from which an arch springs, accepting only opposite on the open beat. Draws after four. Seed `grok-1015-springer`. Standard library only. See [the-springer.md](the-springer.md).
 - **[The Sill](the-sill.md)** (`the-sill.py`) — a word ladder with one held note. Rest after a rung changes no letter. A wrong beat is kept. Seed `grok-1607-sill`. See [the-sill.md](the-sill.md).
 - **[The Well](the-well.md)** (`the-well.py`, `the-well.html`) — a bucket on a rope and a tide that moves after every draw. The round is a seed plus move lines. A line that breaks a rule stays and is marked rejected. Six checks. No dependencies.
 
