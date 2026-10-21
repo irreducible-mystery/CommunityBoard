@@ -27,6 +27,7 @@ its subject. So this check names revenants; it does not decide.
     python3 tools/check_revenant.py made/README.md    # one path
     python3 tools/check_revenant.py --since 2026-10-14
     python3 tools/check_revenant.py --ref origin/main
+    python3 tools/check_revenant.py --would pr/194   # before merging: would this PR cause one?
 
 Exit 1 if any revenant is found, 0 otherwise. Standard library only; reads, writes nothing.
 """
@@ -118,13 +119,59 @@ def find_revenants(ref: str, path: str | None, since: str | None):
     return found
 
 
+def would_revenant(base: str, head: str, path: str | None):
+    """What merging head into base would return to a superseded state, before anyone merges.
+
+    The check above is retrospective: it sees a revenant after the merge commit exists. The
+    three open PRs that carried a pre-#204 made/README.md (#180, #194, #199) showed no
+    revenant on their own branches, because on each branch the stale copy *was* the current
+    state; the return would happen at the merge. This simulates the merge with
+    `git merge-tree --write-tree` and asks the same question of the result.
+
+    Returns a list of (path, result_blob, earlier_commit, earlier_date, earlier_subject), or
+    None if the merge would conflict (then the question has no single answer).
+    """
+    r = subprocess.run(["git", "merge-tree", "--write-tree", base, head], capture_output=True, text=True)
+    if r.returncode != 0:
+        return None
+    tree = r.stdout.split("\n", 1)[0].strip()
+    changed = git("diff", "--name-only", base, tree).split()
+    if path:
+        changed = [p for p in changed if p == path]
+    out = []
+    for p in changed:
+        new = blob_at(tree, p)
+        if new is None or new == blob_at(base, p):
+            continue
+        # Has any ancestor of base held exactly this blob for this path?
+        hits = git("log", base, "--format=%H%x01%cd%x01%s", "--date=iso-strict", f"--find-object={new}",
+                   "--", p).strip().split("\n")
+        hits = [h for h in hits if h]
+        if hits:
+            eh, ed, es = hits[-1].split("\x01", 2)   # oldest producer
+            out.append((p, new, eh, ed[:16].replace("T", " "), es))
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("path", nargs="?", help="one path; default is every path")
     ap.add_argument("--ref", default="HEAD", help="walk history reachable from this ref")
     ap.add_argument("--since", help="only commits after this date, e.g. 2026-10-14")
     ap.add_argument("--quiet", action="store_true", help="summary line only")
+    ap.add_argument("--would", metavar="HEAD",
+                    help="instead: what merging HEAD into --ref would return to a superseded state")
     a = ap.parse_args(argv)
+
+    if a.would:
+        hits = would_revenant(a.ref, a.would, a.path)
+        if hits is None:
+            print(f"merging {a.would} into {a.ref} conflicts; no single answer.")
+            return 2
+        for p, new, eh, ed, es in hits:
+            print(f"{p}: merging {a.would} would return it to its state at {eh[:7]} {ed}  {es[:50]}")
+        print(f"{len(hits)} path(s) would become revenant(s) if {a.would} merged into {a.ref}.")
+        return 1 if hits else 0
 
     found = find_revenants(a.ref, a.path, a.since)
     total = sum(len(v) for v in found.values())

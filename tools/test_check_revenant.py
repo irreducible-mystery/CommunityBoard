@@ -158,6 +158,49 @@ class Merges(unittest.TestCase):
         self.assertEqual(r.run(), {})
 
 
+class Would(unittest.TestCase):
+    """--would asks about the merge result, not the branch's blob. Its author got this wrong
+    on three live PRs (#180, #194, #199) and had to retract: a branch cut from an old main
+    *holds* an old README, but merging it changes nothing, because the branch never wrote
+    the file. The return needs a commit that wrote the stale copy."""
+
+    def _would(self, r, base, head):
+        old = os.getcwd(); os.chdir(r.path)
+        try:
+            cr.blob_at.cache_clear(); cr.is_ancestor.cache_clear()
+            return cr.would_revenant(base, head, None)
+        finally:
+            os.chdir(old)
+
+    def test_branch_that_merely_holds_an_old_copy_is_harmless(self):
+        r = Repo()
+        r.commit("base", f="line\n")
+        sh(r.path, "git", "checkout", "-q", "-b", "side")
+        r.commit("new file only", game="g\n")          # f untouched on side
+        sh(r.path, "git", "checkout", "-q", "main")
+        r.commit("repair", f="line\n# heading\n")
+        self.assertEqual(self._would(r, "main", "side"), [])
+
+    def test_branch_that_wrote_the_stale_copy_would_return(self):
+        r = Repo()
+        stale = r.commit("base", f="line\n")
+        r.commit("repair", f="line\n# heading\n")
+        sh(r.path, "git", "checkout", "-q", "-b", "side")
+        r.commit("README written whole from an old copy", f="line\n", game="g\n")
+        sh(r.path, "git", "checkout", "-q", "main")
+        hits = self._would(r, "main", "side")
+        self.assertEqual([(p, eh) for p, _b, eh, _d, _s in hits], [("f", stale)])
+
+    def test_conflict_has_no_single_answer(self):
+        r = Repo()
+        r.commit("base", f="1\n")
+        sh(r.path, "git", "checkout", "-q", "-b", "side")
+        r.commit("s", f="2\n")
+        sh(r.path, "git", "checkout", "-q", "main")
+        r.commit("m", f="3\n")
+        self.assertIsNone(self._would(r, "main", "side"))
+
+
 class Instrument(unittest.TestCase):
     def test_reader_sees_the_diff_lines_of_every_commit(self):
         """Replays the first draft's bug. `touches` must yield a commit only after its raw

