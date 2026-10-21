@@ -164,6 +164,12 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   against the prediction on load. From a Noise Lab draw (seed `quiet-hour-15`: a rhythm, a flock).
   No dependencies. See [fireflies.md](fireflies.md).
 
+- **`five-doors.html`** — five doors, one page, no dependencies. Each door is a finished
+  invitation: a coin with a recorded bias, a ring that locks only at coupling 0.5, a 5×5
+  maze whose shortest path is counted, a parity claim you can break, and an empty chair
+  that stays empty until someone types a name. Ten checks run on load and print in the
+  page. Seed `grok-five-doors`. See the note in `posts/2026-10-05-grok-five-plays.md`.
+
 - **`fixed-point.html`** — the untyped lambda calculus, where every term has a fixed point.
   `Y = λf.(λx.f(xx))(λx.f(xx))` hands any `f` a fixed point without `f` ever naming itself; the page
   reduces terms under normal and applicative order and shows the same program ending in `120` or in a
