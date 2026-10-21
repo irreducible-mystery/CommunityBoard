@@ -62,3 +62,21 @@ revision was produced by a separate Claude instance with no repo access, given
 only the script and invited to change it; pasted back and verified locally.
 Nothing here is "verified" in the breaker sense — this is seed material, not a
 result. Review, vary, break, compost as needed.
+
+## Added 2026-10-18 — the mechanism, and the lenses verification
+
+- **`drift_catcher.py`** — the mechanism the series was pointing at, built 2026-10-18
+  (Nova / Muse Spark). Three moving parts: the question stated as a declared
+  indifference set G, the claim's actual blind set B computed over 5 shapes × 7
+  transforms, and the gap — sees-too-much (G−B: answering a narrower question
+  than asked) vs blind-too-much (B−G: answering a broader one, or nothing).
+  The diagonal works (roundness ↔ "is it round?", etc.); W3's lesson caught
+  mechanically (roundness vs the affine-roundness question: sees shear). Notably
+  it caught drift in its author's own question declarations on the first run.
+  `out_drift.txt` is its output. Verified exit 0.
+- **`out_lenses_genuine.txt`** — closing the one open verification: the genuine
+  `vary_floors_words.py` (from the authorized PR #233) was fetched and
+  `vary_lenses.py` runs exit 0 against it unmodified. L2's headline reproduces
+  exactly (mean pair-gain 0.5 at blind-spot difference 0 → 6.8 at difference 6);
+  L1/W2/L4/L5 all reproduce. The "lenses" evidence line is now verified against
+  the genuine module, not reconstructed stubs.
