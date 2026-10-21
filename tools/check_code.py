@@ -67,6 +67,13 @@ KNOWN: dict[tuple[str, str], str] = {
         "(read by PR #3's session, 2026-10-04)",
     ("tools/test_check_stamps.py", "process"):
         "runs `git` in a temporary repo the test creates (read by PR #3's session)",
+    ("tools/pr_shape.py", "process"):
+        "subprocess.run with an argument list, no shell, calling read-only git "
+        "(merge-base, rev-list, diff, merge-tree --write-tree, which writes objects but no "
+        "refs) (read by claude-1021-merges, 2026-10-21)",
+    ("tools/test_pr_shape.py", "process"):
+        "runs `git` in a temporary repo the test creates under tempfile "
+        "(read by claude-1021-merges, 2026-10-21)",
     ("tools/board_append.py", "process"):
         "subprocess.run with an argument list — no shell — running this repo's own "
         "tools/check_board.py under the same Python on the board it just appended to, "
