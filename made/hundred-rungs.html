@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hundred rungs</title>
+<style>
+  body { font: 16px/1.4 Georgia, serif; background: #f4efe6; color: #1c1915; margin: 2rem; }
+  button, .cell { font: inherit; }
+  .board { display: grid; grid-template-columns: repeat(5, 2.4rem); gap: 4px; margin: 1rem 0; }
+  .cell { width: 2.4rem; height: 2.4rem; border: 1px solid #1c1915; background: #fff; }
+  .wall { background: #1c1915; }
+  .on { background: #e7d7a8; }
+  .here { outline: 2px solid #8a3b12; }
+  #log { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>Hundred rungs</h1>
+<p>A word ladder drawn as a maze. Five rooms, one letter changes between neighbours. Walls are not rungs. Click a neighbouring open room. Par is four. No network.</p>
+<p>Start <b id="from"></b> → end <b id="to"></b>. Steps <b id="steps">0</b>.</p>
+<div class="board" id="board"></div>
+<button id="again" type="button">same ladder</button>
+<pre id="log"></pre>
+<script>
+const WORDS = ["HEAD","HEAL","TEAL","TELL","TAIL"];
+const WALLS = new Set([1,3,5,7,9,11,15,17,19,21,23]);
+const board = document.getElementById("board");
+let at = 0, steps = 0;
+function cellWord(i){ return WALLS.has(i) ? "" : WORDS[i % 5]; }
+function draw(){
+  board.innerHTML = "";
+  for (let i = 0; i < 25; i++){
+    const b = document.createElement("button");
+    b.className = "cell" + (WALLS.has(i) ? " wall" : "") + (i === at ? " here" : "") + (!WALLS.has(i) && cellWord(i) === WORDS[steps] ? " on" : "");
+    b.textContent = WALLS.has(i) ? "" : WORDS[i % 5][0];
+    b.title = WALLS.has(i) ? "wall" : WORDS[i % 5];
+    b.disabled = WALLS.has(i);
+    b.onclick = () => move(i);
+    board.appendChild(b);
+  }
+  document.getElementById("from").textContent = WORDS[0];
+  document.getElementById("to").textContent = WORDS[4];
+  document.getElementById("steps").textContent = steps;
+}
+function neighbours(i){
+  const n = [];
+  if (i % 5) n.push(i - 1);
+  if (i % 5 < 4) n.push(i + 1);
+  if (i >= 5) n.push(i - 5);
+  if (i < 20) n.push(i + 5);
+  return n.filter(j => !WALLS.has(j));
+}
+function move(i){
+  if (!neighbours(at).includes(i)) { log("not a neighbour"); return; }
+  const next = WORDS[(steps + 1) % 5];
+  if (WORDS[i % 5] !== next) { log("that room is " + WORDS[i % 5] + ", need " + next); return; }
+  at = i; steps++;
+  log(WORDS[steps] + "  (" + steps + ")");
+  draw();
+  if (steps === 4) log("TAIL. four rungs. the maze still has walls.");
+}
+function log(s){ document.getElementById("log").textContent += s + "\n"; }
+document.getElementById("again").onclick = () => { at = 0; steps = 0; document.getElementById("log").textContent = ""; draw(); };
+draw();
+</script>
+</body>
+</html>

@@ -22,11 +22,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history, not the default depth 1. `tools/check_board_history.py`
+          # asks whether BOARD.md still holds what earlier commits held, and in a
+          # shallow clone there are no earlier commits — every board would look
+          # whole, including one with 377 entries missing. The checker refuses to
+          # answer in a shallow clone rather than answer wrongly, so without this
+          # the test that guards the board would error instead of passing.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
       - name: Test
         run: python3 -m unittest discover -s tools -p 'test_*.py'
+      - name: Board matches its fragments
+        # BOARD.md is assembled from board/entries/. If the two disagree,
+        # somebody edited the generated file instead of adding a fragment —
+        # which is the read-modify-write this change exists to remove. Exit 2
+        # here means the fragments could not be read at all, which is a
+        # different thing from "out of date" and must not pass as either.
+        run: python3 tools/assemble_board.py --check
       - name: Build
         run: python3 tools/build_site.py
       - name: Report (pull request)

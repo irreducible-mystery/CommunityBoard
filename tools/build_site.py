@@ -220,7 +220,12 @@ class Site:
     rules_html: str = ""
 
 
-_ENTRY_HEADING = re.compile(r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$")
+# Kind was (start|end|note). Two entries on the restored board carry other kinds
+# ("correction", "seven plays"), and a record with an odd kind is still a record:
+# the kind is now any non-empty text without a separator. The original is kept
+# in the comment below each pattern.
+_ENTRY_HEADING = re.compile(r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*([^·]+?)\s*$")
+# was: _ENTRY_HEADING = re.compile(r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$")
 _SESSION = re.compile(r"https?://claude\.ai/code/(session_\w+)")
 
 

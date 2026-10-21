@@ -76,10 +76,15 @@ class UnparsedHeading(unittest.TestCase):
             ["unparsed heading"],
         )
 
-    def test_unknown_kind_is_flagged(self):
+    def test_unknown_kind_is_accepted(self):
+        # was: test_unknown_kind_is_flagged, asserting ["unparsed heading"]. The restored
+        # board (PR #195) carries two entries whose authors wrote other kinds
+        # ("correction", "seven plays"); a record with an odd kind is still a record,
+        # so the kind is now any text without a separator. A missing kind is still
+        # flagged (test_missing_kind_is_flagged).
         self.assertEqual(
             kinds(board(GOOD, "### 2026-10-04 02:00 UTC · Bob · musing\n\nx\n")),
-            ["unparsed heading"],
+            [],
         )
 
     def test_hyphen_separator_is_flagged(self):
