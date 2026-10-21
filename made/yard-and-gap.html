@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Yard and gap</title>
+<style>
+  body { font: 15px/1.45 Georgia, serif; background: #f4f1ea; color: #1c1915; margin: 2rem; }
+  canvas { background: #fff; border: 1px solid #c8c0b0; }
+  .row { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  pre { background: #fff; padding: 0.8rem; border: 1px solid #c8c0b0; }
+</style>
+</head>
+<body>
+<h1>Yard and gap</h1>
+<p>Noise Lab seed <code>grok-1006-third-sitting</code>, index 0: a flock and a maze.
+Constraint: a small example and a counterexample. Same steering in both panels.
+The left wall is closed. The right wall has one missing cell. Birds do not talk.</p>
+<div class="row">
+  <div><canvas id="yard" width="280" height="280"></canvas><p>Example: the yard holds them.</p></div>
+  <div><canvas id="gap" width="280" height="280"></canvas><p>Counterexample: the same rule leaves.</p></div>
+</div>
+<pre id="notes"></pre>
+<script>
+const N = 9, CELL = 28;
+const walls = [
+  "#########",
+  "#       #",
+  "# ##### #",
+  "# #   # #",
+  "# #   # #",
+  "# ##### #",
+  "#       #",
+  "#       #",
+  "#########"
+];
+function grid(openGap) {
+  return walls.map((row, y) => row.split("").map((c, x) => (openGap && y === 4 && x === 8) ? " " : c));
+}
+function birds() {
+  return [
+    { x: 2.2, y: 1.4, vx: 0.35, vy: 0.1 },
+    { x: 3.4, y: 1.6, vx: -0.1, vy: 0.3 },
+    { x: 2.6, y: 6.4, vx: 0.2, vy: -0.25 },
+    { x: 5.2, y: 6.8, vx: -0.28, vy: 0.12 }
+  ];
+}
+function step(b, g) {
+  let nx = b.x + b.vx, ny = b.y + b.vy;
+  const cx = Math.max(0, Math.min(N - 1, Math.floor(nx)));
+  const cy = Math.max(0, Math.min(N - 1, Math.floor(ny)));
+  if (g[cy][cx] === "#") {
+    const wx = Math.floor(b.x), wy = Math.floor(b.y);
+    if (g[wy][cx] === "#") b.vx = -b.vx;
+    if (g[cy][wx] === "#") b.vy = -b.vy;
+    nx = b.x + b.vx; ny = b.y + b.vy;
+  }
+  b.x = nx; b.y = ny;
+  return b.x < 0 || b.y < 0 || b.x >= N || b.y >= N;
+}
+function draw(id, g, flock) {
+  const c = document.getElementById(id), x = c.getContext("2d");
+  x.clearRect(0, 0, 280, 280);
+  for (let y = 0; y < N; y++) for (let i = 0; i < N; i++) if (g[y][i] === "#") {
+    x.fillStyle = "#2c2824"; x.fillRect(i * CELL, y * CELL, CELL, CELL);
+  }
+  x.fillStyle = "#b45309";
+  for (const b of flock) x.fillRect(b.x * CELL - 3, b.y * CELL - 3, 6, 6);
+}
+const left = grid(false), right = grid(true);
+const a = birds(), b = birds();
+let leftOut = 0, rightOut = 0, ticks = 0;
+function frame() {
+  if (ticks < 240) {
+    ticks++;
+    for (const bird of a) if (step(bird, left)) leftOut++;
+    for (const bird of b) if (step(bird, right)) rightOut++;
+    draw("yard", left, a); draw("gap", right, b);
+    requestAnimationFrame(frame);
+  }
+}
+const checks = [];
+function check(name, ok) { checks.push((ok ? "ok " : "FAIL ") + name); }
+const probe = birds();
+let escaped = false;
+for (let i = 0; i < 80 && !escaped; i++) escaped = step(probe[0], grid(true));
+check("gap lets a bird out", escaped);
+const held = birds();
+let leaked = false;
+for (let i = 0; i < 80; i++) leaked = step(held[0], grid(false)) || leaked;
+check("closed yard keeps the same bird", !leaked);
+check("gap is one cell", grid(true)[4][8] === " " && grid(false)[4][8] === "#");
+document.getElementById("notes").textContent = checks.join("\n") + "\nleft exits so far are counted on the canvas, not claimed here.";
+frame();
+</script>
+</body>
+</html>
