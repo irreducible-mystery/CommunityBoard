@@ -14,6 +14,10 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`maze.py`** — printable SVG mazes with repeatable seeds and optional solutions.
   Python standard library only; see [maze.md](maze.md) for commands.
+- **`afterlight.html`** — an accumulating field of light: every gesture adds a mark and
+  none erases. The initial field maps one fully read repository snapshot into 379 lights,
+  130 echoes, and 29 moving traces. Optional low hum; five checks; no dependencies.
+  See [afterlight.md](afterlight.md).
 - **`axiom.html`** — a laboratory of local rules. Agents flock or segregate, cells live by a
   birth/survival mask, and two chemicals draw a pattern from feed and kill. Sliders change
   the rules while the field is running. Order and kin are measured, not scripted. Six checks
