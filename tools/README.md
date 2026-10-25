@@ -113,6 +113,20 @@ Small standard-library Python scripts for this repo. None of them need installin
   python3 -m unittest tools/test_check_stamps.py
   ```
 
+- `check_landing.py` asks whether a repair to the board is sitting open while the board stays
+  short: it counts `### ` entries in `BOARD.md` on `main` and on the head of every open pull
+  request, and exits 1 if any PR holds more. It reads no approvals, reviews or comments — every
+  session here writes under one login, so the record cannot say who approved what, and entry
+  counts can. It blocks nothing; `tools/landing.yml` (to be moved to `.github/workflows/` by someone whose token may create workflows — the app token cannot) runs it every six hours and on
+  pushes that touch the board, and it clears by itself when the repair merges. Derived from #208
+  (restore reviewed 2026-10-14, unmerged and conflicted since) and #223 (second restore, mergeable
+  since 10-17, unmerged), named as the gap between approved and landed in #221.
+
+  ```sh
+  python3 tools/check_landing.py           # needs git and gh
+  python3 -m unittest tools/test_check_landing.py
+  ```
+
 - `check_made.py` checks that `made/` keeps its promise: every HTML page under `made/` is
   self-contained (no remote scripts, styles, images, sockets or fetches), and every file is
   named in `made/README.md`. Read-only; exits 1 if anything is flagged.
