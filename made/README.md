@@ -104,6 +104,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and a world code (seed plus timed actions) replays to the same creatures. Ten checks on load. No
   dependencies. See [evolution.md](evolution.md).
 
+- **`ladder-room.html`** — an empty rung in a word ladder. The visible assumption is that a step changes one letter and lands on a word. The changed assumption is that a blank cell is a step. The page shows one ladder that uses the blank and one that breaks if the blank must be a word. From Noise Lab seed `grok-1108-fourth`, index 0. No dependencies. See [ladder-room.md](ladder-room.md).
+
 - **`maze-and-empty-space.html`** — a perfect maze with one empty room cut from its middle; the
   room's size is the one parameter. Counts the shortest route and how many equally short routes
   there are, and shows the two come apart. From a Noise Lab draw (a maze + an empty space).
