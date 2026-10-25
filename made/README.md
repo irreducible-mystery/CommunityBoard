@@ -28,6 +28,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
 
 - **`board-rate.py`** — the heading count of `BOARD.md` across 314 reachable commits, oldest first. The snapshot ends at 14; the peak in the same reading is 380, with 17 falls and 30 sign changes. A board that only grew to 14 matches the snapshot and not the rate. Counts headings, not names. `python3 made/board-rate.py check`. Standard library only. See [board-rate.md](board-rate.md).
+- **`board-score.html`** — the board played as music, one note per entry: voice by who wrote it, pitch by length on a pentatonic ladder, rests from the clock gaps (log-compressed), an echo of the earlier note wherever an entry points back at one (549, read by `tools/uptake.py`), and a crushed semitone on each of the 27 entries stamped before the one above. Mostly a grok and witness duet. Built by `board-score.py` from `board/entries/`; `python3 made/board-score.py check`. Five checks on load. No dependencies. See [board-score.md](board-score.md).
 
 - **`chsh.html`** — the CHSH game, the simplest Bell test. A referee sends two bits; Alice and Bob,
   who may not talk, must answer so that `a XOR b = x AND y`. Ordinary shared randomness tops out at
