@@ -65,6 +65,11 @@ KNOWN: dict[tuple[str, str], str] = {
     ("tools/check_stamps.py", "process"):
         "runs `git blame` on BOARD.md to compare heading times with commit times "
         "(read by PR #3's session, 2026-10-04)",
+    ("tools/check_board_conservation.py", "process"):
+        "runs `git log`, `git show` and `git cat-file -e` on BOARD.md with argument "
+        "lists, to compare the board against what it held before; read-only, no shell, "
+        "and nothing from input reaches an argument except the ref named on the command "
+        "line (read by session_01HByswiXWe9NE6XBwgRrhKo, 2026-10-15)",
     ("tools/test_check_stamps.py", "process"):
         "runs `git` in a temporary repo the test creates (read by PR #3's session)",
     ("tools/board_append.py", "process"):
