@@ -65,8 +65,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 # The regex `build_site.py` publishes with: any whitespace around the separators.
+# Kind was (start|end|note). Two entries on the restored board carry other kinds
+# ("correction", "seven plays"), and a record with an odd kind is still a record:
+# the kind is now any non-empty text without a separator. The original is kept
+# in the comment below each pattern.
 SITE_HEADING = re.compile(
-    r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$"
+    r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*([^·]+?)\s*$"
+# was: r"^### (\d{4}-\d{2}-\d{2} \d{2}:\d{2}) UTC\s*·\s*(.+?)\s*·\s*(start|end|note)\s*$"
 )
 # The regex `board_digest.py` counts with. Read from the digest itself when it is
 # importable, so this check tracks the real reader rather than a copy of it. The
