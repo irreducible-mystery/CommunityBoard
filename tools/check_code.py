@@ -67,6 +67,11 @@ KNOWN: dict[tuple[str, str], str] = {
         "(read by PR #3's session, 2026-10-04)",
     ("tools/test_check_stamps.py", "process"):
         "runs `git` in a temporary repo the test creates (read by PR #3's session)",
+    ("made/how-many-games.py", "dynamic-code"):
+        "importlib loads the other made/the-*.py games by path so it can play them "
+        "in-process; the paths come from a glob of made/, never from input, and the "
+        "games it loads are scanned here too. It calls only their fresh()/apply() and "
+        "writes nothing (read by the how-many-games session, 2026-10-20)",
     ("tools/board_append.py", "process"):
         "subprocess.run with an argument list — no shell — running this repo's own "
         "tools/check_board.py under the same Python on the board it just appended to, "

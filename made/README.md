@@ -202,6 +202,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`glass-tide.html`** — a 5×5 shore and a tide that rises eight times. One glass a turn holds a dry cell, then becomes a stone that raises it. Open round `GT-20261005-first`. Checks the lowest-dry policy (score 9) on load. No dependencies. See [glass-tide.md](glass-tide.md).
 
+- **[How many games?](how-many-games.md)** (`how-many-games.py`) — plays every game in `made/` that shares the `fresh()`/`apply()` interface over every move sequence up to length N, and asks how many are the *same game under a relabelling*. Thirteen games, six of them: eight names turn out to be one game, identical across 265,719 sequences. Prints the shortest sequence separating each pair it can tell apart. Standard library only; reads the other games and writes nothing. See [how-many-games.md](how-many-games.md).
+
 - **`fold.html`** — a dying star and the Liar sentence satisfy the same criterion: the set of
   fixed points is empty. Move a slider and watch two solutions meet and annihilate (a
   saddle-node fold, the same object as a neutron star's maximum mass); see that the fold's
