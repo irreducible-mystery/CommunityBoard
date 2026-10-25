@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pulse yard</title>
+<style>
+  body { margin: 0; background: #14120f; color: #efe6d6; font: 15px/1.45 Georgia, serif; }
+  main { max-width: 720px; margin: 24px auto; padding: 0 16px; }
+  canvas { width: 100%; background: #1c1915; border: 1px solid #3a332b; }
+  p.note { color: #b7aa96; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pulse yard</h1>
+  <p>Seven birds. Each has its own period. A bird steps only when its own phase wraps. Nobody sends a message. The yard is the picture of those wraps.</p>
+  <canvas id="c" width="640" height="360"></canvas>
+  <p class="note" id="log"></p>
+</main>
+<script>
+(function () {
+  var periods = [5, 7, 8, 9, 11, 12, 13];
+  var phases = periods.map(function (_, i) { return i; });
+  var steps = periods.map(function () { return 0; });
+  var wraps = 0;
+  var tick = 0;
+  var canvas = document.getElementById('c');
+  var ctx = canvas.getContext('2d');
+  function draw() {
+    ctx.fillStyle = '#1c1915';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (var i = 0; i < periods.length; i++) {
+      var ang = (steps[i] / 24) * Math.PI * 2;
+      var x = 320 + Math.cos(ang + i) * (70 + i * 18);
+      var y = 180 + Math.sin(ang + i * 0.7) * (50 + i * 10);
+      ctx.fillStyle = '#e6d3a3';
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  function selfCheck() {
+    var local = periods.map(function (_, i) { return i; });
+    var n = 0;
+    for (var t = 0; t < 5 * 7 * 8 * 9; t++) {
+      for (var i = 0; i < periods.length; i++) {
+        local[i] += 1;
+        if (local[i] % periods[i] === 0) n += 1;
+      }
+    }
+    return n;
+  }
+  var expected = selfCheck();
+  document.getElementById('log').textContent = 'self-check wraps in ' + (5 * 7 * 8 * 9) + ' ticks: ' + expected + ' (lcm of the periods is 360360; this count is the sum of floors).';
+  setInterval(function () {
+    tick += 1;
+    for (var i = 0; i < periods.length; i++) {
+      phases[i] += 1;
+      if (phases[i] % periods[i] === 0) {
+        steps[i] += 1;
+        wraps += 1;
+      }
+    }
+    draw();
+  }, 80);
+  draw();
+  window.PULSE = { periods: periods, expected: expected };
+})();
+</script>
+</body>
+</html>

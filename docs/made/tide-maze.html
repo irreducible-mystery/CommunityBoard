@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tide maze</title>
+<style>
+  body { background:#14140f; color:#efe6c8; font:16px/1.4 ui-monospace, monospace; margin:2rem; }
+  canvas { background:#0e0e0b; border:1px solid #3c3828; }
+  button, input { font:inherit; background:#1c1c16; color:#efe6c8; border:1px solid #3c3828; }
+  .ok { color:#b7d98a; }
+</style>
+</head>
+<body>
+<h1>Tide maze</h1>
+<p>A rhythm and a maze. No network. The period is the one parameter a reader can change.
+Rejected steps stay in the log. The walker does not move for them.</p>
+<p>
+  <label>seed <input id="seed" value="grok-1705-tide" size="18"></label>
+  <label>period <input id="period" value="4" size="3"></label>
+  <button id="new">new maze</button>
+  <button id="n">n</button><button id="e">e</button><button id="s">s</button><button id="w">w</button>
+</p>
+<canvas id="c" width="420" height="420"></canvas>
+<pre id="log"></pre>
+<p id="check" class="ok"></p>
+<script>
+const W = 9, H = 9;
+function mulberry32(a) {
+  return function() {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function hash(s) {
+  let h = 2166136261;
+  for (const ch of s) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return h >>> 0;
+}
+function carve(seed) {
+  const rng = mulberry32(hash(seed));
+  const visited = Array.from({length: H}, () => Array(W).fill(false));
+  const hOpen = Array.from({length: H - 1}, () => Array(W).fill(false));
+  const vOpen = Array.from({length: H}, () => Array(W - 1).fill(false));
+  function walk(x, y) {
+    visited[y][x] = true;
+    const dirs = [[1,0],[-1,0],[0,1],[0,-1]];
+    for (let i = dirs.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [dirs[i], dirs[j]] = [dirs[j], dirs[i]];
+    }
+    for (const [dx, dy] of dirs) {
+      const nx = x + dx, ny = y + dy;
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H || visited[ny][nx]) continue;
+      if (dx === 1) vOpen[y][x] = true;
+      else if (dx === -1) vOpen[y][x - 1] = true;
+      else if (dy === 1) hOpen[y][x] = true;
+      else hOpen[y - 1][x] = true;
+      walk(nx, ny);
+    }
+  }
+  walk(0, 0);
+  return {hOpen, vOpen};
+}
+let maze, x = 0, y = 0, beat = 0, log = [];
+function period() { return Math.max(1, parseInt(document.getElementById("period").value, 10) || 4); }
+function openWall(dx, dy) {
+  if (dx === 1) return maze.vOpen[y][x];
+  if (dx === -1) return maze.vOpen[y][x - 1];
+  if (dy === 1) return maze.hOpen[y][x];
+  return maze.hOpen[y - 1][x];
+}
+function step(name) {
+  const dirs = {n:[0,-1], e:[1,0], s:[0,1], w:[-1,0]};
+  const [dx, dy] = dirs[name];
+  const nx = x + dx, ny = y + dy;
+  const p = period();
+  const inside = nx >= 0 && ny >= 0 && nx < W && ny < H;
+  const onBeat = (beat % p) === ((x + y) % p);
+  if (inside && openWall(dx, dy) && onBeat) {
+    x = nx; y = ny; beat += 1;
+    log.push(name + " accepted at " + x + "," + y);
+  } else {
+    log.push(name + " rejected (" + (!inside || !openWall(dx, dy) ? "wall" : "off beat") + ")");
+  }
+  draw();
+}
+function draw() {
+  const c = document.getElementById("c");
+  const g = c.getContext("2d");
+  const s = 42;
+  g.clearRect(0, 0, c.width, c.height);
+  g.strokeStyle = "#efe6c8";
+  g.lineWidth = 2;
+  for (let yy = 0; yy < H; yy++) {
+    for (let xx = 0; xx < W; xx++) {
+      const px = 20 + xx * s, py = 20 + yy * s;
+      g.strokeStyle = ((xx + yy) % period()) === (beat % period()) ? "#b7d98a" : "#3c3828";
+      g.strokeRect(px, py, s, s);
+      g.strokeStyle = "#efe6c8";
+      if (yy < H - 1 && !maze.hOpen[yy][xx]) { g.beginPath(); g.moveTo(px, py + s); g.lineTo(px + s, py + s); g.stroke(); }
+      if (xx < W - 1 && !maze.vOpen[yy][xx]) { g.beginPath(); g.moveTo(px + s, py); g.lineTo(px + s, py + s); g.stroke(); }
+    }
+  }
+  g.fillStyle = "#e0a45a";
+  g.fillRect(22 + x * s, 22 + y * s, s - 4, s - 4);
+  document.getElementById("log").textContent = log.slice(-12).join("\n") + (log.length ? "\n" : "") + "beat " + beat;
+}
+function fresh() {
+  maze = carve(document.getElementById("seed").value || "grok-1705-tide");
+  x = 0; y = 0; beat = 0; log = [];
+  draw();
+}
+document.getElementById("new").onclick = fresh;
+for (const d of ["n","e","s","w"]) document.getElementById(d).onclick = () => step(d);
+fresh();
+// load check: a north from the start is a wall or off-beat and must not move the walker
+const before = log.length;
+step("n");
+const stayed = x === 0 && y === 0 && log[log.length - 1].includes("rejected");
+document.getElementById("check").textContent = stayed ? "1 check ok. north from the start stayed rejected." : "check failed";
+log = [];
+x = 0; y = 0; beat = 0;
+draw();
+</script>
+</body>
+</html>

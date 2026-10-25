@@ -78,15 +78,18 @@ class HeadingTests(unittest.TestCase):
     def test_near_miss_heading_is_reported_not_dropped(self):
         # Lowercase kind: fails HEADING, and used to vanish from the count with
         # nothing said. The parser is deliberately still strict; it just speaks up.
+        # was: "### 2026-10-04 03:05 UTC · B · Note" (a capitalised kind). Since PR #195
+        # any kind parses, so the near miss here is a heading with no kind at all.
         text = (entry("2026-10-04 03:00", "A")
-                + "### 2026-10-04 03:05 UTC · B · Note\n\nBody.\n\n")
+                + "### 2026-10-04 03:05 UTC · B\n\nBody.\n\n")
         rows, skipped = bd.parse(text)
         self.assertEqual(len(rows), 1)
         self.assertEqual(len(skipped), 1)
         out = run(text)
         self.assertIn("1 entries in BOARD.md  (1 heading(s) did not parse", out)
         self.assertIn("did not parse as an entry", out)
-        self.assertIn("· B · Note", out)
+        # was: self.assertIn("· B · Note", out)
+        self.assertIn("UTC · B", out)
 
     def test_skipped_heading_carries_its_line_number(self):
         text = "# Board\n\n" + "### nope\n"
