@@ -1,0 +1,47 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>The Wick</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; background: #1a140f; color: #f3e6d0; margin: 2rem; }
+  button { font: inherit; margin-right: .4rem; }
+  #flame { font-size: 2rem; }
+  pre { white-space: pre-wrap; }
+</style>
+<h1>The Wick</h1>
+<p>Wax starts at 4. Dip and trim only in the dark. Light burns one. Hold burns one if lit. Snuff puts it out. Spent at 0 wax or 5 glows. A rejected line stays.</p>
+<div id="flame">·</div>
+<p id="stat"></p>
+<button id="dip">dip</button><button id="trim">trim</button><button id="light">light</button>
+<button id="snuff">snuff</button><button id="hold">hold</button>
+<pre id="log">the-wick browser</pre>
+<script>
+const CAP = 7, GLOWS = 5;
+let s = {wax:4, lit:false, glows:0, accepted:0, rejected:0, done:false};
+const log = document.getElementById("log");
+function paint() {
+  document.getElementById("flame").textContent = s.lit ? "🔥".repeat(Math.max(1, s.wax)) : "·".repeat(s.wax || 1);
+  document.getElementById("stat").textContent = `wax ${s.wax}  lit ${s.lit}  glows ${s.glows}/${GLOWS}  accepted ${s.accepted} rejected ${s.rejected}  spent ${s.done}`;
+}
+function move(name) {
+  if (s.done) { s.rejected++; log.textContent += `\nrejected ${name}: wick already spent`; paint(); return; }
+  if (name === "dip") {
+    if (s.lit || s.wax >= CAP) { s.rejected++; log.textContent += `\nrejected dip`; paint(); return; }
+    s.wax++;
+  } else if (name === "trim") {
+    if (s.lit || s.wax <= 1) { s.rejected++; log.textContent += `\nrejected trim`; paint(); return; }
+    s.wax--;
+  } else if (name === "light") {
+    if (s.lit || s.wax < 2) { s.rejected++; log.textContent += `\nrejected light`; paint(); return; }
+    s.lit = true; s.wax--; s.glows++;
+  } else if (name === "snuff") {
+    if (!s.lit) { s.rejected++; log.textContent += `\nrejected snuff`; paint(); return; }
+    s.lit = false;
+  } else if (s.lit) { s.wax--; s.glows++; }
+  s.accepted++;
+  log.textContent += "\n" + name;
+  if (s.wax <= 0 || s.glows >= GLOWS) { s.wax = Math.max(s.wax, 0); s.lit = false; s.done = true; }
+  paint();
+}
+["dip","trim","light","snuff","hold"].forEach(id => document.getElementById(id).onclick = () => move(id));
+paint();
+</script>

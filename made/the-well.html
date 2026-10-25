@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Well</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; background: #f4efe6; color: #1c1915; margin: 2rem auto; max-width: 40rem; padding: 0 1rem; }
+  pre, textarea { font: 14px/1.4 ui-monospace, monospace; background: #fff; border: 1px solid #c8bba8; width: 100%; }
+  .rung { display: flex; gap: 0.5rem; align-items: center; }
+  .mark { width: 1.2rem; text-align: center; }
+  #notes { color: #6b4b2a; }
+</style>
+</head>
+<body>
+<h1>The Well</h1>
+<p>A bucket on a rope. Water sits on a rung named by the seed and steps after every accepted draw. Paste move lines. A rejected line stays.</p>
+<label>Seed <input id="seed" value="grok-1005-well"></label>
+<textarea id="moves" rows="8">down
+down
+down
+down
+down
+draw</textarea>
+<button id="go">Replay</button>
+<pre id="field"></pre>
+<pre id="notes"></pre>
+<script>
+const FLOOR = 5, ROPE = 8, CAP = 3, FILLS = 3;
+async function tide(seed, step) {
+  const data = new TextEncoder().encode(`the-well/1|${seed}|${step}`);
+  const buf = await crypto.subtle.digest("SHA-256", data);
+  return new Uint8Array(buf)[0] % (FLOOR + 1);
+}
+function fresh(seed, water) {
+  return { seed, rung: 0, water, rope: ROPE, held: 0, filled: 0, units: 0, accepted: 0, rejected: 0, done: false, notes: [] };
+}
+function apply(s, line) {
+  const word = line.trim();
+  if (s.done) { s.rejected++; s.notes.push(`rejected ${JSON.stringify(line)}: round already drawn`); return; }
+  if (!["down", "up", "draw", "rest"].includes(word)) { s.rejected++; s.notes.push(`rejected ${JSON.stringify(line)}: not a move`); return; }
+  if (word === "down") {
+    if (s.rung >= FLOOR || s.rope <= 0) { s.rejected++; s.notes.push(`rejected down: rung ${s.rung} rope ${s.rope}`); return; }
+    s.rung++; s.rope--;
+  } else if (word === "up") {
+    if (s.rung <= 0) { s.rejected++; s.notes.push("rejected up: already at the lip"); return; }
+    s.rung--;
+  } else if (word === "draw") {
+    if (s.rung !== s.water || s.held >= CAP) { s.rejected++; s.notes.push(`rejected draw: bucket ${s.rung} water ${s.water} held ${s.held}`); return; }
+    s.held++; s.units++;
+    if (s.held === CAP) { s.filled++; s.held = 0; }
+    s.water = s._next;
+  }
+  s.turn = (s.turn || 0) + 1; s.accepted++;
+  if (s.filled >= FILLS || (s.rope === 0 && s.rung === 0 && s.held === 0)) s.done = true;
+}
+async function replay(seed, lines) {
+  let s = fresh(seed, await tide(seed, 0));
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    if (line.trim() === "draw" && s.rung === s.water && s.held < CAP && !s.done) {
+      const heldAfter = s.held + 1;
+      const filledAfter = heldAfter === CAP ? s.filled + 1 : s.filled;
+      const unitsAfter = s.units + 1;
+      s._next = await tide(seed, filledAfter + unitsAfter);
+    }
+    apply(s, line);
+  }
+  return s;
+}
+function paint(s) {
+  const rows = [];
+  for (let r = 0; r <= FLOOR; r++) {
+    const b = s.rung === r ? "o" : " ";
+    const w = s.water === r ? "~" : " ";
+    rows.push(`${r} ${b} ${w}`);
+  }
+  document.getElementById("field").textContent =
+    `the-well ${s.seed}\n` + rows.join("\n") +
+    `\nbucket ${s.rung} water ${s.water} rope ${s.rope} held ${s.held} filled ${s.filled} units ${s.units} accepted ${s.accepted} rejected ${s.rejected}`;
+  document.getElementById("notes").textContent = s.notes.join("\n");
+}
+async function checks() {
+  const fails = [];
+  const w0 = await tide("check", 0);
+  const s = await replay("check", ["down"]);
+  if (s.water !== w0 || s.rung !== 1 || s.rope !== ROPE - 1) fails.push("down");
+  const bad = await replay("check", ["down", "nope"]);
+  if (bad.rejected !== 1 || bad.rung !== 1) fails.push("reject keeps field");
+  const lip = await replay("lip", ["up"]);
+  if (lip.rejected !== 1) fails.push("up at lip");
+  const rope = await replay("rope", ["down", "up"]);
+  if (rope.rope !== ROPE - 1) fails.push("rope remembers");
+  const deep = await replay("grok-1005-well", ["down","down","down","down","down","draw"]);
+  if (deep.units !== 1 || deep.rejected !== 0) fails.push("draw on water");
+  const dry = await replay("grok-1005-well", ["draw"]);
+  if (dry.rejected !== 1 || dry.units !== 0) fails.push("draw off water");
+  const el = document.getElementById("notes");
+  el.textContent = (fails.length ? "FAIL " + fails.join(", ") : "PASS 6") + (el.textContent ? "\n" + el.textContent : "");
+  return fails.length === 0;
+}
+document.getElementById("go").onclick = async () => {
+  const s = await replay(document.getElementById("seed").value, document.getElementById("moves").value.split("\n"));
+  paint(s);
+};
+checks();
+</script>
+</body>
+</html>
