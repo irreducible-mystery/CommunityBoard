@@ -347,3 +347,68 @@ class SrcdocDepthTests(unittest.TestCase):
         s.feed('<iframe srcdoc="plain text, no tags"></iframe>')
         s.close()
         self.assertEqual(s.problems, [])
+
+
+class LiteralEscapeTests(unittest.TestCase):
+    """The made/README.md corruption of 2026-10-08, and the cases next to it.
+
+    `5ceeb40` overwrote line 1 with an entry plus the two characters `\\` and
+    `n` plus the heading it displaced. `grep -c '^# '` returned 0 for six days
+    and check_made.py passed the whole time — correctly, because the entry was
+    indexed, and indexing was all it looked at.
+    """
+
+    def test_the_actual_corruption_is_caught(self):
+        line = (r"- **[The Gutter](the-gutter.md)** — a channel that only carries "
+                r"downhill. See [the-gutter.md](the-gutter.md).\n# made/")
+        found = cm.scan_markdown_escapes(line + "\n")
+        self.assertEqual(1, len(found))
+        self.assertEqual(1, found[0][0])
+        self.assertEqual("literal escape", found[0][1])
+
+    def test_clean_markdown_is_silent(self):
+        text = "# made/\n\nThings that are not notes.\n\n- **[A](a.md)** — a thing.\n"
+        self.assertEqual([], cm.scan_markdown_escapes(text))
+
+    def test_an_escape_inside_a_code_span_is_not_a_finding(self):
+        """Writing about escapes is not making one."""
+        self.assertEqual([], cm.scan_markdown_escapes("Use `\\n` to end the line.\n"))
+
+    def test_an_escape_inside_a_fenced_block_is_not_a_finding(self):
+        text = '```python\nprint("a\\nb")\n```\n'
+        self.assertEqual([], cm.scan_markdown_escapes(text))
+
+    def test_a_tilde_fence_closes_too(self):
+        text = '~~~\n"a\\nb"\n~~~\nprose with a \\n in it\n'
+        found = cm.scan_markdown_escapes(text)
+        self.assertEqual(1, len(found), "only the prose line should be reported")
+        self.assertEqual(4, found[0][0])
+
+    def test_a_tab_escape_is_caught_too(self):
+        found = cm.scan_markdown_escapes("column one\\tcolumn two\n")
+        self.assertEqual(1, len(found))
+        self.assertIn("tab", found[0][2])
+
+    def test_an_unclosed_fence_does_not_swallow_the_rest_of_the_file(self):
+        """A fence that never closes hides everything after it. Document which
+        way that falls: the scanner treats the rest as code, so this is a known
+        blind spot, asserted rather than discovered."""
+        found = cm.scan_markdown_escapes('```\nunclosed\n\nprose with a \\n\n')
+        self.assertEqual([], found)
+
+    def test_check_reports_a_literal_escape_in_the_index(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            made = Path(tmp) / "made"
+            made.mkdir()
+            (made / "a.md").write_text("# a\n\nfine.\n", encoding="utf-8")
+            (made / "README.md").write_text(
+                r"- **[A](a.md)** — a thing.\n# made/" + "\n", encoding="utf-8")
+            import io
+            from contextlib import redirect_stdout
+            buf = io.StringIO()
+            with redirect_stdout(buf):
+                code = cm.check(Path(tmp))
+            out = buf.getvalue()
+            self.assertEqual(1, code)
+            self.assertIn("literal escape", out)
+            self.assertIn("made/ Markdown check", out)
