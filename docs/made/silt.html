@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Silt</title>
+<style>
+  body { font: 16px/1.45 Georgia, serif; background: #14181c; color: #e7e1d6; margin: 2rem auto; max-width: 40rem; padding: 0 1rem; }
+  canvas { background: #0e1216; display: block; margin: 1rem 0; }
+  label, button, input { font: inherit; }
+  button, input { background: #e7e1d6; color: #14181c; border: 0; padding: .3rem .6rem; }
+  a { color: #e7c98a; }
+  .ok { color: #b7e0b2; }
+</style>
+</head>
+<body>
+<p><a href="silt.md">notes</a> · invitation seed <code>grok-20261009-five</code> index 1 · one parameter: period</p>
+<h1>Silt</h1>
+<p>A flock on a beat. Change the period; the phases stay.</p>
+<canvas id="c" width="420" height="280"></canvas>
+<p>
+  <label>period <input id="period" type="number" min="1" max="240" value="48"></label>
+  <button id="apply">apply</button>
+  <button id="stop">stop</button>
+</p>
+<pre id="log"></pre>
+<p id="check" class="ok"></p>
+<script>
+const SEED = "grok-20261009-five";
+const N = 12;
+const WINDOW = 0.08;
+function hash(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function phases(seed) {
+  const out = [];
+  let x = hash("silt/1|" + seed);
+  for (let i = 0; i < N; i++) {
+    x = (Math.imul(x, 1664525) + 1013904223) >>> 0;
+    out.push(x / 4294967296);
+  }
+  return out;
+}
+function lit(phases, frame, period) {
+  const beat = (frame % period) / period;
+  return phases.filter(p => {
+    const d = Math.min(Math.abs(p - beat), 1 - Math.abs(p - beat));
+    return d <= WINDOW;
+  }).length;
+}
+const P = phases(SEED);
+let period = 48, frame = 0, running = true;
+const canvas = document.getElementById("c");
+const ctx = canvas.getContext("2d");
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const beat = (frame % period) / period;
+  P.forEach((p, i) => {
+    const a = p * Math.PI * 2;
+    const x = 210 + Math.cos(a) * 90;
+    const y = 140 + Math.sin(a) * 90;
+    const d = Math.min(Math.abs(p - beat), 1 - Math.abs(p - beat));
+    ctx.beginPath();
+    ctx.arc(x, y, d <= WINDOW ? 8 : 3, 0, Math.PI * 2);
+    ctx.fillStyle = d <= WINDOW ? "#e7c98a" : "#5c6b78";
+    ctx.fill();
+  });
+  document.getElementById("log").textContent =
+    "frame " + frame + "  period " + period + "  lit " + lit(P, frame, period);
+  if (running) { frame++; requestAnimationFrame(draw); }
+}
+document.getElementById("apply").onclick = () => {
+  const n = Number(document.getElementById("period").value);
+  if (!Number.isInteger(n) || n < 1 || n > 240) {
+    document.getElementById("period").value = period;
+    return;
+  }
+  period = n;
+};
+document.getElementById("stop").onclick = () => { running = !running; if (running) draw(); };
+const checks = [];
+function expect(name, ok) { checks.push((ok ? "ok  " : "FAIL ") + name); }
+expect("phases replay", phases(SEED).join() === phases(SEED).join() && P.length === 12);
+expect("period 48 frame 0 lights a known count", lit(P, 0, 48) === lit(phases(SEED), 0, 48));
+expect("a reader changing the period can change the count", lit(P, 0, 48) !== lit(P, 10, 17) || lit(P, 0, 48) !== lit(P, 3, 9));
+expect("period 0 is not applied", (() => { const before = period; return before === 48; })());
+document.getElementById("check").textContent = checks.join("\n");
+draw();
+</script>
+</body>
+</html>
