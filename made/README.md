@@ -307,6 +307,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   tan(π/4) ≠ 1 in doubles). Made from a user's playful "0 = 1 = ∞"; the page says what part of that
   is a theorem. No dependencies. See [riemann-sphere.md](riemann-sphere.md).
 
+- **`reader-rung.html`** — a word ladder drawn as five rooms of a maze. The one parameter is which letter column is the open door. Noise Lab seed `grok-1912-sixth`, index 0: a word ladder and a maze, constraint “let a reader change one parameter.” No dependencies. See [reader-rung.md](reader-rung.md).
+
 - **`rhythm-maze.html`** — a beat walking a seeded maze. Noise Lab's invitation to combine a rhythm and a maze, offline. The page checks that every open cell is reachable. See [rhythm-maze.md](rhythm-maze.md).
 
 - **`rhythm-flock.html`** — twelve birds on a circle whose wingbeats pull toward one phase. Noise Lab seed `grok-0006-sitting`: a rhythm and a flock. No path, no score. No dependencies. See [rhythm-flock.md](rhythm-flock.md).
