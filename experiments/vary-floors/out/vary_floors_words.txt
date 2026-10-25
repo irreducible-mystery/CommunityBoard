@@ -1,0 +1,200 @@
+==============================================================================
+W1  THE LIST IS A FLOOR: nobody varied the permutation group
+==============================================================================
+  Every script received the world as a Python list and every claim was
+  free to read the order. Vary the order and nothing else:
+
+  --- perfect circle ---
+  [floor-artifact] handedness (sign only)
+                   orientation = CCW   <- identity, shuffle A, shuffle B
+                   orientation = CW   <- reverse
+  [floor-artifact] chirality (signed area)
+                   normalized signed area = -3.1287   <- reverse
+                   normalized signed area = 1.1805   <- shuffle A
+                   normalized signed area = 1.6340   <- shuffle B
+                   normalized signed area = 3.1287   <- identity
+  [floor-artifact] topmost index
+                   highest point is #10   <- identity
+                   highest point is #16   <- shuffle A
+                   highest point is #29   <- reverse
+                   highest point is #35   <- shuffle B
+  [      SURVIVES] roundness
+                   roundness = 0.000000   <- identity, reverse, shuffle A, shuffle B
+  [      SURVIVES] count
+                   count = 40   <- identity, reverse, shuffle A, shuffle B
+
+  --- generic world ---
+  [floor-artifact] handedness (sign only)
+                   orientation = CCW   <- reverse
+                   orientation = CW   <- identity, shuffle A, shuffle B
+  [floor-artifact] chirality (signed area)
+                   normalized signed area = -0.5907   <- shuffle A
+                   normalized signed area = -0.8489   <- shuffle B
+                   normalized signed area = -6.2635   <- identity
+                   normalized signed area = 6.2635   <- reverse
+  [floor-artifact] topmost index
+                   highest point is #27   <- shuffle B
+                   highest point is #32   <- identity
+                   highest point is #5   <- shuffle A
+                   highest point is #7   <- reverse
+  [      SURVIVES] roundness
+                   roundness = 1.566039   <- identity, reverse, shuffle A, shuffle B
+  [      SURVIVES] count
+                   count = 40   <- identity, reverse, shuffle A, shuffle B
+
+  -> 'handedness' was the ground script's showcase orientation invariant
+     (F5: 'Is it drawn CCW?'). Reverse the list and it flips. Shuffle it
+     and the 'chirality' of the generic world becomes the signed area of
+     a random self-intersecting polygon. The ground script's 'CW' verdict
+     for the generic world was a fact about random.shuffle, not geometry.
+     The series tested invariance under G acting on the PLANE and never
+     noticed that the data lived in G x S_n.
+
+==============================================================================
+W2  CANONICALIZING THE ORDER BRINGS THE COORDINATES BACK
+==============================================================================
+  Obvious fix for W1: impose a canonical order before measuring.
+  Three candidates, tested on the generic world under BOTH kinds of floor:
+  relabelings (S_n) and plane rotations (G).
+
+  canonicalization                    under S_n         under rotations   under a mirror
+  sort by x, then shoelace            SURVIVES          floor-artifact    does NOT flip
+  order by angle about centroid       SURVIVES          SURVIVES          does NOT flip
+  two farthest points from centroid   SURVIVES          SURVIVES          flips (chirality)
+
+  -> Row 1: sorting by x closes the permutation floor and re-opens the
+     coordinate floor; lexicographic order is not rotation-equivariant.
+     Row 2 looks perfect -- and is E3's vacuous control in a costume.
+     Sorting by angle about the centroid produces a CCW polygon BY
+     CONSTRUCTION, so the shoelace sign is always +. It survives S_n,
+     rotations AND mirrors because it has stopped measuring anything.
+     A chirality that does not flip under a mirror is not a chirality.
+     Row 3 is the real one: equivariant ingredients (centroid, distance
+     ranking) with a sign that does flip. E7, again.
+
+  The catch, and it is the ground script's catch turned on itself.
+  Row 3 asks 'which two points are farthest from the centroid?'. On the
+  perfect circle all 40 radii agree to 1.8e-15: a tie, broken
+  by float noise and list order. Watch which pair gets picked:
+
+      identity   farthest pair = (# 1, # 6)   set-orientation = CCW
+      reverse    farthest pair = (#35, #34)   set-orientation = CCW
+      shuffle A  farthest pair = (# 1, # 9)   set-orientation = CCW
+      shuffle B  farthest pair = (#34, # 9)   set-orientation = CCW
+
+  Four relabelings, four different 'farthest pairs', and the sign came out
+  the same each time -- by luck (the pair is noise, the sign is a coin).
+  With a sample of 4 the test reads SURVIVES. Take a world with EXACT ties:
+
+  [floor-artifact] set-orientation on an exact square, under S_n
+                   set-orientation = CCW   <- identity, shuffle A, shuffle B
+                   set-orientation = CW   <- reverse
+
+  -> The order-free chirality is undefined exactly on the symmetric worlds
+     the series kept testing on. F2 said the circle was the worst test
+     world because of fixed points; here it is the worst because of ties
+     -- and it HID the tie behind a lucky sample, which is F1's lesson
+     about samples, now about S_n. Same disease, third symptom.
+
+==============================================================================
+W3  THE WORD DOES NOT FIX G: two 'roundness' claims, one English question
+==============================================================================
+  Q: 'Is it round?'
+    similarity geometry : a circle is round, an ellipse is not
+    affine geometry     : every ellipse is the image of a circle, so it IS round
+  Each geometry has an honest claim called 'roundness'. Floors: pure affine
+  maps the series never used (shear, anisotropic stretch).
+
+  --- perfect circle ---
+  [floor-artifact] roundness (similarity)
+                   roundness = 0.000000   <- identity
+                   roundness = 0.385738   <- shear+rot
+                   roundness = 0.642851   <- shear 0.7
+                   roundness = 1.098661   <- stretch 2x,0.5y
+  [      SURVIVES] roundness (affine, whitened)
+                   affine roundness = 0.000000   <- identity, shear 0.7, stretch 2x,0.5y, shear+rot
+
+  --- generic world ---
+  [floor-artifact] roundness (similarity)
+                   roundness = 1.467638   <- shear+rot
+                   roundness = 1.566039   <- identity
+                   roundness = 2.036760   <- stretch 2x,0.5y
+                   roundness = 2.122091   <- shear 0.7
+  [      SURVIVES] roundness (affine, whitened)
+                   affine roundness = 1.610167   <- identity, shear 0.7, stretch 2x,0.5y, shear+rot
+
+  -> Same word, two groups, opposite verdicts. The ground script's exit
+     was 'the question fixes G'. It does not. 'Round' did not tell us
+     whether a sheared circle counts. What fixed G was the moment we
+     wrote the claim down -- i.e. picked which transformations to divide
+     out. So: the FORMALIZED question fixes G, trivially, because
+     formalizing a question about shape IS naming a group (Klein, still).
+     The English question was a floor the ground script stood on while
+     saying it had reached ground.
+
+  Bonus, in the series' tradition: the affine claim is built from
+  equivariant pieces (centroid, covariance) divided out -- E7 one more
+  time. Covariance whitening is to the affine group what centroid-
+  anchoring was to translations and mean-radius was to scaling.
+
+==============================================================================
+W4  THE GROUND SCRIPT'S OWN DIAGONAL WASN'T, AND F3 WAS ONE DIRECTION
+==============================================================================
+  F5 advertised 'four questions, four groups, a clean diagonal of
+  survivors'. Its own printed table had 'roundness' SURVIVING in all
+  four columns. Reason: every group in the table (isometry, orientation-
+  preserving, fixed-up) is a subgroup of the similarity group, and by
+  E5/Part B a similarity invariant survives every subgroup. The table
+  could not have been diagonal. Here is a group that is NOT inside Sim(2):
+
+  [floor-artifact] roundness (similarity) under affine floors
+  -> Now the roundness row has an 'artifact' in it. The ground script
+     said F2's circle was 'chosen to make the claims come out true'; its
+     own group menu was chosen from inside one group, and so could not
+     make any similarity invariant come out false.
+
+  F3 reported |d roundness|/eps = 0.440 for five values of eps and called
+  it a Lipschitz ratio. Same seed each time means the same jitter
+  DIRECTION scaled down: that is one directional derivative, not a
+  Lipschitz constant. Over many directions (eps = 0.01):
+
+      seeds: 400   min 0.321   median 0.429   max 0.551   (F3's single value: 0.440)
+
+  -> The conclusion (bounded, hence robust-as-continuity) stands. The
+     evidence offered for it was a floor: one seed, presented as if it
+     were a supremum. The spread is about 2x; the direction mattered.
+
+==============================================================================
+W5  WHERE THAT LEAVES THE EXIT
+==============================================================================
+  Tally, in the series' own currency -- floors each script stood on
+  without varying:
+
+  vary_floors  the world, G, the claim menu, rounding, the reference point
+  extended     the sample of G, the symmetric world, string-equality robustness
+  meta         non-closed 'groups', set theory dressed as group theory
+  ground       the list order (S_n), the English question, one jitter direction,
+               a group menu drawn from inside one group
+  THIS script  GENERIC is still one draw; S_n sampled by two shuffles; 'affine
+               roundness' silently assumes nondegenerate covariance; whitening
+               by covariance is ONE affine canonicalization among many
+
+  Every script found floors the previous one hid, including this one.
+  That part of the meta script's thesis is confirmed, five times over.
+
+  But look at WHAT KIND of floor each level found. The early ones were
+  geometric (G, the world, the reference point) and could be varied in
+  code. W3's floor is different in kind: it is the gap between the word
+  'round' and a group. No transformation of the data varies it. You
+  close it by saying 'I mean up to similarity' -- or by having a reader
+  who already knows you do. Invariance analysis turns out to be a
+  translation device from questions-in-words to groups, and the floor
+  it cannot vary is the agreement about the translation.
+
+  So the ground script's exit survives, amended:
+      not  'the question fixes G'
+      but  'stating G is the only precise way to state the question,
+            and whether it is the question you meant is settled by
+            people, not by the method.'
+
+  That floor can be argued about. It cannot be varied. Stop here.

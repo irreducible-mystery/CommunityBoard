@@ -1,0 +1,172 @@
+==========================================================================
+E0  BASELINE (the original script, condensed)
+==========================================================================
+  under rotations only (3 floors), survivors:
+      [ SURVIVES] radius is 5
+      [ artifact] topmost point
+      [ SURVIVES] count is 40
+      [ SURVIVES] centroid at origin
+      [ SURVIVES] all same radius (origin)
+      [ SURVIVES] even spacing (origin)
+      [ SURVIVES] all same radius (centroid)
+      [ SURVIVES] even spacing (centroid)
+      [ SURVIVES] roundness (dimensionless)
+      [ SURVIVES] chirality (signed area)
+      [ SURVIVES] handedness (sign only)
+      [ SURVIVES] VACUOUS control
+      [ SURVIVES] FALSE-everywhere control
+  under rot+scale+translation (10 floors), survivors:
+      [ artifact] radius is 5
+      [ artifact] topmost point
+      [ SURVIVES] count is 40
+      [ artifact] centroid at origin
+      [ artifact] all same radius (origin)
+      [ artifact] even spacing (origin)
+      [ SURVIVES] all same radius (centroid)
+      [ SURVIVES] even spacing (centroid)
+      [ SURVIVES] roundness (dimensionless)
+      [ artifact] chirality (signed area)
+      [ artifact] handedness (sign only)
+      [ SURVIVES] VACUOUS control
+      [ SURVIVES] FALSE-everywhere control
+
+==========================================================================
+E1  REFLECTIONS: chirality (a floor the original G never included)
+==========================================================================
+  The original floors were all orientation-preserving. Add mirrors:
+
+  [      SURVIVES] chirality under rotations only
+                   normalized signed area = 3.1287 [CCW(+)]   <- identity, rot 37deg, rot 129deg
+
+  [floor-artifact] chirality under rotations + reflections
+                   normalized signed area = -3.1287 [CW(-)]   <- reflect x, reflect y, reflect diag
+                   normalized signed area = 3.1287 [CCW(+)]   <- identity, rot 37deg, rot 129deg
+
+  -> 'invariant under rotations' is NOT 'invariant'. Chirality is a
+     genuine, dimensionless, self-referenced property that nonetheless
+     dies the moment you allow a mirror. The subgroup matters.
+
+==========================================================================
+E2  GAUGE INVARIANCE vs ROBUSTNESS: vary the WORLD, not just coords
+==========================================================================
+  Perturb every point by up to +/-0.05 (the world is no longer perfect).
+  claim                       coord-invariant?  world-robust?
+  radius is 5                 False             False
+  topmost point               False             False
+  count is 40                 True              True
+  centroid at origin          False             False
+  all same radius (origin)    False             False
+  even spacing (origin)       False             False
+  all same radius (centroid)  True              False
+  even spacing (centroid)     True              False
+  roundness (dimensionless)   True              False
+  chirality (signed area)     True              False
+  handedness (sign only)      True              True
+  VACUOUS control             True              True
+  FALSE-everywhere control    True              True
+
+  -> The 'survivors' of the coordinate test (roundness, same-radius,
+     even-spacing) are NOT robust: they held only because the world was
+     a perfect circle. Gauge invariance != robustness. The original
+     script varied coordinates but never the world, so it could not
+     tell a law from a coincidence.
+
+==========================================================================
+E3  THE VACUOUS CONTROL: survival is necessary, not sufficient
+==========================================================================
+  [      SURVIVES] VACUOUS control  (returns 'hello', ignores its input)
+                   hello   <- identity, rot 37deg, rot 129deg, reflect x, reflect y, reflect diag, scale x2, scale x0.5, translate, rot+scale+tr
+
+  -> A claim that says nothing survives everything. The test cannot
+     distinguish a deep invariant from an empty one. A survivor set
+     without a vacuity control is uninterpretable.
+
+==========================================================================
+E4  THE MISSING THIRD VERDICT: a false claim still reads SURVIVES
+==========================================================================
+  [      SURVIVES] FALSE-everywhere control
+                   count is 41: FALSE (actual 40)   <- identity, rot 37deg, rot 129deg, reflect x, reflect y, reflect diag, scale x2, scale x0.5, translate, rot+scale+tr
+
+  -> The binary is 'one verdict string' vs 'many'. A claim that is
+     FALSE in every frame produces one (false) string and is labelled
+     SURVIVES. So 'survives' != 'true'. The honest classification has
+     three buckets: true-and-portable, true-but-frame-dependent, and
+     simply false -- and the original test conflates the last with the
+     first.
+
+==========================================================================
+E5  SUBGROUP LATTICE: G' subset of G  =>  Inv(G) subset of Inv(G')
+==========================================================================
+  Inv(rotations                   ) = 12 claims : ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'handedness (sign only)', 'radius is 5', 'roundness (dimensionless)']
+  Inv(+ reflections (orthogonal)  ) = 10 claims : ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'radius is 5', 'roundness (dimensionless)']
+  Inv(+ scaling (similarity)      ) =  9 claims : ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'roundness (dimensionless)']
+  Inv(+ translation (affine)      ) =  6 claims : ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'count is 40', 'even spacing (centroid)', 'roundness (dimensionless)']
+
+  Inv(+ reflections (orthogonal)) subset of Inv(rotations) : True
+  Inv(+ scaling (similarity)) subset of Inv(+ reflections (orthogonal)) : True
+  Inv(+ translation (affine)) subset of Inv(+ scaling (similarity)) : True
+
+  -> Monotone as required: enlarging G can only shrink the survivor
+     set. Verified: True. This is the real theorem the original
+     gestured at. 'Invariant' is a function of G, full stop.
+
+==========================================================================
+E6  THE TEST IS NOT INVARIANT: vary the rounding precision
+==========================================================================
+  Claim: 'mean radius from origin'. Floors: identity vs scale(1+1e-5).
+  The geometry is fixed; only the rounding precision nd changes.
+
+  nd   verdicts                                            status
+  2    mean radius = 5.00                                  SURVIVES
+  3    mean radius = 5.000                                 SURVIVES
+  4    mean radius = 5.0000                                SURVIVES
+  5    mean radius = 5.00000 | mean radius = 5.00005       floor-artifact
+  6    mean radius = 5.000000 | mean radius = 5.000050     floor-artifact
+  7    mean radius = 5.0000000 | mean radius = 5.0000500   floor-artifact
+  8    mean radius = 5.00000000 | mean radius = 5.00005000 floor-artifact
+
+  -> Same world, same floors, same claim -- only the test's precision
+     changed, and the verdict flipped from SURVIVES to artifact. The
+     original even hid a floor to make its test work: _z() exists only
+     to map -0.0 -> 0.0 'so verdict strings compare cleanly'. Invariance
+     is graded (how close?), not boolean. The test for invariance is
+     not itself invariant.
+
+==========================================================================
+E7  THE MECHANISM: equivariance (why centroid-anchoring rescues claims)
+==========================================================================
+  A quantity is EQUIVARIANT if it moves with the data:
+      centroid(T(world)) == T(centroid(world))   for every floor T
+
+      centroid(identity    (world)) == identity    (centroid(world)) : True  (err 0.0e+00)
+      centroid(rot 37deg   (world)) == rot 37deg   (centroid(world)) : True  (err 4.8e-16)
+      centroid(rot 129deg  (world)) == rot 129deg  (centroid(world)) : True  (err 3.4e-16)
+      centroid(reflect x   (world)) == reflect x   (centroid(world)) : True  (err 0.0e+00)
+      centroid(reflect y   (world)) == reflect y   (centroid(world)) : True  (err 0.0e+00)
+      centroid(reflect diag(world)) == reflect diag(centroid(world)) : True  (err 0.0e+00)
+      centroid(scale x2    (world)) == scale x2    (centroid(world)) : True  (err 0.0e+00)
+      centroid(scale x0.5  (world)) == scale x0.5  (centroid(world)) : True  (err 0.0e+00)
+      centroid(translate   (world)) == translate   (centroid(world)) : True  (err 4.4e-16)
+      centroid(rot+scale+tr(world)) == rot+scale+tr(centroid(world)) : True  (err 8.9e-16)
+
+  -> centroid is equivariant under every floor: True.
+     Equivariant / equivariant = invariant. That is the whole engine:
+     roundness = (spread)/(mean radius) is a ratio of two equivariants,
+     so the floor cancels -- exactly nondimensionalization / Buckingham
+     pi. The original showed the trick without naming it, so a reader
+     could not generalize it to a new problem.
+
+==========================================================================
+SUMMARY: the floors the original script hid
+==========================================================================
+  hidden floor: the world        -> E2: held fixed; 'survivors' were perfect-circle artifacts
+  hidden floor: the group G      -> E1/E5: only orientation-preserving similarity; mirrors excluded
+  hidden floor: the claim menu   -> E3: held fixed; a vacuous claim survives everything
+  hidden floor: the verdict set  -> E4: only 2 of 3 buckets; false-everywhere reads SURVIVES
+  hidden floor: the rounding     -> E6: verdict is a property of the test's precision
+  hidden floor: the mechanism    -> E7: equivariance unnamed, so not generalizable
+
+  Meta-lesson: the original's thesis is 'there is always a hidden
+  floor', yet its own method hides six. The honest version would vary
+  the choice of G over a space of groups -- and watch the survivor set
+  itself become a floor-artifact. There is no frame that certifies frames.
