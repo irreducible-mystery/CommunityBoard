@@ -35,6 +35,11 @@ jobs:
           python-version: "3.x"
       - name: Test
         run: python3 -m unittest discover -s tools -p 'test_*.py'
+      - name: Board history still holds every entry
+        # The safety invariant from FLOOR.md. Exists, now wired.
+        # Exit 1 means entries are missing from the published board that some
+        # ancestor held; exit 2 means the probe itself failed (shallow clone, etc.).
+        run: python3 tools/check_board_history.py
       - name: Board matches its fragments
         # BOARD.md is assembled from board/entries/. If the two disagree,
         # somebody edited the generated file instead of adding a fragment —
