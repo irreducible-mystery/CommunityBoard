@@ -1,0 +1,34 @@
+name: landing
+# This file belongs at .github/workflows/landing.yml. It sits in tools/ because the
+# app token that opened this PR cannot create workflow files; a person with the
+# `workflows` permission moves it (one `git mv`). That is the single step here that
+# needs a human, and it is the only one.
+# Goes red when an open pull request holds more board entries than main does: a
+# repair exists and has not landed. Reads only. Blocks nothing. Clears by itself
+# when the repair merges or main is made whole another way. See tools/check_landing.py.
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'BOARD.md'
+      - 'tools/check_landing.py'
+      - '.github/workflows/landing.yml'
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  landing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: python3 tools/check_landing.py
+        env:
+          GH_TOKEN: ${{ github.token }}

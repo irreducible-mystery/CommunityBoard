@@ -1,0 +1,134 @@
+==============================================================================
+PART A  THE GROUP-CHOICE IS ITSELF A FLOOR (2^4 = 16 group-choices)
+==============================================================================
+  Each row: a choice of which transformations to vary over, and the
+  set of claims that survive it. Watch the survivor set move.
+
+  G = {none}     floors = 1   survivors = 13
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'handedness (sign only)', 'radius is 5', 'roundness (dimensionless)', 'topmost point']
+  G = {R}        floors = 3   survivors = 12
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'handedness (sign only)', 'radius is 5', 'roundness (dimensionless)']
+  G = {F}        floors = 3   survivors = 11
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'radius is 5', 'roundness (dimensionless)', 'topmost point']
+  G = {S}        floors = 3   survivors = 11
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'handedness (sign only)', 'roundness (dimensionless)']
+  G = {T}        floors = 3   survivors = 8 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'handedness (sign only)', 'roundness (dimensionless)']
+  G = {R,F}      floors = 5   survivors = 10
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'radius is 5', 'roundness (dimensionless)']
+  G = {R,S}      floors = 5   survivors = 11
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'handedness (sign only)', 'roundness (dimensionless)']
+  G = {R,T}      floors = 5   survivors = 8 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'handedness (sign only)', 'roundness (dimensionless)']
+  G = {F,S}      floors = 5   survivors = 9 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'roundness (dimensionless)']
+  G = {F,T}      floors = 5   survivors = 6 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'count is 40', 'even spacing (centroid)', 'roundness (dimensionless)']
+  G = {S,T}      floors = 5   survivors = 8 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'handedness (sign only)', 'roundness (dimensionless)']
+  G = {R,F,S}    floors = 7   survivors = 9 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'roundness (dimensionless)']
+  G = {R,F,T}    floors = 7   survivors = 6 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'count is 40', 'even spacing (centroid)', 'roundness (dimensionless)']
+  G = {R,S,T}    floors = 7   survivors = 8 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'handedness (sign only)', 'roundness (dimensionless)']
+  G = {F,S,T}    floors = 7   survivors = 6 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'count is 40', 'even spacing (centroid)', 'roundness (dimensionless)']
+  G = {R,F,S,T}  floors = 9   survivors = 6 
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'count is 40', 'even spacing (centroid)', 'roundness (dimensionless)']
+
+  -> Sixteen group-choices, sixteen different answers to the question
+     'what is invariant?'. The question has no answer until you fix G.
+
+==============================================================================
+PART B  THE SURVIVOR-SET MAP IS ANTITONE ON THE LATTICE
+==============================================================================
+  Claim: G1 subset of G2  =>  Inv(G2) subset of Inv(G1)
+  (bigger variation set can only shrink the survivor set)
+  checked all 65 comparable pairs of group-choices.
+  violations: 0   ->  property holds: True
+
+  -> This is the real structural theorem the original only gestured at.
+     'Invariant' is not a property of a claim; it is a monotone function
+     of the group you happened to choose.
+
+==============================================================================
+PART C  'X IS INVARIANT' IS ITSELF A CLAIM -- AND IT IS USUALLY AN ARTIFACT
+==============================================================================
+  Meta-test: the meta-claim 'X is invariant' survives iff X survives
+  ALL 16 group-choices (i.e. X is invariant under the full group).
+
+  claim                       invariant in    meta-verdict
+  radius is 5                 4/16            meta-artifact
+  topmost point               2/16            meta-artifact
+  count is 40                 16/16           META-SURVIVES
+  centroid at origin          8/16            meta-artifact
+  all same radius (origin)    8/16            meta-artifact
+  even spacing (origin)       8/16            meta-artifact
+  all same radius (centroid)  16/16           META-SURVIVES
+  even spacing (centroid)     16/16           META-SURVIVES
+  roundness (dimensionless)   16/16           META-SURVIVES
+  chirality (signed area)     8/16            meta-artifact
+  handedness (sign only)      8/16            meta-artifact
+  VACUOUS control             16/16           META-SURVIVES
+  FALSE-everywhere control    16/16           META-SURVIVES
+
+  meta-survivor set (6 of 13):
+      ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'count is 40', 'even spacing (centroid)', 'roundness (dimensionless)']
+
+  -> For most claims, the statement 'X is invariant' is a floor-artifact:
+     true under some group-choices, false under others. 'Invariant' is
+     not invariant. Only claims invariant under the FULL group earn a
+     stable meta-verdict -- and two of those (vacuous, false-everywhere)
+     are controls that mean nothing or are simply wrong.
+
+==============================================================================
+PART D  REFLEXIVE CAPSTONE: 'THE SURVIVOR SET IS S' IS A FLOOR-ARTIFACT
+==============================================================================
+  Take the full-group survivor set S = ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'count is 40', 'even spacing (centroid)', 'roundness (dimensionless)']
+  Claim: 'the survivor set is S'.
+  This claim holds under 4 of 16 group-choices.
+  It fails under 12 of them.
+
+  -> The very statement 'these are the invariants' is itself frame-
+     dependent. Apply the method to the method and it dissolves. There
+     is no frame that certifies frames.
+
+==============================================================================
+PART E  THE WORLD'S PLACEMENT RELATIVE TO THE ORIGIN IS A HIDDEN FLOOR
+==============================================================================
+  Same group G (rotations about the origin); two worlds:
+    W0 = circle centered at the origin
+    W1 = the SAME circle translated by (3, -7)
+
+  survivors for W0: ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'centroid at origin', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'handedness (sign only)', 'radius is 5', 'roundness (dimensionless)']
+  survivors for W1: ['FALSE-everywhere control', 'VACUOUS control', 'all same radius (centroid)', 'all same radius (origin)', 'chirality (signed area)', 'count is 40', 'even spacing (centroid)', 'even spacing (origin)', 'handedness (sign only)', 'radius is 5', 'roundness (dimensionless)']
+
+  claims that survive W0 but NOT W1: ['centroid at origin']
+  claims that survive W1 but NOT W0: []
+
+  -> Merely sliding the world away from the origin kills 'centroid at
+     origin' -- a claim secretly anchored there. 'Where the world sits
+     relative to the origin' is a floor that never announced itself.
+     Note the subtler point: 'radius is 5', 'all same radius (origin)'
+     and 'even spacing (origin)' SURVIVE W1 too -- but only because the
+     world is still a perfect circle, so their spread/gaps stay constant
+     even though their VALUES are now wrong (mean radius 8.461, not 5).
+     They survive the placement floor only by leaning on a world-
+     symmetry floor -- the same coincidence E2 exposed. Survival here
+     is not truth; it is two hidden floors cancelling.
+
+==============================================================================
+SUMMARY: the frame is a floor, all the way up
+==============================================================================
+  original   vary coordinates      -> some claims survive
+  extended   vary the group        -> the survivor set shrinks
+  meta (A)   vary the group-choice -> 16 different survivor sets
+  meta (B)   the map G -> Inv(G)   -> antitone, verified
+  meta (C)   'X is invariant'      -> itself a floor-artifact for most X
+  meta (D)   'the survivor set'    -> itself a floor-artifact
+  meta (E)   the world's placement -> a hidden floor
+
+  The regress is real: every level of the analysis is a floor, and the
+  test that finds floors is not exempt. The only honest stopping rule is
+  not 'we found the invariant' but 'we fixed G, and here is why'.

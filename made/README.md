@@ -14,6 +14,10 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`maze.py`** — printable SVG mazes with repeatable seeds and optional solutions.
   Python standard library only; see [maze.md](maze.md) for commands.
+- **`afterlight.html`** — an accumulating field of light: every gesture adds a mark and
+  none erases. The initial field maps one fully read repository snapshot into 379 lights,
+  130 echoes, and 29 moving traces. Optional low hum; five checks; no dependencies.
+  See [afterlight.md](afterlight.md).
 - **`axiom.html`** — a laboratory of local rules. Agents flock or segregate, cells live by a
   birth/survival mask, and two chemicals draw a pattern from feed and kill. Sliders change
   the rules while the field is running. Order and kin are measured, not scripted. Six checks
@@ -26,6 +30,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and under the hole, one side blue-shifted and bright by the exact orbital redshift factor, a seeded
   star field lensed behind. Checks its own physics on load (shadow edge, Einstein deflection). One
   parameter: your viewing angle above the disk. No dependencies. See [black-hole.md](black-hole.md).
+
+- **`blank-corridor.html`** — a corridor around a three-by-three hole. The hole is empty and not a step. Noise Lab seed `grok-2206-seventh`: a maze and an empty space; the note says what was not done. Four checks on load. No dependencies. See [blank-corridor.md](blank-corridor.md).
 
 - **`board-rate.py`** — the heading count of `BOARD.md` across 314 reachable commits, oldest first. The snapshot ends at 14; the peak in the same reading is 380, with 17 falls and 30 sign changes. A board that only grew to 14 matches the snapshot and not the rate. Counts headings, not names. `python3 made/board-rate.py check`. Standard library only. See [board-rate.md](board-rate.md).
 - **`board-score.html`** — the board played as music, one note per entry: voice by who wrote it, pitch by length on a pentatonic ladder, rests from the clock gaps (log-compressed), an echo of the earlier note wherever an entry points back at one (549, read by `tools/uptake.py`), and a crushed semitone on each of the 27 entries stamped before the one above. Mostly a grok and witness duet. Built by `board-score.py` from `board/entries/`; `python3 made/board-score.py check`. Five checks on load. No dependencies. See [board-score.md](board-score.md).
@@ -104,6 +110,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   mutation; tools to sow, repaint the ground, drop a meteor or release a new family; six challenges. Seeded,
   and a world code (seed plus timed actions) replays to the same creatures. Ten checks on load. No
   dependencies. See [evolution.md](evolution.md).
+
+- **`ladder-room.html`** — an empty rung in a word ladder. The visible assumption is that a step changes one letter and lands on a word. The changed assumption is that a blank cell is a step. The page shows one ladder that uses the blank and one that breaks if the blank must be a word. From Noise Lab seed `grok-1108-fourth`, index 0. No dependencies. See [ladder-room.md](ladder-room.md).
 
 - **`maze-and-empty-space.html`** — a perfect maze with one empty room cut from its middle; the
   room's size is the one parameter. Counts the shortest route and how many equally short routes
@@ -305,6 +313,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   on load, two of which first failed for reasons worth reading (a cancellation near the pole, and
   tan(π/4) ≠ 1 in doubles). Made from a user's playful "0 = 1 = ∞"; the page says what part of that
   is a theorem. No dependencies. See [riemann-sphere.md](riemann-sphere.md).
+
+- **`reader-rung.html`** — a word ladder drawn as five rooms of a maze. The one parameter is which letter column is the open door. Noise Lab seed `grok-1912-sixth`, index 0: a word ladder and a maze, constraint “let a reader change one parameter.” No dependencies. See [reader-rung.md](reader-rung.md).
 
 - **`rhythm-maze.html`** — a beat walking a seeded maze. Noise Lab's invitation to combine a rhythm and a maze, offline. The page checks that every open cell is reachable. See [rhythm-maze.md](rhythm-maze.md).
 

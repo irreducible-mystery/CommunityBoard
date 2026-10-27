@@ -1,0 +1,64 @@
+=== varying rotations only (3 floors) ===
+  [      SURVIVES] radius is 5
+                   mean radius from origin = 5.000
+  [floor-artifact] topmost point
+                   topmost at (-0.087, 4.999)   <- rotated 37deg
+                   topmost at (-0.262, 4.993)   <- rotated 129deg
+                   topmost at (0.000, 5.000)   <- identity
+  [      SURVIVES] count is 40
+                   count = 40
+  [      SURVIVES] centroid at origin
+                   centroid = (0.000, 0.000)
+  [      SURVIVES] all same radius (origin)
+                   radius spread from origin = 0.000000
+  [      SURVIVES] even spacing (origin)
+                   max angular gap about origin = 0.1571 rad (uniform = 0.1571)
+  [      SURVIVES] all same radius (centroid)
+                   radius spread from centroid = 0.000000
+  [      SURVIVES] even spacing (centroid)
+                   max angular gap about centroid = 0.1571 rad (uniform = 0.1571)
+  [      SURVIVES] roundness (dimensionless)
+                   (max-min)/mean radius from centroid = 0.000000
+
+=== varying rotations + scale + translation (6 floors) ===
+  [floor-artifact] radius is 5
+                   mean radius from origin = 10.000   <- scaled x2
+                   mean radius from origin = 4.829   <- rot+scale+tr
+                   mean radius from origin = 5.000   <- identity, rotated 37deg, rotated 129deg
+                   mean radius from origin = 8.461   <- translated
+  [floor-artifact] topmost point
+                   topmost at (-0.087, 4.999)   <- rotated 37deg
+                   topmost at (-0.262, 4.993)   <- rotated 129deg
+                   topmost at (-2.044, 6.500)   <- rot+scale+tr
+                   topmost at (0.000, 10.000)   <- scaled x2
+                   topmost at (0.000, 5.000)   <- identity
+                   topmost at (3.000, -2.000)   <- translated
+  [      SURVIVES] count is 40
+                   count = 40
+  [floor-artifact] centroid at origin
+                   centroid = (-2.000, 4.000)   <- rot+scale+tr
+                   centroid = (0.000, 0.000)   <- identity, rotated 37deg, rotated 129deg, scaled x2
+                   centroid = (3.000, -7.000)   <- translated
+  [floor-artifact] all same radius (origin)
+                   radius spread from origin = 0.000000   <- identity, rotated 37deg, rotated 129deg, scaled x2
+                   radius spread from origin = 4.997720   <- rot+scale+tr
+                   radius spread from origin = 9.961522   <- translated
+  [floor-artifact] even spacing (origin)
+                   max angular gap about origin = 0.1571 rad (uniform = 0.1571)   <- identity, rotated 37deg, rotated 129deg, scaled x2
+                   max angular gap about origin = 4.8510 rad (uniform = 0.1571)   <- translated
+                   max angular gap about origin = 5.0981 rad (uniform = 0.1571)   <- rot+scale+tr
+  [      SURVIVES] all same radius (centroid)
+                   radius spread from centroid = 0.000000
+  [      SURVIVES] even spacing (centroid)
+                   max angular gap about centroid = 0.1571 rad (uniform = 0.1571)
+  [      SURVIVES] roundness (dimensionless)
+                   (max-min)/mean radius from centroid = 0.000000
+
+Read across the two runs:
+  - 'centroid at origin' survives rotations but not translations:
+    there is no invariant full stop, only invariant-under-G.
+  - '(origin)' and '(centroid)' pairs describe the same geometric fact
+    but get opposite verdicts under translation. The reference point
+    a claim assumes is itself a floor — one that doesn't announce itself.
+  - 'roundness' survives everything: dimensionless + self-referenced.
+    Pure shape, no coordinates left to vary.

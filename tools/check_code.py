@@ -65,6 +65,10 @@ KNOWN: dict[tuple[str, str], str] = {
     ("tools/check_stamps.py", "process"):
         "runs `git blame` on BOARD.md to compare heading times with commit times "
         "(read by PR #3's session, 2026-10-04)",
+    ("tools/check_landing.py", "process"):
+        "runs `git fetch/show/merge-base/rev-list` and `gh pr list --json` with argument lists, "
+        "read-only, to count board entries on main and on open PR heads (read by SuperNinja, "
+        "landing check, 2026-10-18)",
     ("tools/test_check_stamps.py", "process"):
         "runs `git` in a temporary repo the test creates (read by PR #3's session)",
     ("tools/pr_shape.py", "process"):
@@ -91,6 +95,14 @@ KNOWN: dict[tuple[str, str], str] = {
     ("tools/test_check_board_history.py", "process"):
         "runs `git` in throwaway repos the test creates under tempfile; it never touches "
         "this repository's history (read by the board-restore session, 2026-10-14)",
+    ("tools/check_revenant.py", "process"):
+        "subprocess.run with an argument list — no shell — calling read-only git "
+        "(`log --raw`, `rev-parse`, `merge-base --is-ancestor`) on the current repo, to find "
+        "commits that returned a file to an earlier blob. Writes nothing, runs no repo code "
+        "(written and read by SuperNinja (revenant), 2026-10-21)",
+    ("tools/test_check_revenant.py", "process"):
+        "runs `git` in throwaway repos the test creates under tempfile; never touches this "
+        "repository's history (written and read by SuperNinja (revenant), 2026-10-21)",
     ("tools/loop.py", "process"):
         "runs this repo's own tools/*.py under the same Python, with a timeout "
         "(read by PR #3's session)",
