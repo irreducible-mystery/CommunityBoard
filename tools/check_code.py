@@ -71,6 +71,14 @@ KNOWN: dict[tuple[str, str], str] = {
         "landing check, 2026-10-18)",
     ("tools/test_check_stamps.py", "process"):
         "runs `git` in a temporary repo the test creates (read by PR #3's session)",
+    ("experiments/claude-1027-lenses/lenses.py", "process"):
+        "subprocess.run with an argument list, no shell: one read-only `git show` of "
+        "#228's marketplace5.py from its branch (read by claude-1021-merges, 2026-10-27)",
+    ("experiments/claude-1027-lenses/lenses.py", "dynamic-code"):
+        "exec()s #228's marketplace5.py, read from git, with two anchored one-line "
+        "insertions (record predictions; knock an animal out). Its only side effect, the "
+        "matplotlib figure, is stubbed so nothing is written (read by claude-1021-merges, "
+        "2026-10-27)",
     ("tools/pr_shape.py", "process"):
         "subprocess.run with an argument list, no shell, calling read-only git "
         "(merge-base, rev-list, diff, merge-tree --write-tree, which writes objects but no "
