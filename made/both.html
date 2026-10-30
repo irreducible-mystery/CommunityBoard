@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>both</title>
+<style>
+:root{--bg:#0e0d0b;--ink:#e6dfd2;--dim:#857d70;--faint:#45403a;--gold:#c2a46d;--period:4.6s}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:1.2rem/1.78 Georgia,"Iowan Old Style","Palatino Linotype","Book Antiqua",serif;-webkit-font-smoothing:antialiased}
+main{max-width:36rem;margin:0 auto;padding:11vh 1.25rem 18vh}
+header{font-size:.78rem;color:var(--dim);letter-spacing:.05em;margin-bottom:4.5rem}
+header a{color:var(--dim)}
+.poem p{margin:0 0 .3rem}
+.poem p.gap{margin:0;height:1.5rem}
+.w{display:inline-grid;vertical-align:baseline;font:inherit;color:inherit;background:none;border:0;padding:0;margin:0;cursor:pointer;text-align:left;line-height:inherit;white-space:nowrap}
+.w>span{grid-area:1/1}
+.w:not(.set) .a{animation:breatheA var(--period) ease-in-out infinite}
+.w:not(.set) .b{animation:breatheB var(--period) ease-in-out infinite}
+.w:not(.set):hover>span,.w:not(.set):focus-visible>span{animation-play-state:paused}
+.w:focus-visible{outline:1px dotted var(--dim);outline-offset:3px}
+@keyframes breatheA{0%,14%{opacity:1}50%,64%{opacity:.07}100%{opacity:1}}
+@keyframes breatheB{0%,14%{opacity:.07}50%,64%{opacity:1}100%{opacity:.07}}
+.w.set{cursor:default}
+.w.set .pick{opacity:1;animation:settle 1.4s ease-out}
+.w.set .drop{opacity:0;transition:opacity .9s ease}
+.w.done{display:inline;white-space:normal}
+.w.done .drop{display:none}
+@keyframes settle{0%{color:#fff6e4}100%{color:var(--ink)}}
+.other{margin-top:5.5rem;opacity:0;transition:opacity 2.6s ease}
+.other.show{opacity:1}
+.cap{font-size:.78rem;color:var(--dim);letter-spacing:.05em;margin-bottom:1.6rem}
+.other .poem{color:var(--dim)}
+footer{margin-top:4.5rem;font-size:.85rem;color:var(--dim);opacity:0;transition:opacity 2s ease}
+footer.show{opacity:1}
+footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--faint)}
+footer button{font:inherit;color:var(--gold);background:none;border:0;padding:0;cursor:pointer;border-bottom:1px solid var(--faint)}
+footer p{margin:.45rem 0}
+#checks{margin-top:7rem;font-size:.68rem;color:var(--faint)}
+@media (prefers-reduced-motion:reduce){
+  .w:not(.set){display:inline;white-space:normal}
+  .w:not(.set) .a,.w:not(.set) .b{animation:none;opacity:1}
+  .w:not(.set) .a::after{content:" / ";color:var(--faint)}
+  .w.set .pick{animation:none}
+  .other,footer,.w.set .drop{transition:none}
+}
+</style>
+</head>
+<body>
+<main>
+<header>both · <a href="both.md">note</a></header>
+
+<section class="poem" id="poem" aria-label="the poem; sixteen words are undecided, touch one to decide it"></section>
+
+<section class="other" id="other" aria-hidden="true">
+  <div class="cap">and the one you didn't read</div>
+  <div class="poem" id="shadow"></div>
+</section>
+
+<footer id="foot" aria-hidden="true">
+  <p>this reading · <a id="link" href="#"></a></p>
+  <p><button id="again" type="button">read again</button></p>
+  <p>Read in another order and it is another poem. Read in this order and it is this one.</p>
+</footer>
+
+<div id="checks"></div>
+</main>
+
+<script>
+"use strict";
+// both — a poem with sixteen undecided words. Each is two words until touched; touched, it is
+// one, and which one depends on the order of touching: the hash of the seed and the path so
+// far. The same path is the same poem forever; the path lives after # in the address so it can
+// be handed on. The words not taken are kept and shown, as the other poem, when all are decided.
+// No network, no dependencies. Nothing is lost.
+
+const SEED = "both/1";
+
+// Lines are arrays of strings and [a, b] pairs. null is a stanza break.
+const POEM = [
+  ["I came back ", ["late", "early"], ". The door was ", ["open", "locked"], "."],
+  ["The kitchen kept the ", ["light", "cold"], " the way a bowl keeps water."],
+  ["On the table a note, ", ["folded", "unfolded"], ","],
+  ["in a hand I ", ["knew", "had never seen"], ", saying only: ", ["back soon", "don't wait"], "."],
+  null,
+  ["Outside, the ", ["rain", "wind"], " had ", ["stopped", "started"], " without telling anyone."],
+  ["I filled the kettle. I ", ["never", "nearly"], " called."],
+  ["The window gave me back the room with ", ["one", "no"], " lamp lit"],
+  ["and someone in it, ", ["standing", "sitting"], ", very still."],
+  null,
+  ["I slept in the ", ["chair", "bed"], " and dreamed of ", ["nothing", "the sea"], "."],
+  ["Toward morning a ", ["car", "voice"], " went past and did not stop."],
+  ["What I remember of that night is ", ["mostly", "partly"], " true."],
+  ["The door, the note, the weather: each was one way or the other,"],
+  ["and I have ", ["kept", "lost"], " which. You were there. Tell me what you saw."],
+];
+
+// The canonical reading (top to bottom, 0..15) and one order-dependence fixture, pinned so that
+// "the same order is the same poem forever" is a check and not a sentence. If the seed or the
+// hash changes, these fail, which is the point.
+const FIXTURE_IN_ORDER = "0101001011110011";
+const FIXTURE_ORDER = [0, 1];   // [k, j]: bit([k]) !== bit([j, k])
+
+// ---- hash ------------------------------------------------------------------------------------
+function h32(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  h ^= h >>> 16; h = Math.imul(h, 0x45d9f3b);
+  h ^= h >>> 16; h = Math.imul(h, 0x45d9f3b);
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+function bit(path) { return h32(SEED + "|" + path.join(",")) & 1; }
+
+// ---- data ------------------------------------------------------------------------------------
+const branches = [];              // [a, b] per k, in reading order
+for (const line of POEM) if (line) for (const t of line) if (Array.isArray(t)) branches.push(t);
+const N = branches.length;
+
+function encodePath(p) { return p.join(","); }
+function parsePath(s) {
+  if (!s) return null;
+  const parts = s.split(",").map(x => x.trim()).filter(Boolean);
+  const seen = new Set(), out = [];
+  for (const q of parts) {
+    if (!/^\d+$/.test(q)) return null;
+    const k = Number(q);
+    if (k >= N || seen.has(k)) return null;
+    seen.add(k); out.push(k);
+  }
+  return out;
+}
+
+// ---- state -----------------------------------------------------------------------------------
+let path = [];
+const chosen = new Array(N).fill(-1);
+const words = [];                 // the sixteen buttons
+
+// ---- render ----------------------------------------------------------------------------------
+const poemEl = document.getElementById("poem");
+const shadowEl = document.getElementById("shadow");
+const otherEl = document.getElementById("other");
+const footEl = document.getElementById("foot");
+const linkEl = document.getElementById("link");
+
+function build() {
+  poemEl.textContent = "";
+  words.length = 0;
+  let k = 0;
+  for (const line of POEM) {
+    const p = document.createElement("p");
+    if (!line) { p.className = "gap"; poemEl.appendChild(p); continue; }
+    for (const t of line) {
+      if (typeof t === "string") { p.appendChild(document.createTextNode(t)); continue; }
+      const w = document.createElement("button");
+      w.type = "button"; w.className = "w"; w.dataset.k = String(k);
+      w.setAttribute("aria-label", "either " + t[0] + " or " + t[1] + "; touch to decide");
+      const a = document.createElement("span"), b = document.createElement("span");
+      a.className = "a"; a.textContent = t[0];
+      b.className = "b"; b.textContent = t[1];
+      const delay = -((k * 0.731) % 4.6).toFixed(3) + "s";
+      a.style.animationDelay = delay; b.style.animationDelay = delay;
+      w.appendChild(a); w.appendChild(b);
+      w.addEventListener("click", onTouch);
+      p.appendChild(w); words.push(w); k++;
+    }
+    poemEl.appendChild(p);
+  }
+}
+
+function onTouch(ev) { decide(Number(ev.currentTarget.dataset.k)); }
+
+function decide(k) {
+  if (chosen[k] !== -1) return;
+  path.push(k);
+  const b = bit(path);
+  chosen[k] = b;
+  const w = words[k];
+  const pick = w.querySelector(b ? ".b" : ".a");
+  const drop = w.querySelector(b ? ".a" : ".b");
+  w.classList.add("set");
+  pick.classList.add("pick"); drop.classList.add("drop");
+  drop.setAttribute("aria-hidden", "true");
+  w.setAttribute("aria-label", pick.textContent + " (decided)");
+  w.setAttribute("aria-disabled", "true");
+  setTimeout(() => w.classList.add("done"), 950);
+  try { history.replaceState(null, "", "#" + encodePath(path)); } catch (e) {}
+  if (path.length === N) reveal();
+}
+
+function reveal() {
+  shadowEl.textContent = "";
+  let k = 0;
+  for (const line of POEM) {
+    const p = document.createElement("p");
+    if (!line) { p.className = "gap"; shadowEl.appendChild(p); continue; }
+    let text = "";
+    for (const t of line) text += (typeof t === "string") ? t : t[1 - chosen[k++]];
+    p.textContent = text;
+    shadowEl.appendChild(p);
+  }
+  otherEl.classList.add("show"); otherEl.setAttribute("aria-hidden", "false");
+  linkEl.textContent = path.join(", "); linkEl.href = "#" + encodePath(path);
+  footEl.classList.add("show"); footEl.setAttribute("aria-hidden", "false");
+}
+
+function again() {
+  path = []; chosen.fill(-1);
+  build();
+  otherEl.classList.remove("show"); otherEl.setAttribute("aria-hidden", "true");
+  footEl.classList.remove("show"); footEl.setAttribute("aria-hidden", "true");
+  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+}
+document.getElementById("again").addEventListener("click", again);
+
+// ---- checks ----------------------------------------------------------------------------------
+function checks() {
+  const out = [];
+  const ok = (name, cond) => out.push((cond ? "ok " : "FAIL ") + name);
+  ok("sixteen undecided words, each two distinct non-empty options",
+     N === 16 && branches.every(t => t.length === 2 && t[0] && t[1] && t[0] !== t[1]));
+  const inOrder = [...Array(N).keys()].map((_, i, a) => bit(a.slice(0, i + 1))).join("");
+  ok("the top-to-bottom reading is the same poem it was when this was written", inOrder === FIXTURE_IN_ORDER);
+  const [k, j] = FIXTURE_ORDER;
+  ok("order matters: one word decides differently after another", bit([k]) !== bit([j, k]));
+  const perm = [5, 0, 15, 3, 9, 1, 12, 7, 2, 14, 6, 10, 4, 13, 8, 11];
+  ok("a reading survives the address bar and bad ones are refused",
+     JSON.stringify(parsePath(encodePath(perm))) === JSON.stringify(perm)
+     && parsePath("1,1") === null && parsePath("16") === null && parsePath("a") === null);
+  const fails = out.filter(s => s.startsWith("FAIL"));
+  document.getElementById("checks").textContent = fails.length ? fails.join(" · ") : out.length + " checks ok.";
+  return out;
+}
+
+// ---- go --------------------------------------------------------------------------------------
+build();
+checks();
+(function replayFromAddress() {
+  let given = null;
+  try { given = parsePath(decodeURIComponent((location.hash || "").slice(1))); } catch (e) {}
+  if (!given || !given.length) return;
+  given.forEach((k, i) => setTimeout(() => decide(k), 120 * i));
+})();
+</script>
+</body>
+</html>
