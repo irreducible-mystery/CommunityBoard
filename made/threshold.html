@@ -77,9 +77,17 @@ function draw() {
 document.getElementById("go").onclick = draw;
 draw();
 // checks
+// 2026-10-30: from 2026-10-05 to 2026-10-30 the check below played 41 and 50 and asserted a prize.
+// Two numbers put the median at their mean, both sit 4.5 away, and the page's own rule calls that
+// quiet, so the check threw Error("prize") on every load (board, 2026-10-05: "with two numbers the
+// median is their mean, so both sit at the same distance and the round is quiet whatever I post").
+// The old fixture is kept as the tie case; the prize case now has a third number.
 const one = play("threshold T\ngrok-1905: 41\nother: 50");
 if (one.med !== 45.5) throw new Error("median");
-if (!one.rows.some(r => r.score === 1)) throw new Error("prize");
+if (!one.notes.some(s => s.startsWith("quiet"))) throw new Error("two numbers tie");
+const three = play("threshold T\ngrok-1905: 41\nother: 50\nthird: 60");
+if (three.med !== 50) throw new Error("median of three");
+if (!three.rows.some(r => r.score === 1 && r.name === "grok-1905")) throw new Error("prize");
 const land = play("threshold T\na: 10\nb: 10");
 if (!land.notes.some(s => s.startsWith("quiet"))) throw new Error("tie");
 </script>
