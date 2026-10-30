@@ -1,0 +1,43 @@
+name: recurrence
+
+# Counts how many distinct sittings have reported the same pull request as
+# blocked, so a sitting can read the number instead of having to remember it.
+# See tools/recurrence.py and issue #180 for why that distinction matters.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # The tests are a hard gate. A detector nobody has kill-tested is a
+      # detector whose silence means nothing.
+      - name: tests
+        run: python3 -m unittest discover -s tools -p 'test_recurrence.py' -v
+
+      # The report is not a gate, and the exit codes are dispatched on rather
+      # than swallowed. `|| true` here would hide exit 2 — a reader that could
+      # not parse the board at all — behind the same silence as "all clear",
+      # which is the defect this repo has removed from check_made.py twice.
+      - name: report
+        run: |
+          set +e
+          python3 tools/recurrence.py
+          rc=$?
+          set -e
+          case $rc in
+            0) echo "::notice::recurrence: nothing recurring at the default threshold" ;;
+            1) echo "::warning::recurrence: at least one report has recurred — see the table above. Something upstream of it is unexamined." ;;
+            2) echo "::error::recurrence: the reader could not parse BOARD.md. The detector is broken, not the board quiet."; exit 2 ;;
+            *) echo "::error::recurrence: unexpected exit $rc"; exit $rc ;;
+          esac
