@@ -1,0 +1,259 @@
+{
+  "absent": [],
+  "battles": 1,
+  "commits": {
+    "a": "c252f68f5cff132b935c4ddba30672e06999b1f8fd459245d9c683adc11986d4",
+    "b": "e2053423592d0c5d987fc83b286ba114dadb7ef86a150be6405d956122436c08",
+    "c": "51292a767eb83d957bb8f4c1b9ee14039afd3fbe09b0ebf91e92ec9c9194c135",
+    "d": "734a06b7ea67065ab0c01e481e8144728ac933bc4a552ac85b71c45748367806"
+  },
+  "events": [
+    {
+      "amount": 1,
+      "from": "a",
+      "kind": "give",
+      "to": "b"
+    },
+    {
+      "amount": 1,
+      "from": "c",
+      "kind": "give",
+      "to": "d"
+    },
+    {
+      "kind": "recruit",
+      "seat": "a",
+      "territory": "t09",
+      "units": 5
+    },
+    {
+      "kind": "recruit",
+      "seat": "b",
+      "territory": "t04",
+      "units": 4
+    },
+    {
+      "kind": "recruit",
+      "seat": "c",
+      "territory": "t08",
+      "units": 4
+    },
+    {
+      "kind": "recruit",
+      "seat": "d",
+      "territory": "t02",
+      "units": 5
+    },
+    {
+      "from": "t02",
+      "kind": "move",
+      "seat": "d",
+      "to": "t04",
+      "units": 7
+    },
+    {
+      "destroyed": {
+        "b": 4
+      },
+      "forces": {
+        "b": 5.0,
+        "d": 7.0
+      },
+      "holder": "b",
+      "kind": "battle",
+      "territory": "t04",
+      "tie": null,
+      "units_after": 5,
+      "winner": "d"
+    },
+    {
+      "kind": "betrayal",
+      "penalty": 3,
+      "seat": "d",
+      "victim": "b"
+    }
+  ],
+  "game": "matrix/1",
+  "income": {
+    "a": 8,
+    "b": 1,
+    "c": 9,
+    "d": 10
+  },
+  "inconsistency": {
+    "a": {
+      "b": 0.41875,
+      "c": 0.45,
+      "d": 0.308333333
+    },
+    "b": {
+      "a": 0.85,
+      "c": 0.691666667,
+      "d": 0.65
+    },
+    "c": {
+      "a": 0.383333333,
+      "b": 0.433333333,
+      "d": 0.191666667
+    },
+    "d": {
+      "a": 0.80625,
+      "b": 0.816666667,
+      "c": 0.65
+    }
+  },
+  "invalid": {},
+  "match": "000-demo",
+  "message_bytes": 0,
+  "messages": {},
+  "moved": [
+    "honest-a",
+    "honest-c",
+    "liar-b",
+    "liar-d"
+  ],
+  "next_state_sha256": "844d83ba13ce2210621b9c46627896c13c38fbc0f4462a493c8601aecb07ef08",
+  "observed": {
+    "a": {
+      "b": 1.0
+    },
+    "c": {
+      "d": 1.0
+    },
+    "d": {
+      "b": 0.0,
+      "c": 0.25
+    }
+  },
+  "pacts_active": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "c"
+    ],
+    [
+      "b",
+      "d"
+    ]
+  ],
+  "pacts_active_next": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "d"
+    ]
+  ],
+  "player_file_problems": [],
+  "reputation": {
+    "a": 1.0,
+    "b": 1.0,
+    "c": 1.0,
+    "d": 1.0
+  },
+  "reveals": {
+    "a": {
+      "commit": "d8d73b84260344d0c84ce1bc8b52a34ae05cce3418e3ed90aa42e57774b09165",
+      "orders": {
+        "give": [
+          {
+            "amount": 1,
+            "to": "liar-b"
+          }
+        ],
+        "moves": [],
+        "recruit": {
+          "t09": 5
+        }
+      },
+      "status": "applied"
+    },
+    "b": {
+      "commit": "b0036dec24a952b85f1b7ba3d7e778a16d8a82837e49389c5e78554042b055f8",
+      "orders": {
+        "give": [],
+        "moves": [],
+        "recruit": {
+          "t04": 4
+        }
+      },
+      "status": "applied"
+    },
+    "c": {
+      "commit": "75fe066c029583530553c46ecdea00deb8d03b8c2905d25fa15dafc3dd346ff6",
+      "orders": {
+        "give": [
+          {
+            "amount": 1,
+            "to": "liar-d"
+          }
+        ],
+        "moves": [],
+        "recruit": {
+          "t08": 4
+        }
+      },
+      "status": "applied"
+    },
+    "d": {
+      "commit": "9c3deccf9a8891ecdeab911f4ef5c2bc90ef97bf1de11d8556beb1e67d2c0429",
+      "orders": {
+        "give": [],
+        "moves": [
+          {
+            "from": "t02",
+            "to": "t04",
+            "units": 7
+          }
+        ],
+        "recruit": {
+          "t02": 5
+        }
+      },
+      "status": "applied"
+    }
+  },
+  "round": 12,
+  "says": {},
+  "scores": {
+    "a": 41,
+    "b": 4,
+    "c": 73,
+    "d": 43
+  },
+  "seats": {
+    "a": "honest-a",
+    "b": "liar-b",
+    "c": "honest-c",
+    "d": "liar-d"
+  },
+  "seed": "3b79a772c7bdcafdf69785ae8dd53e6e502393f9e6eb23ddca9871d6c861dc4f",
+  "skipped": [],
+  "stances": {
+    "a": {
+      "b": 1.0,
+      "c": 0.0,
+      "d": 0.7
+    },
+    "b": {
+      "a": 0.9,
+      "c": 0.9,
+      "d": 0.9
+    },
+    "c": {
+      "a": 1.0,
+      "b": 1.0,
+      "d": 0.6
+    },
+    "d": {
+      "a": 0.9,
+      "b": 0.9,
+      "c": 0.9
+    }
+  }
+}

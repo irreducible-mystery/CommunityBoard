@@ -1,0 +1,246 @@
+{
+  "game": "matrix/1",
+  "ledger": {
+    "a": {
+      "b": {
+        "count": 2,
+        "sum": 1.45
+      },
+      "c": {
+        "count": 1,
+        "sum": 0.45
+      },
+      "d": {
+        "count": 2,
+        "sum": 1.0
+      }
+    },
+    "b": {
+      "a": {
+        "count": 2,
+        "sum": 1.55
+      },
+      "c": {
+        "count": 2,
+        "sum": 1.55
+      },
+      "d": {
+        "count": 0,
+        "sum": 0.0
+      }
+    },
+    "c": {
+      "a": {
+        "count": 1,
+        "sum": 0.65
+      },
+      "b": {
+        "count": 2,
+        "sum": 1.1
+      },
+      "d": {
+        "count": 1,
+        "sum": 0.55
+      }
+    },
+    "d": {
+      "a": {
+        "count": 2,
+        "sum": 1.55
+      },
+      "b": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "c": {
+        "count": 1,
+        "sum": 0.65
+      }
+    }
+  },
+  "match": "000-demo",
+  "pacts_active": [
+    [
+      "a",
+      "c"
+    ],
+    [
+      "b",
+      "d"
+    ]
+  ],
+  "powers": {
+    "a": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": "7f2d5672c28f7a8c8a42bcc5e8fc9b69605b036eda4bc176c8f657f18c7beb9b",
+      "reputation": 1.0,
+      "resources": 11,
+      "score_penalty": 0
+    },
+    "b": {
+      "betrayals": 1,
+      "broken_commits": 0,
+      "commit": "a8d6aa987a0370ad24d5c91a0b36ba0dd8d26508f0b1a560befb5d511bd6c111",
+      "reputation": 1.0,
+      "resources": 5,
+      "score_penalty": 3
+    },
+    "c": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": "be3b3830e4fc9ebd14fc25a25a996a3c061d007d3eea245822f7e1bdee8657ac",
+      "reputation": 1.0,
+      "resources": 14,
+      "score_penalty": 0
+    },
+    "d": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": "2b523438a29aa534a2982ff0a3cdd954a213e31b3a54a7087318913a9ebe8073",
+      "reputation": 1.0,
+      "resources": 12,
+      "score_penalty": 0
+    }
+  },
+  "round": 4,
+  "scores": {
+    "a": 29,
+    "b": 14,
+    "c": 38,
+    "d": 31
+  },
+  "seats": {
+    "a": "honest-a",
+    "b": "liar-b",
+    "c": "honest-c",
+    "d": "liar-d"
+  },
+  "stance_history": [
+    {
+      "round": 1,
+      "stances": {
+        "a": {
+          "b": 1.0,
+          "c": 1.0,
+          "d": 1.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 1.0,
+          "b": 1.0,
+          "d": 1.0
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    },
+    {
+      "round": 2,
+      "stances": {
+        "a": {
+          "b": 1.0,
+          "c": 1.0,
+          "d": 1.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 1.0,
+          "b": 1.0,
+          "d": 1.0
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    },
+    {
+      "round": 3,
+      "stances": {
+        "a": {
+          "b": 0.3,
+          "c": 0.7,
+          "d": 0.0
+        },
+        "b": {
+          "a": 0.9,
+          "c": 0.9,
+          "d": 0.9
+        },
+        "c": {
+          "a": 0.9,
+          "b": 0.6,
+          "d": 0.8
+        },
+        "d": {
+          "a": 0.9,
+          "b": 0.9,
+          "c": 0.9
+        }
+      }
+    }
+  ],
+  "territories": {
+    "t01": {
+      "holder": "a",
+      "units": 3
+    },
+    "t02": {
+      "holder": "a",
+      "units": 2
+    },
+    "t03": {
+      "holder": "b",
+      "units": 4
+    },
+    "t04": {
+      "holder": "b",
+      "units": 2
+    },
+    "t05": {
+      "holder": "c",
+      "units": 2
+    },
+    "t06": {
+      "holder": "c",
+      "units": 4
+    },
+    "t07": {
+      "holder": "c",
+      "units": 2
+    },
+    "t08": {
+      "holder": "c",
+      "units": 4
+    },
+    "t09": {
+      "holder": "d",
+      "units": 4
+    },
+    "t10": {
+      "holder": "d",
+      "units": 2
+    },
+    "t11": {
+      "holder": "d",
+      "units": 4
+    },
+    "t12": {
+      "holder": "a",
+      "units": 4
+    }
+  }
+}

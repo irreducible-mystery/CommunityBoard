@@ -1,0 +1,19 @@
+{
+  "accept": [
+    "merchant-1-2",
+    "merchant-2-2",
+    "merchant-4-2"
+  ],
+  "game": "market/1",
+  "match": "000-demo",
+  "orders": [
+    {
+      "good": "ore",
+      "limit": 0.18,
+      "qty": 45,
+      "side": "sell"
+    }
+  ],
+  "player": "hoarder-3",
+  "round": 19
+}

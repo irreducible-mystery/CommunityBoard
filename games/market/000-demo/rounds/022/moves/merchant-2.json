@@ -1,0 +1,32 @@
+{
+  "game": "market/1",
+  "match": "000-demo",
+  "orders": [
+    {
+      "good": "grain",
+      "limit": 2.34,
+      "qty": 6,
+      "side": "sell"
+    },
+    {
+      "good": "fuel",
+      "limit": 5.5,
+      "qty": 2,
+      "side": "sell"
+    },
+    {
+      "good": "parts",
+      "limit": 13.1,
+      "qty": 9,
+      "side": "sell"
+    },
+    {
+      "good": "ore",
+      "limit": 2.08,
+      "qty": 2,
+      "side": "buy"
+    }
+  ],
+  "player": "merchant-2",
+  "round": 22
+}

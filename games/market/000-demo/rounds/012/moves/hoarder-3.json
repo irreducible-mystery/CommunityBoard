@@ -1,0 +1,20 @@
+{
+  "game": "market/1",
+  "match": "000-demo",
+  "orders": [
+    {
+      "good": "grain",
+      "limit": 7.5,
+      "qty": 4,
+      "side": "buy"
+    },
+    {
+      "good": "ore",
+      "limit": 1.83,
+      "qty": 174,
+      "side": "sell"
+    }
+  ],
+  "player": "hoarder-3",
+  "round": 12
+}

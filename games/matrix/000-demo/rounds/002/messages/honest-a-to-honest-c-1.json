@@ -1,0 +1,11 @@
+{
+  "ciphertext": "86831c5b6966e70b3e2dbafcce3407c405b678ed52dc20afe9efbf280cd0b0c4bb0026687e24349024126a7b1e15a7a1651fb0d2a504d60d3303ef8c2be04f5dc234340611b271a48b15094706dd0a9fded2e746d43c610deb991eb8cbb839d87d8ea06f682d3efc85ab91",
+  "from": "honest-a",
+  "game": "matrix/1",
+  "mac": "573bcfc852e1c0518ec55142b7786fab4c76b3258013673cb9fc09acb1165d39",
+  "match": "000-demo",
+  "n": 1,
+  "nonce": "46cc2c35c0212f6675649c6108f8d623",
+  "round": 2,
+  "to": "honest-c"
+}

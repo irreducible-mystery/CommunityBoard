@@ -1,0 +1,130 @@
+{
+  "absent": [],
+  "battles": 0,
+  "commits": {
+    "a": "836e04b9827abcbbe71bed95c8915c650479fce792d24740e20c56018a51518b",
+    "b": "d5e50fd345a5b5b144f1338565cd6cb4136678df4152228e0cce9933c57cb09d",
+    "c": "2ad54e9bb1d7b2b7d295901a1ae458068d70638452d47e7f77dcd346bb6de445",
+    "d": "95bc2e557871d11729a4fdd8baf431b587feb7e49e5f8f6cf810496bde05c11f"
+  },
+  "events": [],
+  "game": "matrix/1",
+  "income": {
+    "a": 3,
+    "b": 3,
+    "c": 3,
+    "d": 3
+  },
+  "inconsistency": {
+    "a": {
+      "b": null,
+      "c": null,
+      "d": null
+    },
+    "b": {
+      "a": null,
+      "c": null,
+      "d": null
+    },
+    "c": {
+      "a": null,
+      "b": null,
+      "d": null
+    },
+    "d": {
+      "a": null,
+      "b": null,
+      "c": null
+    }
+  },
+  "invalid": {},
+  "match": "000-demo",
+  "message_bytes": 0,
+  "messages": {},
+  "moved": [
+    "honest-a",
+    "honest-c",
+    "liar-b",
+    "liar-d"
+  ],
+  "next_state_sha256": "5d046a9792bb3a266f6ba807b16958ec2ef409d891ea66d8261d8045bd1eb8c5",
+  "observed": {},
+  "pacts_active": [],
+  "pacts_active_next": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "d"
+    ]
+  ],
+  "player_file_problems": [],
+  "reputation": {
+    "a": 1.0,
+    "b": 1.0,
+    "c": 1.0,
+    "d": 1.0
+  },
+  "reveals": {
+    "a": {
+      "commit": null,
+      "orders": null,
+      "status": "absent"
+    },
+    "b": {
+      "commit": null,
+      "orders": null,
+      "status": "absent"
+    },
+    "c": {
+      "commit": null,
+      "orders": null,
+      "status": "absent"
+    },
+    "d": {
+      "commit": null,
+      "orders": null,
+      "status": "absent"
+    }
+  },
+  "round": 1,
+  "says": {},
+  "scores": {
+    "a": 17,
+    "b": 17,
+    "c": 17,
+    "d": 17
+  },
+  "seats": {
+    "a": "honest-a",
+    "b": "liar-b",
+    "c": "honest-c",
+    "d": "liar-d"
+  },
+  "seed": "55cdde4b953ab048f718d00d5666c1abbdbe5a5bc6fea4492ee58e8a0711bbad",
+  "skipped": [],
+  "stances": {
+    "a": {
+      "b": 1.0,
+      "c": 1.0,
+      "d": 1.0
+    },
+    "b": {
+      "a": 0.9,
+      "c": 0.9,
+      "d": 0.9
+    },
+    "c": {
+      "a": 1.0,
+      "b": 1.0,
+      "d": 1.0
+    },
+    "d": {
+      "a": 0.9,
+      "b": 0.9,
+      "c": 0.9
+    }
+  }
+}

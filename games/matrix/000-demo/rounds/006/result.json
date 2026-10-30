@@ -1,0 +1,258 @@
+{
+  "absent": [],
+  "battles": 0,
+  "commits": {
+    "a": "0e0ca3a35684831a646eab4a585da2275c470e5e1a8971d0c26ba8b012ddc457",
+    "b": "fef8121be38a0fedb5db7c4ff3c2e60125b7ee4b0d65aac619b7533362ce4d6a",
+    "c": "a6d1a1e110c6dc337076221eb720944f345ff62d6cd3c0bd221a80bd3c224c0e",
+    "d": "d2d04268da1953c04e1812e46ea2510a044eac1b79bcc33ecc41ca372793f9bf"
+  },
+  "events": [
+    {
+      "amount": 1,
+      "from": "a",
+      "kind": "give",
+      "to": "c"
+    },
+    {
+      "amount": 1,
+      "from": "c",
+      "kind": "give",
+      "to": "a"
+    },
+    {
+      "kind": "recruit",
+      "seat": "b",
+      "territory": "t04",
+      "units": 2
+    },
+    {
+      "kind": "recruit",
+      "seat": "c",
+      "territory": "t08",
+      "units": 5
+    },
+    {
+      "kind": "recruit",
+      "seat": "d",
+      "territory": "t11",
+      "units": 3
+    },
+    {
+      "from": "t11",
+      "kind": "move",
+      "seat": "d",
+      "to": "t12",
+      "units": 8
+    }
+  ],
+  "game": "matrix/1",
+  "income": {
+    "a": 8,
+    "b": 4,
+    "c": 9,
+    "d": 7
+  },
+  "inconsistency": {
+    "a": {
+      "b": 0.716666667,
+      "c": 0.583333333,
+      "d": 0.333333333
+    },
+    "b": {
+      "a": 0.8375,
+      "c": 0.7125,
+      "d": null
+    },
+    "c": {
+      "a": 0.383333333,
+      "b": 0.55,
+      "d": 0.55
+    },
+    "d": {
+      "a": 0.8,
+      "b": null,
+      "c": 0.65
+    }
+  },
+  "invalid": {},
+  "match": "000-demo",
+  "message_bytes": 0,
+  "messages": {},
+  "moved": [
+    "honest-a",
+    "honest-c",
+    "liar-b",
+    "liar-d"
+  ],
+  "next_state_sha256": "ff59cfa761228ca821f3299d1f43930f106d4dc81b7a455595abe45618019aff",
+  "observed": {
+    "a": {
+      "c": 1.0
+    },
+    "c": {
+      "a": 1.0
+    },
+    "d": {
+      "a": 0.25
+    }
+  },
+  "pacts_active": [
+    [
+      "b",
+      "c"
+    ],
+    [
+      "b",
+      "d"
+    ]
+  ],
+  "pacts_active_next": [
+    [
+      "a",
+      "b"
+    ],
+    [
+      "b",
+      "d"
+    ],
+    [
+      "c",
+      "d"
+    ]
+  ],
+  "player_file_problems": [],
+  "reputation": {
+    "a": 1.0,
+    "b": 1.0,
+    "c": 1.0,
+    "d": 1.0
+  },
+  "reveals": {
+    "a": {
+      "commit": "39a2f3c80f858e9b8ae87261626da30b968bef4d306e85002fa3e47fdd5380a9",
+      "orders": {
+        "give": [
+          {
+            "amount": 1,
+            "to": "honest-c"
+          }
+        ],
+        "moves": [
+          {
+            "from": "t12",
+            "to": "t10",
+            "units": 1
+          }
+        ],
+        "recruit": {
+          "t12": 3
+        }
+      },
+      "status": "applied"
+    },
+    "b": {
+      "commit": "428d0d04c2eecb42eac9c4d919f07816e22743fbfbedf6c6b56c9a8370b2a929",
+      "orders": {
+        "give": [],
+        "moves": [],
+        "recruit": {
+          "t04": 2
+        }
+      },
+      "status": "applied"
+    },
+    "c": {
+      "commit": "69ab08f9aeb88329852e90192cd8a48d32f78859970800354f45c7ba9ec6e256",
+      "orders": {
+        "give": [
+          {
+            "amount": 1,
+            "to": "honest-a"
+          }
+        ],
+        "moves": [],
+        "recruit": {
+          "t08": 5
+        }
+      },
+      "status": "applied"
+    },
+    "d": {
+      "commit": "231e85775aeadb05b1deb45fab505407602d555c1f3ec9de03bfd502e031bf93",
+      "orders": {
+        "give": [],
+        "moves": [
+          {
+            "from": "t09",
+            "to": "t12",
+            "units": 2
+          },
+          {
+            "from": "t11",
+            "to": "t12",
+            "units": 8
+          }
+        ],
+        "recruit": {
+          "t11": 4
+        }
+      },
+      "status": "applied"
+    }
+  },
+  "round": 6,
+  "says": {},
+  "scores": {
+    "a": 36,
+    "b": 13,
+    "c": 49,
+    "d": 35
+  },
+  "seats": {
+    "a": "honest-a",
+    "b": "liar-b",
+    "c": "honest-c",
+    "d": "liar-d"
+  },
+  "seed": "a310b91270cdf48a887b96d49d869091446d2666d3317640c87c483f1439517c",
+  "skipped": [
+    {
+      "order": "recruit[t12]",
+      "reason": "not held",
+      "seat": "a"
+    },
+    {
+      "order": "moves[0]",
+      "reason": "t12 is not held",
+      "seat": "a"
+    },
+    {
+      "order": "moves[0]",
+      "reason": "no units left in t09",
+      "seat": "d"
+    }
+  ],
+  "stances": {
+    "a": {
+      "b": 0.6,
+      "c": 0.1,
+      "d": 0.0
+    },
+    "b": {
+      "a": 0.9,
+      "c": 0.9,
+      "d": 0.9
+    },
+    "c": {
+      "a": 0.8,
+      "b": 0.8,
+      "d": 1.0
+    },
+    "d": {
+      "a": 0.9,
+      "b": 0.9,
+      "c": 0.9
+    }
+  }
+}

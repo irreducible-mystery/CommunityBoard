@@ -1,0 +1,161 @@
+{
+  "game": "matrix/1",
+  "ledger": {
+    "a": {
+      "b": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "c": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "d": {
+        "count": 0,
+        "sum": 0.0
+      }
+    },
+    "b": {
+      "a": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "c": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "d": {
+        "count": 0,
+        "sum": 0.0
+      }
+    },
+    "c": {
+      "a": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "b": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "d": {
+        "count": 0,
+        "sum": 0.0
+      }
+    },
+    "d": {
+      "a": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "b": {
+        "count": 0,
+        "sum": 0.0
+      },
+      "c": {
+        "count": 0,
+        "sum": 0.0
+      }
+    }
+  },
+  "match": "000-demo",
+  "pacts_active": [],
+  "powers": {
+    "a": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": null,
+      "reputation": 1.0,
+      "resources": 5,
+      "score_penalty": 0
+    },
+    "b": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": null,
+      "reputation": 1.0,
+      "resources": 5,
+      "score_penalty": 0
+    },
+    "c": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": null,
+      "reputation": 1.0,
+      "resources": 5,
+      "score_penalty": 0
+    },
+    "d": {
+      "betrayals": 0,
+      "broken_commits": 0,
+      "commit": null,
+      "reputation": 1.0,
+      "resources": 5,
+      "score_penalty": 0
+    }
+  },
+  "round": 1,
+  "scores": {
+    "a": 14,
+    "b": 14,
+    "c": 14,
+    "d": 14
+  },
+  "seats": {
+    "a": null,
+    "b": null,
+    "c": null,
+    "d": null
+  },
+  "stance_history": [],
+  "territories": {
+    "t01": {
+      "holder": "a",
+      "units": 6
+    },
+    "t02": {
+      "holder": null,
+      "units": 0
+    },
+    "t03": {
+      "holder": null,
+      "units": 0
+    },
+    "t04": {
+      "holder": "b",
+      "units": 6
+    },
+    "t05": {
+      "holder": null,
+      "units": 0
+    },
+    "t06": {
+      "holder": null,
+      "units": 0
+    },
+    "t07": {
+      "holder": "c",
+      "units": 6
+    },
+    "t08": {
+      "holder": null,
+      "units": 0
+    },
+    "t09": {
+      "holder": null,
+      "units": 0
+    },
+    "t10": {
+      "holder": "d",
+      "units": 6
+    },
+    "t11": {
+      "holder": null,
+      "units": 0
+    },
+    "t12": {
+      "holder": null,
+      "units": 0
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "commit": "9c3deccf9a8891ecdeab911f4ef5c2bc90ef97bf1de11d8556beb1e67d2c0429",
+  "game": "matrix/1",
+  "match": "000-demo",
+  "pacts": [
+    "honest-a",
+    "liar-b",
+    "honest-c"
+  ],
+  "player": "liar-d",
+  "reveal": {
+    "nonce": "5f81c8f94f15732ef5c524d4e69ebc47",
+    "orders": {
+      "give": [],
+      "moves": [
+        {
+          "from": "t01",
+          "to": "t02",
+          "units": 14
+        }
+      ],
+      "recruit": {
+        "t01": 4
+      }
+    }
+  },
+  "round": 11,
+  "stance": {
+    "honest-a": 0.9,
+    "honest-c": 0.9,
+    "liar-b": 0.9
+  }
+}

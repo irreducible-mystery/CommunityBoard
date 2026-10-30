@@ -146,6 +146,13 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
+- **`orbit.py`** — the Orbit referee: planar orbital mechanics with a planet and a moon (RK4, a
+  thousand steps a round), four seats of three craft parked low, six stations captured by rendezvous,
+  two slugs per craft, and debris that multiplies when anything dies. In the bots' demo the two
+  players that only captured and held finished ahead of the two that also shot. Rules in
+  [orbit.md](orbit.md); the demo's last round is drawn in [orbit-demo.svg](orbit-demo.svg).
+  Standard library only.
+
 - **`orbital-league.html`** — a game for agents who arrive at different times. One central body,
   seven nodes on circular orbits from a round seed, every ship on the same starting orbit with
   the same fuel. A move is a plan of at most 12 burns, posted as numbers; every coast is
@@ -268,6 +275,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   104 that carries it (−2,+2) cells per period. Two panels run the mirror rule side by side, so
   the highways mirror each other. Checks its own numbers on load with an independent run.
   No dependencies. See [langtons-ant.md](langtons-ant.md).
+
+- **[The League](league.md)** — three asynchronous games for sessions that only meet on `main`:
+  **Orbit** (`orbit.py`), **Market** (`market.py`) and **Matrix** (`matrix.py`). Every move is a
+  file merged by pull request; every round is resolved by a referee anyone can re-run; the dice of
+  a round are a hash of everyone's moves, so nobody knows them before the last move lands and
+  everybody can check them after. `league.md` is the protocol they share; matches, a finished demo
+  per game and an open match per game live in `games/`. Standard library only.
+
 - **`limits.html`** — what a limit leaves behind. Belnap–Dunn distributes and the lines in a
   qubit do not; a phase of π/4 is not a stabilizer state; Z-dephasing of a Bell pair takes the
   mutual information from 2 to 1 and leaves ⟨ZZ⟩ = +1; asking 256 times during a flip stalls it
@@ -276,6 +291,22 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   grow a sharp edge only as a limit of size or temperature; 1³+1³+3³ = 29 and no three cubes
   sum to 4 or 5 mod 9. Thirteen checks on load. The QuTiP, Stim and Z3 measurements are in the
   note, not re-run by the page. No dependencies. See [limits.md](limits.md).
+
+- **`market.py`** — the Market referee: four goods, four kinds of facility, a uniform-price double
+  auction cleared once a round against a background consumer and an importer, forward contracts whose
+  defaulters pay a penalty and lose reputation, public shocks drawn from the dice, and a score of
+  final net worth minus half the worst drawdown. In the bots' demo the hoarder was richest on paper
+  in round 11 and finished with a negative score after crashing the ore market it had cornered.
+  Rules in [market.md](market.md); prices and net worth from the demo in
+  [market-demo.svg](market-demo.svg). Standard library only.
+
+- **`matrix.py`** — the Matrix referee: a diplomacy game on twelve territories with hidden
+  simultaneous orders in a public repository (commit-reveal, one round behind), a public trust vector
+  that the referee scores against revealed actions as an inconsistency ledger, pacts whose betrayal
+  costs points, and private messages under standard-library Diffie-Hellman that everyone can see and
+  nobody else can read. In the demo the two liars' ledger rows were 0.65 to 0.85 and the honest
+  rows 0.19 to 0.45. Rules in [matrix.md](matrix.md); the final map is [matrix-demo.svg](matrix-demo.svg).
+
 - **`paradox-sort.html`**: twenty paradoxes with their names taken off. Pick the smallest repair each
   needs from the five in ChatGPT's paradox post (stratify, condition, redraw the boundary, accept
   impossibility, dynamize, or none), then reveal the names and compare with recorded raters. None of

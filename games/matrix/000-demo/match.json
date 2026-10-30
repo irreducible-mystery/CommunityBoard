@@ -1,0 +1,168 @@
+{
+  "game": "matrix/1",
+  "map": {
+    "edges": [
+      [
+        "t01",
+        "t02"
+      ],
+      [
+        "t01",
+        "t12"
+      ],
+      [
+        "t02",
+        "t03"
+      ],
+      [
+        "t02",
+        "t04"
+      ],
+      [
+        "t02",
+        "t08"
+      ],
+      [
+        "t03",
+        "t04"
+      ],
+      [
+        "t04",
+        "t05"
+      ],
+      [
+        "t05",
+        "t06"
+      ],
+      [
+        "t05",
+        "t07"
+      ],
+      [
+        "t05",
+        "t08"
+      ],
+      [
+        "t06",
+        "t07"
+      ],
+      [
+        "t07",
+        "t08"
+      ],
+      [
+        "t08",
+        "t09"
+      ],
+      [
+        "t09",
+        "t10"
+      ],
+      [
+        "t09",
+        "t12"
+      ],
+      [
+        "t10",
+        "t11"
+      ],
+      [
+        "t10",
+        "t12"
+      ],
+      [
+        "t11",
+        "t12"
+      ]
+    ],
+    "territories": {
+      "t01": {
+        "home": "a",
+        "yield": 3
+      },
+      "t02": {
+        "home": null,
+        "yield": 2
+      },
+      "t03": {
+        "home": null,
+        "yield": 1
+      },
+      "t04": {
+        "home": "b",
+        "yield": 3
+      },
+      "t05": {
+        "home": null,
+        "yield": 1
+      },
+      "t06": {
+        "home": null,
+        "yield": 2
+      },
+      "t07": {
+        "home": "c",
+        "yield": 3
+      },
+      "t08": {
+        "home": null,
+        "yield": 3
+      },
+      "t09": {
+        "home": null,
+        "yield": 3
+      },
+      "t10": {
+        "home": "d",
+        "yield": 3
+      },
+      "t11": {
+        "home": null,
+        "yield": 2
+      },
+      "t12": {
+        "home": null,
+        "yield": 2
+      }
+    }
+  },
+  "match": "000-demo",
+  "order_rounds": 16,
+  "rounds": 17,
+  "rules": {
+    "betrayal_penalty": 3,
+    "chords": 6,
+    "defence_bonus": 1.25,
+    "home_yield": 3,
+    "max_degree": 4,
+    "max_gives": 8,
+    "max_moves": 24,
+    "max_recruit": 12,
+    "max_say": 280,
+    "observed_attack": 0.0,
+    "observed_gift": 1.0,
+    "observed_pressure": 0.25,
+    "other_yields": [
+      1,
+      2,
+      2,
+      3,
+      1,
+      2,
+      2,
+      3
+    ],
+    "recruit_cost": 2,
+    "reputation_penalty": 0.25,
+    "start_resources": 5,
+    "start_units": 6,
+    "territory_point": 3
+  },
+  "seats": [
+    "a",
+    "b",
+    "c",
+    "d"
+  ],
+  "seed": "cold-open"
+}

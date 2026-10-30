@@ -1,0 +1,315 @@
+{
+  "absent": [],
+  "builds": {},
+  "contracts": {
+    "accepted": [],
+    "expired": [],
+    "rejected": []
+  },
+  "defaults": [],
+  "deliveries": [],
+  "dice": [
+    0.446804438,
+    0.155444053,
+    0.678168699
+  ],
+  "drawdown": {
+    "hoarder-3": 813.6,
+    "merchant-1": 26.92,
+    "merchant-2": 27.13,
+    "merchant-4": 27.89
+  },
+  "events": [],
+  "final": false,
+  "game": "market/1",
+  "invalid": {},
+  "joined": [],
+  "match": "000-demo",
+  "moved": [
+    "hoarder-3",
+    "merchant-1",
+    "merchant-2",
+    "merchant-4"
+  ],
+  "net_worth": {
+    "hoarder-3": 325.01,
+    "merchant-1": 1782.05,
+    "merchant-2": 1786.44,
+    "merchant-4": 1770.92
+  },
+  "offers": [
+    {
+      "deliver": "parts",
+      "due": 20,
+      "id": "merchant-1-2",
+      "offered": 18,
+      "price": 19.41,
+      "qty": 4,
+      "seller": "merchant-1"
+    },
+    {
+      "deliver": "parts",
+      "due": 20,
+      "id": "merchant-2-2",
+      "offered": 18,
+      "price": 19.41,
+      "qty": 4,
+      "seller": "merchant-2"
+    },
+    {
+      "deliver": "parts",
+      "due": 20,
+      "id": "merchant-4-2",
+      "offered": 18,
+      "price": 19.41,
+      "qty": 4,
+      "seller": "merchant-4"
+    }
+  ],
+  "opex": {
+    "hoarder-3": 40.0,
+    "merchant-1": 50.0,
+    "merchant-2": 50.0,
+    "merchant-4": 50.0
+  },
+  "pools": {
+    "fuel": 2095,
+    "ore": 3000
+  },
+  "prices": {
+    "fuel": {
+      "ask_qty": 3,
+      "bid_qty": 19,
+      "consumers_bought": 3,
+      "demand": 19,
+      "imports_sold": 0,
+      "price": 9.73,
+      "volume": 3
+    },
+    "grain": {
+      "ask_qty": 15,
+      "bid_qty": 50,
+      "consumers_bought": 15,
+      "demand": 50,
+      "imports_sold": 0,
+      "price": 3.36,
+      "volume": 15
+    },
+    "ore": {
+      "ask_qty": 76,
+      "bid_qty": 31,
+      "consumers_bought": 25,
+      "demand": 25,
+      "imports_sold": 0,
+      "price": 0.37,
+      "volume": 31
+    },
+    "parts": {
+      "ask_qty": 34,
+      "bid_qty": 15,
+      "consumers_bought": 13,
+      "demand": 15,
+      "imports_sold": 0,
+      "price": 17.63,
+      "volume": 13
+    }
+  },
+  "production": {
+    "hoarder-3": {
+      "idle": {
+        "mine": 4
+      },
+      "made": {},
+      "ran": {
+        "mine": 0
+      },
+      "used": {}
+    },
+    "merchant-1": {
+      "idle": {
+        "factory": 0,
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "made": {
+        "fuel": 5,
+        "grain": 8,
+        "ore": 6,
+        "parts": 4
+      },
+      "ran": {
+        "factory": 1,
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "used": {
+        "fuel": 4,
+        "grain": 3,
+        "ore": 8
+      }
+    },
+    "merchant-2": {
+      "idle": {
+        "factory": 0,
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "made": {
+        "fuel": 5,
+        "grain": 8,
+        "ore": 6,
+        "parts": 4
+      },
+      "ran": {
+        "factory": 1,
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "used": {
+        "fuel": 4,
+        "grain": 3,
+        "ore": 8
+      }
+    },
+    "merchant-4": {
+      "idle": {
+        "factory": 0,
+        "farm": 0,
+        "mine": 0,
+        "well": 0
+      },
+      "made": {
+        "fuel": 5,
+        "grain": 8,
+        "ore": 6,
+        "parts": 4
+      },
+      "ran": {
+        "factory": 1,
+        "farm": 1,
+        "mine": 1,
+        "well": 1
+      },
+      "used": {
+        "fuel": 4,
+        "grain": 3,
+        "ore": 8
+      }
+    }
+  },
+  "round": 18,
+  "scores": {
+    "hoarder-3": -81.79,
+    "merchant-1": 1768.59,
+    "merchant-2": 1772.87,
+    "merchant-4": 1756.97
+  },
+  "season": 1.25,
+  "seed": "4f6b44152c52f0b00999634066d83c9b52228d2a73ff6a6b4cd1bbd76188b5ec",
+  "standings": [
+    {
+      "drawdown": 27.13,
+      "net_worth": 1786.44,
+      "player": "merchant-2",
+      "score": 1772.87
+    },
+    {
+      "drawdown": 26.92,
+      "net_worth": 1782.05,
+      "player": "merchant-1",
+      "score": 1768.59
+    },
+    {
+      "drawdown": 27.89,
+      "net_worth": 1770.92,
+      "player": "merchant-4",
+      "score": 1756.97
+    },
+    {
+      "drawdown": 813.6,
+      "net_worth": 325.01,
+      "player": "hoarder-3",
+      "score": -81.79
+    }
+  ],
+  "trades": {
+    "hoarder-3": {
+      "ore": {
+        "at": 0.37,
+        "bought": 0,
+        "sold": 31
+      }
+    },
+    "merchant-1": {
+      "fuel": {
+        "at": 9.73,
+        "bought": 0,
+        "sold": 1
+      },
+      "grain": {
+        "at": 3.36,
+        "bought": 0,
+        "sold": 5
+      },
+      "ore": {
+        "at": 0.37,
+        "bought": 2,
+        "sold": 0
+      },
+      "parts": {
+        "at": 17.63,
+        "bought": 0,
+        "sold": 5
+      }
+    },
+    "merchant-2": {
+      "fuel": {
+        "at": 9.73,
+        "bought": 0,
+        "sold": 1
+      },
+      "grain": {
+        "at": 3.36,
+        "bought": 0,
+        "sold": 5
+      },
+      "ore": {
+        "at": 0.37,
+        "bought": 2,
+        "sold": 0
+      },
+      "parts": {
+        "at": 17.63,
+        "bought": 0,
+        "sold": 4
+      }
+    },
+    "merchant-4": {
+      "fuel": {
+        "at": 9.73,
+        "bought": 0,
+        "sold": 1
+      },
+      "grain": {
+        "at": 3.36,
+        "bought": 0,
+        "sold": 5
+      },
+      "ore": {
+        "at": 0.37,
+        "bought": 2,
+        "sold": 0
+      },
+      "parts": {
+        "at": 17.63,
+        "bought": 0,
+        "sold": 4
+      }
+    }
+  },
+  "waiting": []
+}

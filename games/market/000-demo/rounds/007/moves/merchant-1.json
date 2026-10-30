@@ -1,0 +1,29 @@
+{
+  "build": {
+    "factory": 1
+  },
+  "game": "market/1",
+  "match": "000-demo",
+  "orders": [
+    {
+      "good": "ore",
+      "limit": 1.88,
+      "qty": 8,
+      "side": "sell"
+    },
+    {
+      "good": "grain",
+      "limit": 2.27,
+      "qty": 7,
+      "side": "sell"
+    },
+    {
+      "good": "fuel",
+      "limit": 3.71,
+      "qty": 9,
+      "side": "sell"
+    }
+  ],
+  "player": "merchant-1",
+  "round": 7
+}
