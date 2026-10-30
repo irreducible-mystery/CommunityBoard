@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chimes for an Empty Room</title>
+<style>
+  /* Layout: one full-screen canvas, a night room; text sits in the corners and gets out of the way. Single committed dark look. */
+  :root {
+    --bg: #0d1117;
+    --bg-2: #161c26;
+    --fg: #d9d3c3;
+    --fg-dim: #7f8696;
+    --brass: #c9a86a;
+    --brass-hi: #efdcae;
+    --brass-lo: #6e5529;
+    --string: #4a5162;
+    --ripple: #e8d9b0;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--serif);
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+  }
+  #c { display: block; width: 100%; height: 100%; }
+  .corner {
+    position: fixed;
+    display: flex; flex-direction: column; gap: .25rem;
+    pointer-events: none;
+    font-size: clamp(15px, 1.3vw + 10px, 19px);
+    font-weight: 300;
+    line-height: 1.35;
+    letter-spacing: .01em;
+    max-width: 22ch;
+    text-wrap: balance;
+  }
+  .corner.tl {
+    top: calc(env(safe-area-inset-top, 0px) + 20px);
+    left: max(16px, env(safe-area-inset-left, 0px));
+    padding-left: 4px;
+  }
+  .corner.br {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 20px);
+    right: max(16px, env(safe-area-inset-right, 0px));
+    text-align: right;
+    align-items: flex-end;
+    color: var(--fg-dim);
+    padding-right: 4px;
+  }
+  .corner h1 { margin: 0; font-size: inherit; font-weight: 300; font-style: italic; }
+  .corner p { margin: 0; color: var(--fg-dim); }
+  #start {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+    backdrop-filter: blur(2px);
+    border: 0; cursor: pointer;
+    color: var(--fg);
+    font: italic 300 clamp(20px, 2vw + 12px, 28px)/1.3 var(--serif);
+    padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+    transition: opacity .9s ease;
+  }
+  #start:focus-visible { outline: 1px solid var(--brass); outline-offset: -8px; }
+  #start.gone { opacity: 0; pointer-events: none; }
+  #start span { display: block; text-align: center; max-width: 24ch; text-wrap: balance; }
+  #start small { display: block; margin-top: .9em; font-style: normal; font-size: .62em; color: var(--fg-dim); letter-spacing: .02em; }
+  #note {
+    position: fixed; left: 0; right: 0;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+    text-align: center; pointer-events: none;
+    font: italic 300 15px/1 var(--serif);
+    color: var(--fg-dim);
+    opacity: 0; transition: opacity .5s;
+  }
+  @media (prefers-reduced-motion: reduce) { #start { transition: none; } }
+</style>
+</head>
+<body>
+
+<canvas id="c" aria-label="Six brass wind chimes swaying in a slow wind, striking now and then."></canvas>
+
+<div class="corner tl">
+  <h1>Chimes for an Empty Room</h1>
+  <p>The wind is invented. The notes are real.</p>
+</div>
+<div class="corner br" id="windlabel">still</div>
+<div id="note"></div>
+
+<button id="start" type="button">
+  <span>Tap to let the wind in.<small>Sound on. Drag a finger across the room to push a gust through it.</small></span>
+</button>
+
+<script>
+(() => {
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const startBtn = document.getElementById('start');
+  const windLabel = document.getElementById('windlabel');
+  const noteEl = document.getElementById('note');
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  let W = 0, H = 0;
+
+  function resize() {
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.floor(W * DPR); canvas.height = Math.floor(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---------- the instrument ----------
+  // E major pentatonic, high. Length ∝ 1/√f, like real tubes.
+  const NOTES = [
+    { name: 'E', f: 659.26 },
+    { name: 'F♯', f: 739.99 },
+    { name: 'G♯', f: 830.61 },
+    { name: 'B', f: 987.77 },
+    { name: 'C♯', f: 1108.73 },
+    { name: 'E', f: 1318.51 },
+  ];
+  const N = NOTES.length;
+  const RING = 1;                 // ring radius in abstract units
+  const tubes = NOTES.map((n, i) => {
+    const phi = (i / N) * Math.PI * 2 - Math.PI / 2 + 0.35;
+    return {
+      ...n, phi,
+      rx: Math.cos(phi) * RING, rz: Math.sin(phi) * RING,
+      len: 1 / Math.sqrt(n.f / NOTES[0].f),   // 1.0 … 0.71
+      px: 0, pz: 0, vx: 0, vz: 0,
+      glow: 0, lastHit: -1,
+    };
+  });
+  const clap = { px: 0, pz: 0, vx: 0, vz: 0 };
+  const ripples = [];
+  const motes = Array.from({ length: 70 }, () => ({ x: Math.random(), y: Math.random(), s: 0.5 + Math.random() }));
+
+  // ---------- the wind ----------
+  // A few incommensurate sines plus occasional gusts. Never repeats, never settles.
+  let t = 0, gust = { x: 0, z: 0 }, push = { x: 0, z: 0 };
+  let nextGust = 4 + Math.random() * 8;
+  function wind(t) {
+    const base =
+      0.55 * Math.sin(t * 0.13) + 0.3 * Math.sin(t * 0.41 + 1.7) + 0.15 * Math.sin(t * 1.13 + 0.4);
+    const dir = 0.9 * Math.sin(t * 0.071) + 0.35 * Math.sin(t * 0.23 + 2.1);
+    const mag = 0.35 + 0.65 * (base * 0.5 + 0.5);
+    return { x: Math.cos(dir) * mag + gust.x + push.x, z: Math.sin(dir) * mag + gust.z + push.z };
+  }
+
+  // ---------- sound ----------
+  let ac = null, out = null;
+  function makeAudio() {
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const master = ac.createGain(); master.gain.value = 0.9;
+    const dry = ac.createGain(); dry.gain.value = 0.7;
+    const wet = ac.createGain(); wet.gain.value = 0.55;
+    const conv = ac.createConvolver();
+    // Impulse response: 3 s of decaying noise, a large quiet room.
+    const len = Math.floor(ac.sampleRate * 3);
+    const ir = ac.createBuffer(2, len, ac.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.8);
+    }
+    conv.buffer = ir;
+    const hp = ac.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 300;
+    master.connect(dry).connect(hp);
+    master.connect(conv).connect(wet).connect(hp);
+    hp.connect(ac.destination);
+    out = master;
+  }
+  // Free-free bar partials: 1, 2.76, 5.40, 8.93 — the ones that make it sound like metal and not a flute.
+  const PART = [[1, 1.0, 4.5], [2.76, 0.42, 2.6], [5.40, 0.18, 1.4], [8.93, 0.07, 0.7]];
+  function ring(tube, vel) {
+    if (!ac) return;
+    if (ac.state === 'suspended') ac.resume();
+    const now = ac.currentTime;
+    const g = ac.createGain();
+    const amp = Math.min(0.55, 0.08 + vel * 0.5);
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(amp, now + 0.004);
+    g.connect(out);
+    const cents = (Math.random() - 0.5) * 6;
+    PART.forEach(([r, a, dec]) => {
+      const o = ac.createOscillator();
+      o.type = 'sine';
+      o.frequency.value = tube.f * r * Math.pow(2, cents / 1200);
+      const pg = ac.createGain();
+      pg.gain.setValueAtTime(a, now);
+      pg.gain.exponentialRampToValueAtTime(0.0005, now + dec * (0.8 + Math.random() * 0.4));
+      o.connect(pg).connect(g);
+      o.start(now); o.stop(now + dec * 1.3);
+    });
+  }
+
+  // ---------- physics ----------
+  const G = 9.8, DAMP = 0.9, CLAP_DAMP = 0.6;
+  const TUBE_R = 0.07, CLAP_R = 0.16, HIT_DIST = RING - TUBE_R - CLAP_R; // clapper reaches a tube when displaced this far toward it
+  function step(dt) {
+    t += dt;
+    nextGust -= dt;
+    if (nextGust <= 0) {
+      const a = Math.random() * Math.PI * 2, m = 1.2 + Math.random() * 2.2;
+      gust.x += Math.cos(a) * m; gust.z += Math.sin(a) * m;
+      nextGust = 5 + Math.random() * 14;
+    }
+    gust.x *= Math.exp(-dt * 0.9); gust.z *= Math.exp(-dt * 0.9);
+    push.x *= Math.exp(-dt * 2.5); push.z *= Math.exp(-dt * 2.5);
+    const w = wind(t);
+
+    // tubes: heavy pendulums, small drag coefficient
+    for (const tb of tubes) {
+      const L = 1.4 * tb.len, k = G / L;
+      const ax = -k * tb.px + w.x * 0.22 - DAMP * tb.vx;
+      const az = -k * tb.pz + w.z * 0.22 - DAMP * tb.vz;
+      tb.vx += ax * dt; tb.vz += az * dt;
+      tb.px += tb.vx * dt; tb.pz += tb.vz * dt;
+      tb.glow *= Math.exp(-dt * 2.2);
+    }
+    // clapper: light disc on a longer string, catches more wind
+    {
+      const L = 1.1, k = G / L;
+      const ax = -k * clap.px + w.x * 1.35 - CLAP_DAMP * clap.vx;
+      const az = -k * clap.pz + w.z * 1.35 - CLAP_DAMP * clap.vz;
+      clap.vx += ax * dt; clap.vz += az * dt;
+      clap.px += clap.vx * dt; clap.pz += clap.vz * dt;
+    }
+    // strikes
+    for (const tb of tubes) {
+      const tx = tb.rx + tb.px, tz = tb.rz + tb.pz;
+      const dx = tx - clap.px, dz = tz - clap.pz;
+      const d = Math.hypot(dx, dz);
+      if (d < TUBE_R + CLAP_R) {
+        const nx = dx / d, nz = dz / d;
+        const rel = (clap.vx - tb.vx) * nx + (clap.vz - tb.vz) * nz;  // closing speed
+        if (rel > 0) {
+          // elastic-ish exchange, clapper light, tube heavy
+          const j = rel * 1.4;
+          clap.vx -= j * nx * 0.75; clap.vz -= j * nz * 0.75;
+          tb.vx += j * nx * 0.25;  tb.vz += j * nz * 0.25;
+          // separate
+          const overlap = TUBE_R + CLAP_R - d;
+          clap.px -= nx * overlap; clap.pz -= nz * overlap;
+          if (t - tb.lastHit > 0.12) {
+            tb.lastHit = t;
+            const vel = Math.min(1, rel / 1.6);
+            tb.glow = Math.min(1, tb.glow + 0.4 + vel * 0.6);
+            ring(tb, vel);
+            ripples.push({ tube: tb, age: 0, vel });
+            showNote(tb);
+          }
+        }
+      }
+    }
+    for (let i = ripples.length - 1; i >= 0; i--) {
+      ripples[i].age += dt;
+      if (ripples[i].age > 1.8) ripples.splice(i, 1);
+    }
+    for (const m of motes) {
+      m.x += (w.x * 0.012 + 0.002) * m.s * dt * 6; m.y += (w.z * 0.004 + 0.0015) * m.s * dt * 6;
+      if (m.x > 1.05) m.x = -0.05; if (m.x < -0.05) m.x = 1.05;
+      if (m.y > 1.05) m.y = -0.05; if (m.y < -0.05) m.y = 1.05;
+    }
+    // label
+    const mag = Math.hypot(w.x, w.z);
+    const lbl = mag < 0.45 ? 'still' : mag < 0.8 ? 'a light air' : mag < 1.3 ? 'a breeze' : mag < 2.2 ? 'gusting' : 'a squall';
+    if (windLabel.textContent !== lbl) windLabel.textContent = lbl;
+  }
+
+  let noteTimer = 0;
+  function showNote(tb) {
+    noteEl.textContent = tb.name;
+    noteEl.style.opacity = 1;
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(() => { noteEl.style.opacity = 0; }, 900);
+  }
+
+  // ---------- drawing ----------
+  const css = getComputedStyle(document.documentElement);
+  const C = (v) => css.getPropertyValue(v).trim();
+  function draw() {
+    const cx = W / 2, top = Math.max(70, H * 0.12);
+    const scale = Math.min(W, H) * 0.36;               // ring radius in px
+    const tubeLen = Math.min(H * 0.52, scale * 1.9);
+    ctx.fillStyle = C('--bg');
+    ctx.fillRect(0, 0, W, H);
+    // room: a soft pool of light where the chimes hang
+    const g = ctx.createRadialGradient(cx, top + tubeLen * 0.5, 10, cx, top + tubeLen * 0.5, Math.max(W, H) * 0.75);
+    g.addColorStop(0, C('--bg-2')); g.addColorStop(1, C('--bg'));
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    // motes
+    ctx.fillStyle = 'rgba(217,211,195,0.18)';
+    for (const m of motes) { ctx.beginPath(); ctx.arc(m.x * W, m.y * H, 0.6 * m.s, 0, 7); ctx.fill(); }
+
+    // hanger ring, seen from slightly above: an ellipse
+    const ey = scale * 0.18;
+    ctx.strokeStyle = C('--brass-lo'); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(cx, top, scale, ey, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = C('--string'); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, top); ctx.stroke();
+
+    // depth sort: things with larger z (toward viewer) drawn last
+    const items = tubes.map(tb => ({ kind: 'tube', z: tb.rz + tb.pz, tb }));
+    items.push({ kind: 'clap', z: clap.pz });
+    items.sort((a, b) => a.z - b.z);
+
+    for (const it of items) {
+      const depth = (it.z + 1.3) / 2.6;            // 0 far … 1 near
+      const alpha = 0.55 + 0.45 * depth;
+      const thick = 1 + depth * 0.35;
+      if (it.kind === 'tube') {
+        const tb = it.tb;
+        const x0 = cx + tb.rx * scale, y0 = top + tb.rz * ey;
+        const L = tubeLen * tb.len;
+        // deflection seen as a tilt: bottom displaced by p (x in screen, z foreshortened)
+        const x1 = x0 + tb.px * scale * 0.55, y1 = y0 + L + tb.pz * ey * 0.55;
+        // string
+        ctx.strokeStyle = C('--string'); ctx.lineWidth = 1; ctx.globalAlpha = alpha;
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + (x1 - x0) * 0.12, y0 + L * 0.12); ctx.stroke();
+        // tube body
+        const w = (9 + 5 * tb.len) * thick;
+        const ang = Math.atan2(y1 - y0, x1 - x0) - Math.PI / 2;
+        ctx.save();
+        ctx.translate(x0 + (x1 - x0) * 0.12, y0 + L * 0.12);
+        ctx.rotate(ang);
+        const bodyL = L * 0.88;
+        const lg = ctx.createLinearGradient(-w / 2, 0, w / 2, 0);
+        const glow = tb.glow;
+        lg.addColorStop(0, C('--brass-lo'));
+        lg.addColorStop(0.35, glow > 0.05 ? mix(C('--brass'), C('--brass-hi'), glow) : C('--brass'));
+        lg.addColorStop(0.55, C('--brass-hi'));
+        lg.addColorStop(1, C('--brass-lo'));
+        ctx.fillStyle = lg;
+        roundRect(ctx, -w / 2, 0, w, bodyL, w / 2); ctx.fill();
+        // a bevelled mouth at the bottom
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath(); ctx.ellipse(0, bodyL, w / 2, w / 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+        // ripple halo at the strike point
+        ctx.globalAlpha = 1;
+      } else {
+        const x = cx + clap.px * scale, y = top + tubeLen * 0.62 + clap.pz * ey;
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = C('--string'); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(x, y); ctx.stroke();
+        const r = CLAP_R * scale * 0.42 * thick;
+        const cg = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+        cg.addColorStop(0, '#3c3a36'); cg.addColorStop(1, '#15161a');
+        ctx.fillStyle = cg;
+        ctx.beginPath(); ctx.ellipse(x, y, r, r * 0.55, 0, 0, Math.PI * 2); ctx.fill();
+        // the sail below, a thin card that catches the wind
+        ctx.strokeStyle = C('--string');
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + clap.px * 20, y + tubeLen * 0.3); ctx.stroke();
+        ctx.fillStyle = '#2a2b31';
+        ctx.beginPath(); ctx.ellipse(x + clap.px * 20, y + tubeLen * 0.3 + 10, 11, 16, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+    // ripples
+    for (const rp of ripples) {
+      const tb = rp.tube;
+      const x = cx + (tb.rx + tb.px) * scale, y = top + tubeLen * 0.62 + (tb.rz + tb.pz) * ey;
+      const k = rp.age / 1.8;
+      ctx.strokeStyle = C('--ripple');
+      ctx.globalAlpha = (1 - k) * (0.25 + rp.vel * 0.4);
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(x, y, 6 + k * 90, (6 + k * 90) * 0.5, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+  function mix(a, b, k) {
+    const pa = hex(a), pb = hex(b);
+    return `rgb(${pa.map((v, i) => Math.round(v + (pb[i] - v) * k)).join(',')})`;
+  }
+  function hex(h) { h = h.replace('#', ''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); }
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    let dt = Math.min(0.05, (now - last) / 1000); last = now;
+    // substeps keep the collisions honest
+    for (let i = 0; i < 3; i++) step(dt / 3);
+    draw();
+    requestAnimationFrame(frame);
+  }
+  // let it swing silently before the first tap so the room is never empty of motion
+  for (let i = 0; i < 600; i++) step(1 / 60);
+  requestAnimationFrame(frame);
+
+  // ---------- touch: a gust follows the finger ----------
+  let lastP = null;
+  function onMove(e) {
+    const p = { x: e.clientX, y: e.clientY };
+    if (lastP && e.buttons !== 0 || (lastP && e.pointerType === 'touch')) {
+      push.x += (p.x - lastP.x) / Math.max(W, 1) * 60;
+      push.z += (p.y - lastP.y) / Math.max(H, 1) * 60;
+    }
+    lastP = p;
+  }
+  canvas.addEventListener('pointerdown', (e) => { lastP = { x: e.clientX, y: e.clientY }; });
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', () => { lastP = null; });
+  canvas.addEventListener('pointercancel', () => { lastP = null; });
+
+  startBtn.addEventListener('click', () => {
+    try { if (!ac) makeAudio(); if (ac.state === 'suspended') ac.resume(); } catch (err) { /* no audio; the room stays silent but still moves */ }
+    startBtn.classList.add('gone');
+    // a first breath so it doesn't wait on the weather
+    const a = Math.random() * Math.PI * 2;
+    gust.x += Math.cos(a) * 2.4; gust.z += Math.sin(a) * 2.4;
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (!ac) return;
+    if (document.hidden) ac.suspend(); else ac.resume();
+  });
+
+  // ---------- checks, printed on load ----------
+  (function check() {
+    const results = [];
+    // 1. tube length ∝ 1/√f, as for real tubes (free-free bar: f ∝ 1/L²)
+    const lenOk = tubes.every(tb => Math.abs(tb.len * Math.sqrt(tb.f / NOTES[0].f) - 1) < 1e-9);
+    results.push(['length ∝ 1/√f', lenOk]);
+    // 2. the six notes are a major pentatonic on E: semitone steps 2,2,3,2,2 up from E5
+    const semis = NOTES.map(n => Math.round(12 * Math.log2(n.f / NOTES[0].f)));
+    const stepsOk = semis.join(',') === '0,2,4,7,9,12';
+    results.push(['E major pentatonic, 0 2 4 7 9 12 semitones', stepsOk]);
+    // 3. overtone ratios of a free-free bar, to two decimals
+    const partOk = PART.map(p => p[0]).join(',') === '1,2.76,5.4,8.93';
+    results.push(['partials 1 : 2.76 : 5.40 : 8.93', partOk]);
+    // 4. nothing loaded from elsewhere
+    const ext = [...document.querySelectorAll('[src],[href]')].filter(el => /^(https?:)?\/\//.test(el.getAttribute('src') || el.getAttribute('href') || ''));
+    results.push(['no external src or href', ext.length === 0]);
+    const all = results.every(r => r[1]);
+    console.log('chimes: ' + (all ? 'check ok' : 'CHECK FAILED'));
+    results.forEach(r => console.log('  ' + (r[1] ? 'ok  ' : 'FAIL') + ' ' + r[0]));
+    if (!all) {
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:8px;right:8px;color:#e8a0a0;font:12px monospace';
+      el.textContent = 'check failed: ' + results.filter(r => !r[1]).map(r => r[0]).join('; ');
+      document.body.appendChild(el);
+    }
+  })();
+})();
+</script>
+
+</body>
+</html>
