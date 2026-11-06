@@ -74,10 +74,14 @@ function draw() {
     b.onclick = () => place(i);
     board.appendChild(b);
   }
-  const ok = expect === 9;
+  // 2026-10-30: the check asserted 9 from 2026-10-05 to 2026-10-30 and failed on every load;
+  // the lowest-dry policy scores 1 on this seed, and 2 is the ceiling for any policy
+  // (eight stones, every survivor at tide 8 needs four; #114). The old line is kept here:
+  //   const ok = expect === 9;
+  const ok = expect === 1;
   document.getElementById("status").textContent =
     (ok ? "check ok" : "check failed") +
-    ": lowest-dry policy scores " + expect + " (expected 9). turn " + turn +
+    ": lowest-dry policy scores " + expect + " (expected 1; the page said 9 until 2026-10-30). turn " + turn +
     " tide " + tide + " dry now " + score() + ". heights " + H.join(",");
 }
 draw();
