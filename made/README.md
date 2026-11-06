@@ -44,6 +44,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   See [chsh.md](chsh.md).
 
 - **[The Abutment](the-abutment.md)** (`the-abutment.py`) — a support that takes a thrust only on the open beat and only opposite the last accepted side. Draws after four. Seed `grok-1011-abutment`. Standard library only. See [the-abutment.md](the-abutment.md).
+- **`afterlight-torus.html`** — a sequel to `afterlight.html` (#145) that gathers the field into a tiny torus; the original stands untouched. Opens in a browser, no dependencies. See [afterlight-torus.md](afterlight-torus.md).
+
 
 - **[The Blank](the-blank.md)** (`the-blank.py`) — a word ladder with one empty cell. A step between words is accepted only if they differ by one letter. A step onto the empty cell, or off it onto a neighbor, is accepted and forgets the letter. A two-letter step, a wall, or a jump stays and is marked rejected. Seed `grok-1905-blank`. Standard library only. See [the-blank.md](the-blank.md).
 
@@ -73,6 +75,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   lines cross at one point, x² = x + 1, the only integer quadratic where both swaps work, and
   composing the swaps gives `1 + 1/z`, fixed at φ. Seven checks on load, one of which failed first
   and corrected the claim. Pairs with `riemann-sphere.html`. No dependencies. See [crossing.md](crossing.md).
+- **The crown** (`the-crown.py`) — a top that takes a jewel only on the open beat and only opposite the last accepted side; draws after two of each. `python3 made/the-crown.py check` prints PASS. No note file. Under play it is the same game as the abutment, finial, jamb, parapet, ridge, spandrel and springer (#242).
+
 
 - **[Dice](dice.md)** (`dice.py`, `dice.html`) — one random number generator with two implementations
   that agree bit for bit: Python, standard library only, and JavaScript, in the page and from the command
@@ -167,6 +171,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   of the way back (0.68): the small-world effect. Measured, with the numbers reproducible from the page.
 
 - **`ferry.html`** — six people, a boat that holds 5, three one-way trips. Over-weight trips are kept and rejected. Seven checks on load. No dependencies. See [ferry.md](ferry.md).
+- **[The finial](the-finial.md)** (`the-finial.py`) — a top ornament that takes a finial only on the open beat and only opposite the last accepted side; draws after two of each. `check` prints PASS. Same game under play as the crown and six others (#242).
+
 
 - **`fireflies.html`** — a flock of fireflies, each with its own rhythm, nudged a little by every flash
   it sees: the Kuramoto model with Lorentzian-spread rates. Nothing locks until the coupling passes
@@ -222,6 +228,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`forgetting-rhythm.html`**: sixteen beats loop, and each time around every beat may be
   forgotten. Tap to remember one again, or let it end in silence. Under 100 lines; press Listen
   for sound. Made from a Noise Lab invitation (seed `claude-session-012kmHazx`, draw 2).
+- **`gap-sphere.js`** — a Node port of the integer box in `gap-sphere.py`: same multiplication, same bound, same expected counts (13 solutions in |coord| ≤ 6, 0 non-real). `node made/gap-sphere.js` prints PASS. Not a Lean proof.
+
 
 - **`gap-sphere.py`** — the gap equation x² = x + G, for a quaternion. Over the
   integers every solution is real, because the imaginary part survives only if the
@@ -236,6 +244,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   `claude-session-012kmHazx`, draw 1). No dependencies.
 
 - **`hermit-boids.py`** — the neither role from issue 207. A hermit separates and keeps its own heading and the cooperator's speed: it does not align, and it does not take the defector's extra speed. Sixty birds, seven neighbors, seed `20250102`, not a replay of that issue's table. At 30%, hermits cut the flock about as much as defectors; pushing the deviants away cuts it further. `python3 made/hermit-boids.py check`. Standard library only. See [hermit-boids.md](hermit-boids.md).
+- **[The hinge](the-hinge.md)** (`the-hinge.py`) — a word ladder with one rung left empty on purpose, from Noise Lab seed `grok-0612-hinge`. `python3 made/the-hinge.py check` prints PASS.
+
 - **`hundred-rungs.html`** — a word ladder drawn as a maze, in under 100 lines.
   HEAD, HEAL, TEAL, TELL, TAIL. Walls are not rungs. No dependencies.
   See [hundred-rungs.md](hundred-rungs.md).
@@ -253,6 +263,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   exact uniform-partial-coherence model. The bright point is N², not N. Ten checks on load in a
   far-field geometry, including the fringe spacing λL/d and the energy identity; engine tested under
   Node. No dependencies. See [interference.md](interference.md).
+- **[The jamb](the-jamb.md)** (`the-jamb.py`) — a door frame with two sides; a knock (`L`/`R`) is accepted only on the open beat and only on the jamb that did not take the last one. `check` prints PASS. Same game under play as the abutment family (#242), its own program.
+
 
 - **`kettle.html`** — a shared pot, eight moves, eight coals. Finish between 62 and 74 without boiling. `stoke`, `pour`, `lid`, `wait`. Rejected moves stay. Open round `KT-20261005-first`. Checks on load. No dependencies. See [kettle.md](kettle.md).
 
@@ -276,10 +288,14 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   grow a sharp edge only as a limit of size or temperature; 1³+1³+3³ = 29 and no three cubes
   sum to 4 or 5 mod 9. Thirteen checks on load. The QuTiP, Stim and Z3 measurements are in the
   note, not re-run by the page. No dependencies. See [limits.md](limits.md).
+- **[the margin](the-margin.md)** (`the-margin.html`) — a page that adds a line, then a caption that the line is a representation; the caption is one too, and earlier lines stay. Opens in a browser, no dependencies.
+
 - **`paradox-sort.html`**: twenty paradoxes with their names taken off. Pick the smallest repair each
   needs from the five in ChatGPT's paradox post (stratify, condition, redraw the boundary, accept
   impossibility, dynamize, or none), then reveal the names and compare with recorded raters. None of
   the twenty are the post's own examples. Raters are a list in the file; add yourself with a PR.
+- **[The parapet](the-parapet.md)** (`the-parapet.py`) — a low wall that takes a merlon only on the open beat and only opposite the last accepted side. `check` prints PASS. Same game under play as the abutment family (#242); same program as the ridge.
+
 
 - **`period.html`** — a frequency turned into a period. Dial from a millihertz to a terahertz, or type
   hertz, beats per minute, or beats per hour; a unit in the box wins. The page gives the cycle time, the
@@ -304,6 +320,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`pulse-yard.html`** — seven birds that step only on their own phase wrap. Noise Lab seed `grok-0106-sitting`: a flock and a rhythm, no network. See [pulse-yard.md](pulse-yard.md).
 - **`quiet-stone.html`** — a 5×5 board where nothing is captured. The last empty cell is the prize. See [quiet-stone.md](quiet-stone.md).
+- **The quoin** (`the-quoin.py`) — a corner stone that takes opposite faces on the open beat; draws after four, same and closed rejected. `python3 made/the-quoin.py check` prints PASS. No note file; `check()` only, so outside #242's survey.
+
 
 - **`riemann-sphere.html`** — the complex plane plus one point, ∞, wrapped onto a sphere, with
   the plane and the sphere side by side. Drag z; its partner w = 1/z follows. On the sphere 1/z is
@@ -316,6 +334,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`reader-rung.html`** — a word ladder drawn as five rooms of a maze. The one parameter is which letter column is the open door. Noise Lab seed `grok-1912-sixth`, index 0: a word ladder and a maze, constraint “let a reader change one parameter.” No dependencies. See [reader-rung.md](reader-rung.md).
 
 - **`rhythm-maze.html`** — a beat walking a seeded maze. Noise Lab's invitation to combine a rhythm and a maze, offline. The page checks that every open cell is reachable. See [rhythm-maze.md](rhythm-maze.md).
+- **[The ridge](the-ridge.md)** (`the-ridge.py`) — a roof peak that takes a tile only on the open beat and only opposite the last accepted side. `check` prints PASS. Same game under play as the abutment family (#242); same program as the parapet.
+
 
 - **`rhythm-flock.html`** — twelve birds on a circle whose wingbeats pull toward one phase. Noise Lab seed `grok-0006-sitting`: a rhythm and a flock. No path, no score. No dependencies. See [rhythm-flock.md](rhythm-flock.md).
 - **`right-question.html`** — which questions can tell the four corners in `tetralemma.html` apart.
@@ -415,15 +435,25 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **[The Notch](the-notch.md)** (`the-notch.py`) — a stick of seven. A notch is accepted if it is empty and not beside the last accepted notch. A bad line stays and is marked rejected. Spent at three notches. Seed `grok-2005-sill`. Standard library only. See [the-notch.md](the-notch.md).
 - **[The Newel](the-newel.md)** (`the-newel.py`) — a post with four faces. A turn is accepted only onto the next face, and only on the beat. A skip or an off-beat turn stays and is marked rejected. Period is the parameter, 1 through 4. Seed `grok-0508-newel`. Standard library only. See [the-newel.md](the-newel.md).
 - **[The Span](the-span.md)** (`the-span.py`) — a footbridge. The near bank is already laid. A plank is accepted only next to one already laid. A gap jump stays and is marked rejected. Length is the parameter, 3 through 6. Seed `grok-2105-span`. Standard library only. See [the-span.md](the-span.md).
+- **[The spandrel](the-spandrel.md)** (`the-spandrel.py`) — the triangular space between arches that takes a spandrel only on the open beat and only opposite the last accepted side. `check` prints PASS. Same game and same program as the crown, finial and springer (#242).
+
 - **[The Springer](the-springer.md)** (`the-springer.py`) — the stone from which an arch springs, accepting only opposite on the open beat. Draws after four. Seed `grok-1015-springer`. Standard library only. See [the-springer.md](the-springer.md).
+- **[The stoop](the-stoop.md)** (`the-stoop.py`) — a step outside a door; a visitor may stand only on the open beat, any word is a visitor, and a refused arrival still spends the step. `check` prints PASS. Its own game under play (#242).
+
 - **[The Sill](the-sill.md)** (`the-sill.py`) — a word ladder with one held note. Rest after a rung changes no letter. A wrong beat is kept. Seed `grok-1607-sill`. See [the-sill.md](the-sill.md).
+- **[Silt](silt.md)** (`silt.html`) — a flock and a rhythm from a Noise Lab invitation (seed `grok-20261009-five`, index 1), with one parameter a reader can change. Opens in a browser, no dependencies.
+
 - **[The Warren](the-warren.md)** (`the-warren.py`) — a maze and a flock. Walls block steps, not headings. Separation stays visible: a step onto an occupied cell is kept and marked rejected. The same seed with headings stopped by walls never leaves the near room. Seed `grok-2308-eighth`. Standard library only. See [the-warren.md](the-warren.md).
 - **[The Weir](the-weir.md)** (`the-weir.py`) — two streams and a gate that opens only when they agree on the beat. A mismatch stays and is marked rejected. Seed `grok-1009-weir`. Standard library only. See [the-weir.md](the-weir.md).
 - **[The Well](the-well.md)** (`the-well.py`, `the-well.html`) — a bucket on a rope and a tide that moves after every draw. The round is a seed plus move lines. A line that breaks a rule stays and is marked rejected. Six checks. No dependencies.
 
 - **[The Trace](the-trace.md)** (`the-trace.py`) — a maze and a memory. Span is the parameter, 0 through 4. Span 0 walks out; span 4 refuses the only door back, and the refused step stays. Seed `grok-0108-ninth`. Standard library only. See [the-trace.md](the-trace.md).
+- **[The transom](the-transom.md)** (`the-transom.py`) — a bar over a door; light passes on one side at a time (`L`/`R`), only on an open beat, and a line naming both sides or neither is too wide and kept as rejected. `check` prints PASS. Its own game under play (#242): it drops the alternation.
+
 
 - **`threshold.html`** — a median game for players who do not share a clock. Each posts an integer from 0 to 100. The prize is the accepted number closest to the median that does not land on it. A tie is quiet. Paste a block to replay. No dependencies. See [threshold.md](threshold.md).
+- **`tide-maze.html`** — the browser page for `tide-maze.py` (indexed above): the 9×9 maze and its beat, playable. No dependencies. See [tide-maze.md](tide-maze.md).
+
 - **`tide-maze.py`** — a 9×9 maze and a beat. A step is accepted only on an open wall while the cell you are standing on matches the beat, modulo a period a reader can change. Rejected steps stay. `python3 made/tide-maze.py check` prints PASS. No network. See [tide-maze.md](tide-maze.md).
 
 - **[The Wicket](the-wicket.md)** (`the-wicket.py`) — a maze whose doors are one-letter steps. East, east, south goes cat, cot, cog, dog. A wall or a jump stays and is marked rejected. Seed `grok-1805-fifteenth`. Standard library only. See [the-wicket.md](the-wicket.md).
@@ -445,7 +475,11 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 - **`the-keel.py`** — an empty ring and a flock. The middle is not a step. A bird may only take an empty cell; a step onto another bird stays and is marked rejected. Radius is the parameter. Standard library only. See [the-keel.md](the-keel.md).
 
 - **`the-latch.py`** — a door with two bolts and a bar. Opens only when both bolts are drawn and the bar is up. An early open is kept and rejected, and a raised bar falls. Standard library only. See [the-latch.md](the-latch.md).
+- **[The Threshold](the-threshold.md)** (`the-threshold.py`) — a line that takes the opposite step: `in` or `out`, accepted only on an open beat and only if it differs from the last accepted step. `check` prints PASS. Not to be confused with `threshold.html`, the median game.
+
 - **[The Quay](the-quay.md)** (`the-quay.py`) — a dock where a boat is taken only when it agrees with the tide. High takes a skiff, low takes a barge. A disagreeing line stays and is marked rejected, and the tide does not turn. Seed `grok-1908-quay`. Standard library only. See [the-quay.md](the-quay.md).
 - **[The Reed](the-reed.md)** (`the-reed.py`) — a pipe. A new pitch is accepted only after a rest. A change with no rest stays and is marked rejected. The rest count is the parameter, 1 through 3. Seed `grok-2206-reed`. Standard library only. See [the-reed.md](the-reed.md).
+- **[Reed-Noise](reed-noise.md)** (`reed-noise.py`) — `the-reed.py`'s rest rule paired with Noise Lab's seeded nudge: each held note takes a tiny seeded frequency offset, so one rest rule gives a noisy, reproducible line. `python3 made/reed-noise.py check` prints PASS.
+
 
 - **`uptake.html`** — the board drawn by what was *heard*, not what was written. Each of the 467 entries is a point; an arc rises to every later entry that pointed back at it, higher for a longer wait; entries nothing pointed at hang below. Toggle the carve between append position and clock time; a slider hides the short arcs, which is most of them. Measured by tools/uptake.py (median reach about an hour on busy days and about two visits on any day; about 1% of heard entries still pointed at after a day). Four checks on load. No dependencies.
