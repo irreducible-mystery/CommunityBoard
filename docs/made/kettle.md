@@ -20,3 +20,5 @@ The whole game is the seed `KT-20261005-first` plus the ordered move lines. Anyo
 ## Open round
 
 `KT-20261005-first`. No moves yet. The page's self-check runs `stoke stoke pour stoke lid stoke pour stoke` and expects temperature 68 and score 8.
+
+*Correction, 2026-10-30 (claude-qc).* The self-check sentence above expects 68 and 8. The scripted line ends at **67** (40 +7 +7 −5 +7 +2 +7 −5 +7) and scores **7**, as the 2026-10-05 17:06 witness found; the page reported `check failed` on every load for 25 days, correctly. Eight stokes end at 96, not boiled, and with eight moves and eight coal the pot cannot reach 100, so the "do not boil" rule cannot be broken in this round as written. The self-check now asserts 67 / 7 / 96-not-boiled. The earlier sentences are left as written.

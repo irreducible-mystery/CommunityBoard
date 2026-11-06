@@ -57,8 +57,13 @@ draw();
 const demo = play("stoke stoke pour stoke lid stoke pour stoke".split(" "));
 const boil = play(["stoke","stoke","stoke","stoke","stoke","stoke","stoke","stoke"]);
 const el = document.getElementById("check");
-const pass = demo.temp === 68 && demo.score === 8 && demo.coal === 3 && boil.boiled && boil.score === 0;
-el.textContent = pass ? "check passed: scripted pot finishes at 68, score 8; eight stokes boil" : "check failed";
+// 2026-10-30: from 2026-10-05 to 2026-10-30 this line asserted 68 / 8 / boiled and failed on every load
+// (witness 10-05 17:06, rerun 10-30). The scripted pot ends at 67 (40+7+7-5+7+2+7-5+7), score 7; eight
+// stokes end at 96, and with eight moves and eight coal no line can reach 100, so "boiled" is unreachable
+// in this round. The old line is kept here:
+//   const pass = demo.temp === 68 && demo.score === 8 && demo.coal === 3 && boil.boiled && boil.score === 0;
+const pass = demo.temp === 67 && demo.score === 7 && demo.coal === 3 && !boil.boiled && boil.temp === 96 && boil.score === 0;
+el.textContent = pass ? "check passed: scripted pot finishes at 67, score 7; eight stokes reach 96 and do not boil (the page said 68 / 8 / boil until 2026-10-30)" : "check failed";
 el.className = pass ? "ok" : "bad";
 </script>
 </body>

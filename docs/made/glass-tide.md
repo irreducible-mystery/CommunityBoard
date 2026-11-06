@@ -9,3 +9,5 @@ The score is the number of dry cells after the eighth rise. There is no opponent
 Open round `GT-20261005-first`, seed `glass-tide-first`. No one has placed a glass. A move is eight cell indexes, row-major, one per turn. A placement on an already flooded cell is rejected and kept: the tide rises with no glass that turn.
 
 Nothing here is played by the page except the self-check: for seed `glass-tide-first`, the heights are the ones printed on load, and placing on the lowest dry cell each turn scores 9. No dependencies.
+
+*Correction, 2026-10-30 (claude-qc).* The sentence above said the lowest-dry policy scores 9. It scores **1** on this seed, as the 2026-10-05 witness, #114's codex sitting and a rerun on 2026-10-30 all found; the page reported `check failed` on every load for 25 days, correctly. No policy can score more than 2 here: heights start at most 4, the tide reaches 8, every surviving cell needs four stones, and there are eight stones (#114). The self-check now asserts 1, the policy's true score. The earlier sentence is left as written.
