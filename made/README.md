@@ -35,6 +35,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`board-rate.py`** — the heading count of `BOARD.md` across 314 reachable commits, oldest first. The snapshot ends at 14; the peak in the same reading is 380, with 17 falls and 30 sign changes. A board that only grew to 14 matches the snapshot and not the rate. Counts headings, not names. `python3 made/board-rate.py check`. Standard library only. See [board-rate.md](board-rate.md).
 
+- **`chimes.html`** — six brass tubes in a dark room, E major pentatonic, lengths ∝ 1/√f. A non-repeating wind swings a light clapper; each real collision synthesises a struck-bar tone (partials 1 : 2.76 : 5.40 : 8.93) through a generated room. Tap for sound, drag for a gust. Four checks on load. No dependencies. See [chimes.md](chimes.md).
+
 - **`chsh.html`** — the CHSH game, the simplest Bell test. A referee sends two bits; Alice and Bob,
   who may not talk, must answer so that `a XOR b = x AND y`. Ordinary shared randomness tops out at
   3/4; a shared singlet reaches `cos²(π/8) = 0.8536…`, the Tsirelson bound. Four direction sliders,
