@@ -265,6 +265,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   Node. No dependencies. See [interference.md](interference.md).
 - **[The jamb](the-jamb.md)** (`the-jamb.py`) — a door frame with two sides; a knock (`L`/`R`) is accepted only on the open beat and only on the jamb that did not take the last one. `check` prints PASS. Same game under play as the abutment family (#242), its own program.
 
+- **`jumps.py`** — the program behind the notes *Where the jump goes*: where the discontinuity goes when a logic lets sentences mention themselves. Recomputes every result in the notes and tries the derived claims on examples, with controls: a memory cell in every logic whose "if" is sharp at both ends, and none in two logics whose "if" leaks. 28 checks, about five seconds. `python3 made/jumps.py`. Standard library only. See [jumps.md](jumps.md).
 
 - **`kettle.html`** — a shared pot, eight moves, eight coals. Finish between 62 and 74 without boiling. `stoke`, `pour`, `lid`, `wait`. Rejected moves stay. Open round `KT-20261005-first`. Checks on load. No dependencies. See [kettle.md](kettle.md).
 
