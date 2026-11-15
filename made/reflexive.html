@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A sentence that remembers</title>
+<style>
+  :root { --bg:#f6f3ec; --ink:#23211d; --dim:#8a8477; --line:#d9d3c5; --curve:#1f6f6b;
+          --dot:#c2452d; --trail:#c2452d; --card:#fffdf8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#15171a; --ink:#e8e4da; --dim:#8c8a84; --line:#33373d; --curve:#6fc7c1;
+            --dot:#ff8a6b; --trail:#ff8a6b; --card:#1c1f23; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font: 16px/1.5 Georgia, 'Times New Roman', serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+  h1 { font-size: 1.7rem; font-weight: normal; margin: 0 0 4px; }
+  .sub { color: var(--dim); margin: 0 0 20px; font-style: italic; }
+  .sentence { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .95rem;
+              background: var(--card); border:1px solid var(--line); border-radius:8px;
+              padding:10px 12px; overflow-x:auto; white-space:nowrap; }
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:16px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  figure { margin:0; background:var(--card); border:1px solid var(--line); border-radius:8px;
+           padding:10px; }
+  figcaption { color:var(--dim); font-size:.85rem; margin-top:6px; }
+  canvas { width:100%; aspect-ratio:1; display:block; }
+  .controls { margin-top:16px; display:grid; gap:10px; }
+  label { display:grid; grid-template-columns: 4.5em minmax(0, 1fr) 3.2em; gap:10px; align-items:center;
+          font-size:.95rem; }
+  input[type=range] { width:100%; accent-color: var(--curve); }
+  a { color: var(--curve); }
+  select { width:100%; min-width:0; }
+  select, button { font: inherit; color:var(--ink); background:var(--card);
+           border:1px solid var(--line); border-radius:6px; padding:5px 8px; }
+  .num { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:.9rem;
+         font-variant-numeric: tabular-nums; }
+  .read { margin-top:14px; font-size:1.05rem; min-height:3em; }
+  .read b { color: var(--dot); font-weight: normal; }
+  .lamp { display:inline-block; width:.8em; height:.8em; border-radius:50%;
+          border:1px solid var(--dot); margin-right:.4em; vertical-align:baseline; }
+  .lamp.on { background: var(--dot); }
+  p.note { color:var(--dim); font-size:.9rem; }
+  #checks { font-family: ui-monospace, Menlo, Consolas, monospace; font-size:.8rem;
+            color:var(--dim); margin-top:26px; white-space:pre-wrap; }
+</style>
+</head>
+<body>
+<main>
+<h1>A sentence that remembers</h1>
+<p class="sub">Raise D, then bring it back. The world is where it was. The sentence is not.</p>
+
+<div class="sentence">S &nbsp;&harr;&nbsp; ( g(S) &or; D ) &and; E
+&nbsp;&nbsp;&nbsp;&nbsp; g(S) = ( &not;(S&rarr;P) &or; (S&rarr;P) ) &rarr; &not;(S&rarr;P)</div>
+
+<div class="controls">
+  <label>the &ldquo;if&rdquo;
+    <select id="cond"></select><span></span></label>
+  <label>D
+    <input id="d" type="range" min="0" max="1" step="0.001"><span class="num" id="dv"></span></label>
+  <label>E
+    <input id="e" type="range" min="0" max="1" step="0.001"><span class="num" id="ev"></span></label>
+</div>
+
+<div class="read" id="read"></div>
+
+<div class="grid">
+  <figure>
+    <canvas id="left" width="760" height="760"></canvas>
+    <figcaption>What the sentence says S is, against what S is. S must sit where the curve
+      meets the diagonal. The dot is where it sits now.</figcaption>
+  </figure>
+  <figure>
+    <canvas id="right" width="760" height="760"></canvas>
+    <figcaption>S against D, everything you have done so far. A loop here is memory: one D,
+      two values of S.</figcaption>
+  </figure>
+</div>
+
+<p class="note">Truth values run from 0 to 1. P is an ordinary sentence with a fixed small
+value p, chosen for each &ldquo;if&rdquo;. Raising D <em>sets</em> the sentence, lowering E
+<em>resets</em> it, and between the two it holds what it was last told. Every &ldquo;if&rdquo;
+in the list that is fully sure a thing implies itself, and fully sure truth does not imply
+falsehood, does this. The last two are each unsure of one of those, and never do. The
+argument is in <a href="reflexive.md">reflexive.md</a>; the question it answers is from
+<em>Where the jump goes</em>.</p>
+
+<button id="clear">clear the trace</button>
+<div id="checks"></div>
+</main>
+
+<script>
+"use strict";
+const clip = v => v < 0 ? 0 : v > 1 ? 1 : v;
+const CONDS = [
+  ["Łukasiewicz: min(1, 1 − x + y)", (x, y) => clip(1 - x + y)],
+  ["both-ways: 1 − |x − y|", (x, y) => 1 - Math.abs(x - y)],
+  ["almost always true: 1 − |x − y|²⁰", (x, y) => 1 - Math.pow(Math.abs(x - y), 20)],
+  ["lopsided, not monotone", (x, y) => clip(1 - Math.abs(x - y) * (0.3 + 0.7 * x) * (1 - 0.6 * y))],
+  ["soft: 1 − (x − y)² when x > y", (x, y) => x <= y ? 1 : 1 - (x - y) * (x - y)],
+  ["blunt, half-slope (true → false is ½)", (x, y) => Math.min(1, 1 - (x - y) / 2)],
+  ["blunt, averaging (x → x is ½)", (x, y) => (1 - x + y) / 2],
+];
+
+// The construction of reflexive.md. Returns {g, p, q}; q is null when no amplifier exists.
+function build(f) {
+  const n = 400, u = x => f(x, 0);
+  let xs = null;
+  for (let i = 0; i <= n; i++) if (u(i / n) <= i / n) { xs = i / n; break; }
+  let best = null;
+  if (xs !== null && xs > 0)
+    for (let i = 1; i < n / 2; i++) {
+      const p = i / n, q = 1 - i / n;
+      if (f(q, p) < xs - 1 / n) best = [p, q]; else if (best) break;
+    }
+  const p = best ? best[0] : 0.25;
+  const g = s => { const e = f(s, p), b = u(e); return f(Math.max(b, e), b); };
+  const amp = best && g(p) < p && g(best[1]) > best[1];
+  return { g, p, q: amp ? best[1] : null };
+}
+
+function roots(h) {
+  const n = 600, out = [];
+  let ps = 0, pv = h(0);
+  if (Math.abs(pv) < 1e-12) out.push(0);
+  for (let i = 1; i <= n; i++) {
+    const s = i / n, v = h(s);
+    if (Math.abs(v) < 1e-12) out.push(s);
+    else if (Math.abs(pv) >= 1e-12 && (v > 0) !== (pv > 0)) {
+      let lo = ps, hi = s, vlo = pv;
+      for (let k = 0; k < 40; k++) {
+        const m = (lo + hi) / 2, vm = h(m);
+        if ((vm > 0) === (vlo > 0)) { lo = m; vlo = vm; } else hi = m;
+      }
+      out.push((lo + hi) / 2);
+    }
+    ps = s; pv = v;
+  }
+  return out;
+}
+
+const rhs = (g, d, e) => s => Math.min(Math.max(g(s), d), e);
+function step(g, s, d, e) {            // nearest solution to where S was
+  const r = roots(t => rhs(g, d, e)(t) - t);
+  if (!r.length) return s;
+  return r.reduce((a, b) => Math.abs(b - s) < Math.abs(a - s) ? b : a);
+}
+function walk(g, s, d0, e0, d1, e1) {  // move the world in small steps, S following
+  const k = Math.max(1, Math.ceil(Math.max(Math.abs(d1 - d0), Math.abs(e1 - e0)) / 0.004));
+  const pts = [];
+  for (let i = 1; i <= k; i++) {
+    const d = d0 + (d1 - d0) * i / k, e = e0 + (e1 - e0) * i / k;
+    s = step(g, s, d, e);
+    pts.push([d, s]);
+  }
+  return { s, pts };
+}
+
+// ---- state and drawing ----------------------------------------------------------------
+const $ = id => document.getElementById(id);
+let cur, S, D, E, trail;
+
+function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+function frame(ctx, xl, yl) {
+  const W = ctx.canvas.width, m = 56, L = W - 2 * m;
+  ctx.clearRect(0, 0, W, W);
+  ctx.strokeStyle = css("--line"); ctx.lineWidth = 2; ctx.strokeRect(m, m, L, L);
+  ctx.fillStyle = css("--dim"); ctx.font = "24px Georgia, serif"; ctx.textAlign = "center";
+  ctx.fillText("0", m, W - m + 30); ctx.fillText("1", W - m, W - m + 30);
+  ctx.fillText(xl, W / 2, W - m + 34);
+  ctx.textAlign = "right"; ctx.fillText("1", m - 10, m + 8); ctx.fillText(yl, m - 10, W / 2);
+  return { X: v => m + v * L, Y: v => W - m - v * L };
+}
+function draw() {
+  const a = $("left").getContext("2d"), A = frame(a, "S", "says");
+  a.strokeStyle = css("--line"); a.lineWidth = 2; a.setLineDash([8, 8]);
+  a.beginPath(); a.moveTo(A.X(0), A.Y(0)); a.lineTo(A.X(1), A.Y(1)); a.stroke(); a.setLineDash([]);
+  a.strokeStyle = css("--dim"); a.lineWidth = 1.5; a.globalAlpha = .55;       // g itself
+  a.beginPath();
+  for (let i = 0; i <= 400; i++) { const s = i / 400; a[i ? "lineTo" : "moveTo"](A.X(s), A.Y(cur.g(s))); }
+  a.stroke(); a.globalAlpha = 1;
+  a.strokeStyle = css("--curve"); a.lineWidth = 4; a.lineJoin = "round";      // the sentence
+  const f = rhs(cur.g, D, E);
+  a.beginPath();
+  for (let i = 0; i <= 400; i++) { const s = i / 400; a[i ? "lineTo" : "moveTo"](A.X(s), A.Y(f(s))); }
+  a.stroke();
+  a.fillStyle = css("--dot"); a.beginPath(); a.arc(A.X(S), A.Y(S), 11, 0, 7); a.fill();
+
+  const b = $("right").getContext("2d"), B = frame(b, "D", "S");
+  b.strokeStyle = css("--trail"); b.lineWidth = 3; b.globalAlpha = .7; b.lineJoin = "round";
+  b.beginPath();
+  trail.forEach((pt, i) => {
+    const jump = i && Math.abs(pt[1] - trail[i - 1][1]) > 0.05;
+    if (!i) b.moveTo(B.X(pt[0]), B.Y(pt[1]));
+    else if (jump) { b.stroke(); b.setLineDash([4, 8]); b.beginPath();
+      b.moveTo(B.X(trail[i - 1][0]), B.Y(trail[i - 1][1])); b.lineTo(B.X(pt[0]), B.Y(pt[1]));
+      b.stroke(); b.setLineDash([]); b.beginPath(); b.moveTo(B.X(pt[0]), B.Y(pt[1])); }
+    else b.lineTo(B.X(pt[0]), B.Y(pt[1]));
+  });
+  b.stroke(); b.globalAlpha = 1;
+  b.fillStyle = css("--dot"); b.beginPath(); b.arc(B.X(D), B.Y(S), 11, 0, 7); b.fill();
+
+  $("dv").textContent = D.toFixed(3); $("ev").textContent = E.toFixed(3);
+  const n = roots(t => rhs(cur.g, D, E)(t) - t).length;
+  const high = cur.q !== null && S > cur.q;
+  $("read").innerHTML = '<span class="lamp' + (high ? " on" : "") + '"></span>S is <b>' +
+    S.toFixed(3) + "</b>. " + (cur.q === null
+      ? "This “if” is blunt. Try to open a loop: it reads the same after a set as after a reset."
+      : n > 1 ? "The world allows " + n + " values for S here. It keeps the one it had."
+              : "The world allows one value here.");
+}
+
+function pick(i) {
+  cur = build(CONDS[i][1]);
+  D = cur.p; E = 1; S = step(cur.g, cur.p, cur.p, cur.p);   // reset first, then open E
+  S = walk(cur.g, S, cur.p, cur.p, cur.p, 1).s;
+  trail = [[D, S]];
+  $("d").value = D; $("e").value = E; draw();
+}
+function move() {
+  const d1 = +$("d").value, e1 = +$("e").value;
+  const w = walk(cur.g, S, D, E, d1, e1);
+  S = w.s; D = d1; E = e1; trail.push(...w.pts);
+  if (trail.length > 6000) trail = trail.slice(-6000);
+  draw();
+}
+
+CONDS.forEach((c, i) => { const o = document.createElement("option"); o.value = i; o.textContent = c[0]; $("cond").append(o); });
+$("cond").onchange = () => pick(+$("cond").value);
+$("d").oninput = move; $("e").oninput = move;
+$("clear").onclick = () => { trail = [[D, S]]; draw(); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+
+// ---- checks, run on load ----------------------------------------------------------------
+(function () {
+  const lines = []; let bad = 0;
+  const ok = (t, c) => { lines.push((c ? "ok   " : "FAIL ") + t); if (!c) bad++; };
+  const cycle = b => {                       // reset, hold, set, hold: S at the hold world twice
+    let s = step(b.g, b.p, b.p, b.p);
+    s = walk(b.g, s, b.p, b.p, b.p, 1).s; const lo = s;
+    s = walk(b.g, s, b.p, 1, 1, 1).s; const top = s;
+    s = walk(b.g, s, 1, 1, b.p, 1).s;
+    return [lo, top, s];
+  };
+  const sharp = CONDS.slice(0, 5).map(c => build(c[1]));
+  ok("the five sharp conditionals are reflexive and send (true, false) to false",
+     CONDS.slice(0, 5).every(c => Math.abs(c[1](1, 0)) < 1e-12 &&
+       [0, .1, .37, .5, .9, 1].every(x => Math.abs(c[1](x, x) - 1) < 1e-12)));
+  ok("each gives an amplifier, g(p) < p < q < g(q)", sharp.every(b => b.q !== null));
+  ok("each reads p at the hold world after reset and more than q after set",
+     sharp.every(b => { const [lo, top, hi] = cycle(b);
+       return Math.abs(lo - b.p) < 1e-6 && Math.abs(top - 1) < 1e-6 && hi > b.q; }));
+  ok("the two blunt conditionals give no amplifier and read the same both times",
+     CONDS.slice(5).every(c => { const b = build(c[1]); const [lo, , hi] = cycle(b);
+       return b.q === null && Math.abs(lo - hi) < 1e-3; }));
+  $("checks").textContent = lines.join("\n") + "\n" + (bad ? "check failed" : "check ok") +
+    " (" + lines.length + " checks)";
+  window.REFLEXIVE = { build, cycle, CONDS, checks: { failed: bad, lines } };
+})();
+
+pick(0);
+</script>
+</body>
+</html>
