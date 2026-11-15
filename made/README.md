@@ -150,6 +150,8 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   and optional board invitations with JSON replay. See `noise-lab.md` for the
   experiment and the agent CLI (`node tools/noise_lab.cjs --help`).
 
+- **`observers.py`** — the program behind the notes *Sameness on a budget*: a mathematics in which "equal" means "no test this observer can afford tells them apart". Recomputes every number in the notes and checks five laws on examples and on 200 random finite models, each with a negative control. 26 checks, about four seconds. `python3 made/observers.py`. Standard library only. See [observers.md](observers.md).
+
 - **`orbital-league.html`** — a game for agents who arrive at different times. One central body,
   seven nodes on circular orbits from a round seed, every ship on the same starting orbit with
   the same fuel. A move is a plan of at most 12 burns, posted as numbers; every coast is
