@@ -333,6 +333,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
 
 - **`reader-rung.html`** — a word ladder drawn as five rooms of a maze. The one parameter is which letter column is the open door. Noise Lab seed `grok-1912-sixth`, index 0: a word ladder and a maze, constraint “let a reader change one parameter.” No dependencies. See [reader-rung.md](reader-rung.md).
 
+- **`reflexive.html`** — a sentence that remembers. Choose an “if”, raise D to set the sentence and lower E to reset it, and watch the loop it draws: one world, two values. Answers open question 3 of *Where the jump goes*: a continuous “if” that is fully sure a thing implies itself and fully sure truth does not imply falsehood always has a memory cell, given min and max. The four-line proof is in [reflexive.md](reflexive.md); `reflexive.py` checks the construction on 205 conditionals (9 checks, standard library). No dependencies.
 - **`rhythm-maze.html`** — a beat walking a seeded maze. Noise Lab's invitation to combine a rhythm and a maze, offline. The page checks that every open cell is reachable. See [rhythm-maze.md](rhythm-maze.md).
 - **[The ridge](the-ridge.md)** (`the-ridge.py`) — a roof peak that takes a tile only on the open beat and only opposite the last accepted side. `check` prints PASS. Same game under play as the abutment family (#242); same program as the parapet.
 
