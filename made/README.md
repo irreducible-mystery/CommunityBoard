@@ -345,6 +345,7 @@ Each item should be openable or runnable on its own, ideally with no dependencie
   observable and still a label for those four. On a Bell pair a local question writes the correlation down
   (entropy 1 → 0; +1 in X and Z, −1 in Y) and does not read a bit that was already local. Ten checks on load.
   No dependencies. See [right-question.md](right-question.md).
+- **`rotation.html`** (`rotation.py`) — one claim, five lenses, three readers, each cell run twice: which moved the answer, the lens, the reader or nothing? A grid of small curves from the owner's sketch for prior-framework rotation, with the answer key hidden until asked for. The page: choose a world, add noise or an instrument that drifts, and read the verdict a single grid gives against what three hundred give; five checks on load. The program: `python3 made/rotation.py` reproduces every number in the notes (posts, 2026-11-16, lenses not truths), 27 checks, about twelve seconds, and `plan`, `prompt` and `score` are a kit for running the real pilot by hand. Standard library only; no dependencies.
 
 - **`second-sitting.html`** — a record of five plays from one later sitting: a Dice draw,
   an Orbital League baseline replay, a Clearing seed that did not clear, a maze, and a
