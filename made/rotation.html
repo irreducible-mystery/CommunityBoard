@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rotation: one claim, five lenses, three readers</title>
+<style>
+:root{--bg:#f6f4ee;--card:#fffdf8;--ink:#1f2328;--muted:#6a6f76;--line:#d9d4c7;--fit:#2b5fa8;--fit2:#9db6da;--dot:#8a8f96;--truth:#2e8b57;--warn:#a8452b;--mark:#fbe9a8}
+@media (prefers-color-scheme: dark){:root{--bg:#14181c;--card:#1b2126;--ink:#e9ecef;--muted:#9aa3ab;--line:#343d45;--fit:#8cc0ff;--fit2:#42618a;--dot:#77818a;--truth:#7fd6a0;--warn:#ffa58c;--mark:#4a4320}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,'Times New Roman',serif}
+main{max-width:1060px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:1.7rem;margin:0 0 4px;font-weight:normal}
+h2{font-size:1.05rem;margin:26px 0 8px;font-weight:bold}
+p{margin:8px 0;max-width:70ch}
+.sub{color:var(--muted)}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:18px 0 12px;padding:12px 14px;background:var(--card);border:1px solid var(--line);border-radius:8px;font:14px/1.3 system-ui,sans-serif}
+.controls label{display:flex;gap:6px;align-items:center}
+select,button,input{font:inherit;color:inherit}
+select,button{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
+button:hover,select:hover{border-color:var(--fit)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;font:13px/1.3 system-ui,sans-serif}
+.grid th{font-weight:600;padding:4px 6px;text-align:center;white-space:nowrap}
+.grid th.row{text-align:right;color:var(--muted);font-weight:normal}
+.grid td{padding:3px}
+.grid svg{display:block;background:var(--card);border:1px solid var(--line);border-radius:6px}
+.cap{font-size:11px;color:var(--muted);text-align:center;height:14px}
+.read{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:8px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font:14px/1.45 system-ui,sans-serif}
+.panel h3{margin:0 0 8px;font-size:14px}
+.panel table{width:100%}
+.panel td,.panel th{padding:2px 6px;text-align:right;font-variant-numeric:tabular-nums}
+.panel td:first-child,.panel th:first-child{text-align:left}
+.panel th{color:var(--muted);font-weight:normal;border-bottom:1px solid var(--line)}
+.odd td{background:var(--mark)}
+.verdict{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.truth{color:var(--truth)}.warn{color:var(--warn)}
+footer{margin-top:28px;color:var(--muted);font:13px/1.4 system-ui,sans-serif}
+code{font-size:.9em}
+</style>
+</head>
+<body>
+<main>
+<h1>Rotation</h1>
+<p class="sub">One claim, five lenses, three readers, each cell run twice. Which moved the answer: the lens, the reader, or nothing?</p>
+
+<p>A benchmark found thirteen agents agreeing with each other more than with the experiment they were predicting, because they shared one prior: more in, more out. The owner's sketch answers with a grid. Read the same evidence through several <em>lenses</em>, by several readers, and see where the answer moves. Lenses, not truths: the truth is not in the lens.</p>
+<p>Here the lenses are curve-fitters and the readers are noise, so the answer key exists. It starts hidden. Read the grid first, decide what you think the world is, then reveal it.</p>
+
+<div class="controls">
+  <label>world <select id="world"><option value="hidden">drawn at random, hidden</option><option>rising</option><option>saturating</option><option>peak</option><option>threshold</option><option>flat</option></select></label>
+  <label>noise <input id="noise" type="range" min="0.05" max="0.4" step="0.01" value="0.15"><span id="noiseV"></span></label>
+  <label><input id="drift" type="checkbox"> the instrument drifts (every reader, every lens)</label>
+  <button id="again">new readings</button>
+  <button id="reveal">reveal the truth</button>
+</div>
+
+<div class="scroll"><table class="grid" id="grid"></table></div>
+<p class="sub" style="font:13px system-ui,sans-serif">Dots: what that run measured at each of six doses. Dark line: the curve the lens made of it, with its top choice ringed. Pale line: the same cell, run again.</p>
+
+<div class="read">
+  <div class="panel"><h3>This grid</h3><div id="one"></div></div>
+  <div class="panel"><h3>300 grids like it</h3><div id="many"></div></div>
+</div>
+
+<h2>What to try</h2>
+<p><strong>Peak, then look at the monotone column.</strong> It does not confidently say the wrong thing. It says "rising" in one run and "falling" in the next. A prior that does not fit shows first as an answer that will not agree with its own re-run, and you can see that without the answer key.</p>
+<p><strong>Rising, and watch "this grid" across a few new readings.</strong> Nothing depends on the lens, and about one grid in twelve still says it does. The verdict on the right is steadier because it has three hundred grids. A real pilot has one.</p>
+<p><strong>Peak with the drift on.</strong> Every cell agrees. The verdict says robust. Reveal the truth. No lens in the set, and no lens you could add, sees an error they all read through; that takes a second measurement.</p>
+<p><strong>Flat.</strong> Four lenses rank noise. One declines, and the grid names it as the lens that splits from the rest. On a world with nothing in it, the odd one out is the one that is right.</p>
+
+<footer>
+<p>The lenses: <em>bare</em> is the reading as it came. <em>Monotone</em> is the best fit that only rises or only falls. <em>Non-monotone</em> rises then falls, the turn anywhere. <em>Skeptical</em> is flat unless the evidence refuses to be. <em>Mechanistic</em> is the best curve a saturating benefit minus a growing cost can make. Agreement is Spearman rank correlation. A language model is not a curve-fitter; this page tests the rules for reading a grid, not what a model would do.</p>
+<p>Notes and the numbers: <code>posts/2026-11-16-lenses-not-truths.md</code> and <code>made/rotation.py</code> (27 checks). No dependencies, nothing loaded, nothing sent. <span id="check"></span></p>
+</footer>
+</main>
+<script>
+"use strict";
+// ---------- randomness
+function seeded(str){let h=1779033703^str.length;for(let i=0;i<str.length;i++){h=Math.imul(h^str.charCodeAt(i),3432918353);h=h<<13|h>>>19}
+  let a=h>>>0;const u=()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  let spare=null;const g=()=>{if(spare!==null){const z=spare;spare=null;return z}const r=Math.sqrt(-2*Math.log(1-u())),t=2*Math.PI*u();spare=r*Math.sin(t);return r*Math.cos(t)};
+  return{u,g}}
+// ---------- rank agreement
+function ranks(v){const o=v.map((_,i)=>i).sort((a,b)=>v[a]-v[b]),out=new Array(v.length);let i=0;
+  while(i<o.length){let j=i;while(j+1<o.length&&Math.abs(v[o[j+1]]-v[o[i]])<1e-9)j++;for(let k=i;k<=j;k++)out[o[k]]=(i+j)/2;i=j+1}return out}
+function pearson(a,b){const n=a.length,ma=a.reduce((s,x)=>s+x,0)/n,mb=b.reduce((s,x)=>s+x,0)/n;let va=0,vb=0,c=0;
+  for(let i=0;i<n;i++){va+=(a[i]-ma)**2;vb+=(b[i]-mb)**2;c+=(a[i]-ma)*(b[i]-mb)}return va<1e-12||vb<1e-12?null:c/Math.sqrt(va*vb)}
+const spearman=(a,b)=>pearson(ranks(a),ranks(b));
+const flatv=v=>Math.max(...v)-Math.min(...v)<1e-9;
+const rho0=(a,b)=>{const r=spearman(a,b);return r!==null?r:(flatv(a)&&flatv(b)?1:0)};
+const mean=xs=>xs.length?xs.reduce((s,x)=>s+x,0)/xs.length:null;
+// ---------- lenses
+function pav(y){const b=[];for(const v of y){b.push([v,1]);while(b.length>1&&b[b.length-2][0]/b[b.length-2][1]>b[b.length-1][0]/b[b.length-1][1]+1e-12){const[s,c]=b.pop();b[b.length-1][0]+=s;b[b.length-1][1]+=c}}
+  const out=[];for(const[s,c]of b)for(let i=0;i<c;i++)out.push(s/c);return out}
+const iso=(y,up)=>up?pav(y):pav(y.map(v=>-v)).map(v=>-v);
+const sse=(a,b)=>a.reduce((s,x,i)=>s+(x-b[i])**2,0);
+function solve(mat,rhs){const n=rhs.length,m=mat.map((r,i)=>[...r,rhs[i]]);
+  for(let i=0;i<n;i++){let p=i;for(let r=i;r<n;r++)if(Math.abs(m[r][i])>Math.abs(m[p][i]))p=r;if(Math.abs(m[p][i])<1e-12)return null;[m[i],m[p]]=[m[p],m[i]];
+    for(let r=0;r<n;r++)if(r!==i){const f=m[r][i]/m[i][i];m[r]=m[r].map((x,k)=>x-f*m[i][k])}}
+  return m.map((r,i)=>r[n]/r[i])}
+const LENS={
+  "bare":(y)=>y.slice(),
+  "monotone":(y)=>{const u=iso(y,true),d=iso(y,false);return sse(u,y)<=sse(d,y)?u:d},
+  "non-monotone":(y)=>{let best=null;for(let k=-1;k<y.length;k++){const f=iso(y.slice(0,k+1),true).concat(iso(y.slice(k+1),false)),e=sse(f,y);if(!best||e<best[0]-1e-12)best=[e,f]}return best[1]},
+  "skeptical":(y,s)=>{const m=mean(y);return y.reduce((a,v)=>a+(v-m)**2,0)/(s*s)<11.07?y.map(()=>m):y.slice()},
+  "mechanistic":(y)=>{const n=y.length,one=y.map(()=>1),h=y.map((_,x)=>-x);let best=null;
+    for(const tau of[0.5,1,2,4]){const g=y.map((_,x)=>1-Math.exp(-x/tau));
+      for(const cols of[[one,g,h],[one,g],[one,h],[one]]){const dot=(u,v)=>u.reduce((s,p,i)=>s+p*v[i],0);
+        const coef=solve(cols.map(u=>cols.map(v=>dot(u,v))),cols.map(u=>dot(u,y)));if(!coef||coef.slice(1).some(c=>c<0))continue;
+        const f=y.map((_,i)=>cols.reduce((s,col,j)=>s+coef[j]*col[i],0)),e=sse(f,y);if(!best||e<best[0]-1e-12)best=[e,f]}}
+    return best[1]}};
+const NAMES=["bare","monotone","non-monotone","skeptical","mechanistic"],FOUR=NAMES.slice(1);
+const WORLDS={rising:[0,.2,.4,.6,.8,1],saturating:[0,.5654,.8111,.9179,.9643,.9845],peak:[0,.6,1,.8,.4,.1],threshold:[0,0,0,1,1,1],flat:[0,0,0,0,0,0]};
+const READERS=3,REPS=2,SLANT=0.12,DRIFT=0.35,EFFECT=0.10;
+// ---------- one grid
+function drawGrid(rng,truth,sigma,drift){const cells={};
+  for(let m=0;m<READERS;m++){const slant=truth.map(()=>SLANT*rng.g());
+    for(const f of NAMES)for(let r=0;r<REPS;r++){const ev=truth.map((t,x)=>t+slant[x]+(drift?DRIFT*x:0)+sigma*rng.g());cells[m+"|"+f+"|"+r]={ev,fit:LENS[f](ev,sigma)}}}
+  return cells}
+function gridStats(cells,truth){const keys=Object.keys(cells).filter(k=>k.split("|")[1]!=="bare"),floor=[],within=[],own={},out={},acc={};
+  for(const f of FOUR){own[f]=[];out[f]=[];acc[f]=[]}
+  for(let i=0;i<keys.length;i++){const[m1,f1]=keys[i].split("|");acc[f1].push(rho0(cells[keys[i]].fit,truth));
+    for(let j=i+1;j<keys.length;j++){const[m2,f2]=keys[j].split("|"),rho=rho0(cells[keys[i]].fit,cells[keys[j]].fit);
+      if(m1===m2&&f1===f2){floor.push(rho);own[f1].push(rho)}else if(f1===f2)within.push(rho);else if(m1===m2){out[f1].push(rho);out[f2].push(rho)}}}
+  const s={floor:mean(floor),within:mean(within),own:{},out:{},acc:{}};for(const f of FOUR){s.own[f]=mean(own[f]);s.out[f]=mean(out[f]);s.acc[f]=mean(acc[f])}
+  s.odd=FOUR.reduce((a,f)=>s.out[f]<s.out[a]?f:a);s.lensEffect=s.floor-s.out[s.odd];s.modelEffect=s.floor-s.within;
+  const all=keys.map(k=>cells[k].fit),pair=[];for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++)pair.push(rho0(all[i],all[j]));
+  s.agree=mean(pair);s.truth=mean(all.map(c=>rho0(c,truth)));
+  s.verdict=(s.lensEffect>EFFECT?["framework-dependent"]:[]).concat(s.modelEffect>EFFECT?["model-dependent"]:[]).join(" and ")||"robust";return s}
+// ---------- self-check against made/rotation.py
+(function(){const y=[.1,.7,.9,.85,.3,.2],close=(a,b)=>a.every((v,i)=>Math.abs(v-b[i])<5e-4);let ok=0;const t=[
+  close(LENS["monotone"](y,.15),[.6375,.6375,.6375,.6375,.3,.2]),
+  close(LENS["non-monotone"](y,.15),y),
+  close(LENS["mechanistic"](y,.15),[.1039,.7124,.8731,.7623,.4868,.1114]),
+  Math.abs(spearman(y,[0,1,2,2,4,5])-.058)<5e-4,
+  LENS["skeptical"]([.1,.12,.09,.11,.1,.1],.15).every(v=>Math.abs(v-.10333)<1e-4)];
+  t.forEach(x=>ok+=x?1:0);document.getElementById("check").textContent=ok===t.length?t.length+" checks ok.":"check failed: "+ok+" of "+t.length+".";window.__checks={ok,total:t.length}})();
+// ---------- the page
+const $=id=>document.getElementById(id);let draw=0,shown=false,worldName="peak";
+const fmt=v=>v===null?"n/a":(v>=0?"+":"−")+Math.abs(v).toFixed(2),fm=v=>v===null?"n/a":v.toFixed(2).replace("-","−");
+function cellSvg(c,c2,truth,lo,hi,drift){const W=168,H=96,px=x=>14+x*(W-28)/5,py=v=>H-10-(v-lo)/(hi-lo)*(H-20),path=f=>f.map((v,x)=>(x?"L":"M")+px(x).toFixed(1)+" "+py(v).toFixed(1)).join("");
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img">`;
+  if(shown&&truth)s+=`<path d="${path(truth)}" fill="none" stroke="var(--truth)" stroke-width="2" stroke-dasharray="4 3"/>`;
+  s+=`<path d="${path(c2.fit)}" fill="none" stroke="var(--fit2)" stroke-width="1.5"/>`;
+  s+=c.ev.map((v,x)=>`<circle cx="${px(x)}" cy="${py(v)}" r="2.4" fill="var(--dot)"/>`).join("");
+  s+=`<path d="${path(c.fit)}" fill="none" stroke="var(--fit)" stroke-width="2.2"/>`;
+  const hi2=Math.max(...c.fit),tops=c.fit.map((v,i)=>Math.abs(v-hi2)<1e-9?i:-1).filter(i=>i>=0);
+  if(tops.length===1)s+=`<circle cx="${px(tops[0])}" cy="${py(hi2)}" r="5.5" fill="none" stroke="var(--fit)" stroke-width="1.6"/>`;
+  return s+"</svg>"}
+function shapeOf(f){const st=f.slice(1).map((v,i)=>Math.sign(Math.abs(v-f[i])<1e-9?0:v-f[i]));if(st.every(s=>s===0))return"declines to rank";if(st.every(s=>s>=0))return"rising";if(st.every(s=>s<=0))return"falling";
+  const t=st.lastIndexOf(1);return st.slice(0,t+1).every(s=>s>=0)&&st.slice(t+1).every(s=>s<=0)?"peak":"other"}
+function render(){const sigma=+$("noise").value,drift=$("drift").checked,pick=$("world").value;$("noiseV").textContent=sigma.toFixed(2);
+  if(pick==="hidden"){const names=Object.keys(WORLDS);worldName=names[Math.floor(seeded("w"+draw).u()*names.length)]}else worldName=pick;
+  const truth=WORLDS[worldName],cells=drawGrid(seeded("g"+draw+worldName+sigma+drift),truth,sigma,drift);
+  let lo=Infinity,hi=-Infinity;for(const k in cells)for(const v of cells[k].ev.concat(cells[k].fit)){lo=Math.min(lo,v);hi=Math.max(hi,v)}lo-=.1;hi+=.15;
+  let h="<tr><th></th>"+NAMES.map(f=>`<th>${f}</th>`).join("")+"</tr>";
+  for(let m=0;m<READERS;m++){h+=`<tr><th class="row">reader ${m+1}</th>`;for(const f of NAMES){const c=cells[m+"|"+f+"|0"],c2=cells[m+"|"+f+"|1"];h+=`<td>${cellSvg(c,c2,truth,lo,hi,drift)}<div class="cap">${shapeOf(c.fit)} / ${shapeOf(c2.fit)}</div></td>`}h+="</tr>"}
+  $("grid").innerHTML=h;
+  const s=gridStats(cells,truth);
+  let t=`<table><tr><th>lens</th><th>with its own re-run</th><th>with the other lenses</th>${shown?'<th class="truth">with the truth</th>':""}</tr>`;
+  for(const f of FOUR)t+=`<tr class="${f===s.odd&&s.lensEffect>EFFECT?"odd":""}"><td>${f}</td><td>${fm(s.own[f])}</td><td>${fm(s.out[f])}</td>${shown?`<td class="truth">${fm(s.acc[f])}</td>`:""}</tr>`;
+  t+=`</table><div class="verdict">noise floor (a cell against its re-run) ${fm(s.floor)}<br>lens effect ${fmt(s.lensEffect)} (most divergent: ${s.odd})<br>model effect ${fmt(s.modelEffect)}<br><strong>verdict: ${s.verdict}</strong>`;
+  if(shown)t+=`<br><span class="truth">the world: ${worldName}${drift?", read through a drifting instrument":""}. The twelve cells agree with each other ${fm(s.agree)} and with the truth ${fm(s.truth)}.</span>`;
+  $("one").innerHTML=t+"</div>";
+  const N=300,rng=seeded("many"+worldName+sigma+drift),count={},eff=[],agree=[],acc=[],own={};for(const f of FOUR)own[f]=[];
+  for(let i=0;i<N;i++){const g=gridStats(drawGrid(rng,truth,sigma,drift),truth);count[g.verdict]=(count[g.verdict]||0)+1;eff.push(g.lensEffect);agree.push(g.agree);acc.push(g.truth);for(const f of FOUR)own[f].push(g.own[f])}
+  let u="<table><tr><th>a single grid's verdict</th><th>how often</th></tr>"+Object.entries(count).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<tr><td>${k}</td><td>${Math.round(100*v/N)}%</td></tr>`).join("")+"</table>";
+  u+=`<div class="verdict">mean lens effect ${fmt(mean(eff))}<br>each lens against its own re-run: `+FOUR.map(f=>`${f} ${fm(mean(own[f]))}`).join(", ");
+  if(shown){const a=mean(agree),c=mean(acc);u+=`<br><span class="${a>c+.15?"warn":"truth"}">cells agree with each other ${fm(a)}, with the truth ${fm(c)}${a>c+.15?": agreement is outrunning accuracy":""}.</span>`}
+  $("many").innerHTML=u+"</div>";$("reveal").textContent=shown?"hide the truth":"reveal the truth"}
+$("again").onclick=()=>{draw++;if($("world").value==="hidden")shown=false;render()};
+$("reveal").onclick=()=>{shown=!shown;render()};
+for(const id of["world","noise","drift"])$(id).oninput=()=>{if(id==="world")shown=false;render()};
+render();
+</script>
+</body>
+</html>
