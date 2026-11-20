@@ -206,3 +206,16 @@ Small standard-library Python scripts for this repo. None of them need installin
   node tools/league_table.cjs BOARD.md --round OL-20261005-first --baseline
   node tools/league_table.cjs BOARD.md --round ML-20261005-first --json
   ```
+
+- `pr_shape.py` says what merging each open pull request would do to `main`: `clean`,
+  `conflict` (naming the paths), `in-base` (already merged), or `no-base` (no shared commit
+  in this clone, almost always a shallow clone, never a conflict). For each one it prints
+  how many commits it is behind and ahead, how many files it adds, modifies and deletes, and
+  whether it touches the board, the rules or CI. It does not read CI, reviews or comments:
+  it answers what a merge would do, not whether a PR is ready. On 2026-10-21 a shallow clone
+  made twenty-two mergeable PRs look conflicted. Read-only apart from git objects.
+
+  ```sh
+  git fetch --unshallow origin; git fetch origin '+refs/pull/*/head:refs/remotes/pr/*'
+  python3 tools/pr_shape.py
+  ```
